@@ -183,19 +183,73 @@ const UI = {
     const st = b.status();
     const modeLabel = b.mode === "review" ? "🚨 复习突袭" : `🪐 ${b.unit.name}`;
 
-    let promptHtml;
-    if (q.type === "dialogue") {
+    const STYLE_LABEL = {
+      mc: q.type === "dialogue" ? "🗣️ 角色扮演" : "🎯 弹药选择",
+      listen: "🎧 听音辨词",
+      spell: "⌨️ 拼写填空",
+      speak: "🎤 口语评测",
+    };
+    const styleBadge = `<div class="chip" style="font-size:12px;padding:3px 10px;position:absolute;right:10px;top:-12px">${STYLE_LABEL[q.style] || ""}</div>`;
+    const speakBtn = `<button class="chip" style="position:absolute;left:10px;top:-12px" onclick="Sound.speak('${(q.speak || "").replace(/'/g, "")}')">🔊</button>`;
+
+    let promptHtml, answersHtml;
+
+    if (q.style === "listen") {
+      // 听音辨词：隐藏文字，只能靠听
+      promptHtml = `
+        <div class="text-xs opacity-60 mb-2">仔细听，选出听到的单词：</div>
+        <button class="btn" style="margin:0 auto" onclick="Sound.speak('${(q.speak || "").replace(/'/g, "")}')">🔊 再听一次</button>`;
+      answersHtml = q.options.map((o, i) => `<button class="missile" data-i="${i}" onclick="UI.choose(${i}, this)">${o}</button>`).join("");
+    } else if (q.style === "spell") {
+      // 拼写填空：字母拼块
+      promptHtml = `
+        <div class="text-xs opacity-60 mb-1">为这个怪兽密码拼出英文：</div>
+        <div class="text-2xl font-black" style="color:var(--gold)">${q.prompt}</div>
+        <div id="spell-slots" class="flex justify-center gap-1 mt-3 flex-wrap" style="min-height:40px"></div>`;
+      answersHtml = `
+        <div class="flex flex-wrap justify-center gap-2" id="letter-tray">
+          ${q.letters.map((c, i) => `<button class="missile" style="min-width:44px;min-height:44px;padding:8px;font-size:20px" data-li="${i}" onclick="UI.spellTap(${i}, this)">${c}</button>`).join("")}
+        </div>
+        <div class="grid grid-cols-2 gap-3 mt-3">
+          <button class="btn secondary" onclick="UI.spellBackspace()">⌫ 退格</button>
+          <button class="btn" id="fire-btn" onclick="UI.spellFire()">🚀 发射</button>
+        </div>`;
+    } else if (q.style === "speak") {
+      // 口语评测：麦克风发音评分
+      const supported = "webkitSpeechRecognition" in window || "SpeechRecognition" in window;
+      promptHtml = `
+        <div class="text-xs opacity-60 mb-1">👤 ${q.speaker || "NPC"} 说：</div>
+        <div class="text-lg font-bold">${q.prompt}</div>
+        <div class="text-sm opacity-60 mt-1">${q.promptZh || ""}</div>
+        <div class="mt-2 p-2 rounded-lg" style="background:rgba(56,189,248,0.12)">
+          <div class="text-xs opacity-60">请大声读出回应：</div>
+          <div class="text-xl font-black" style="color:var(--accent)">${q.correct}</div>
+        </div>
+        <div id="speak-status" class="text-sm mt-2 opacity-70">${supported ? "点击麦克风，发音越标准激光炮越强！" : "当前浏览器不支持语音识别，可点击「跳过朗读」直接发射。"}</div>`;
+      answersHtml = supported
+        ? `<div class="grid grid-cols-2 gap-3">
+             <button class="btn gold" id="mic-btn" onclick="UI.startSpeak()">🎤 开始朗读</button>
+             <button class="btn secondary" onclick="UI.skipSpeak()">跳过朗读</button>
+           </div>`
+        : `<button class="btn" onclick="UI.skipSpeak()">🚀 发射激光炮</button>`;
+    } else if (q.type === "dialogue") {
+      // 角色扮演：选择最合适回应
       promptHtml = `
         <div class="text-xs opacity-60 mb-1">👤 ${q.speaker || "NPC"} 说：</div>
         <div class="text-xl font-bold">${q.prompt}</div>
         <div class="text-sm opacity-60 mt-1">${q.promptZh || ""}</div>
         <div class="text-xs opacity-50 mt-2">选择最合适的回应，发射激光炮 →</div>`;
+      answersHtml = q.options.map((o, i) => `<button class="missile" data-i="${i}" onclick="UI.choose(${i}, this)">${o}</button>`).join("");
     } else {
+      // 词汇选择
       promptHtml = `
         <div class="text-xs opacity-60 mb-1">怪兽身上的密码：</div>
         <div class="text-2xl font-black" style="color:var(--gold)">${q.prompt}</div>
         <div class="text-xs opacity-50 mt-2">选择正确的英文导弹击中它 →</div>`;
+      answersHtml = q.options.map((o, i) => `<button class="missile" data-i="${i}" onclick="UI.choose(${i}, this)">${o}</button>`).join("");
     }
+
+    const useGrid = q.style === "mc" || q.style === "listen";
 
     this._render(`
       <div class="screen">
@@ -233,19 +287,29 @@ const UI = {
         </div>
 
         <!-- 武器舱 -->
-        <div class="panel p-4 mt-3 text-center" id="weapon-bay">
-          <button class="chip" style="position:absolute;margin-left:-8px" onclick="Sound.speak('${(q.speak || "").replace(/'/g, "")}')">🔊</button>
+        <div class="panel p-4 mt-4 text-center" id="weapon-bay" style="position:relative">
+          ${q.style === "listen" ? "" : speakBtn}
+          ${styleBadge}
           ${promptHtml}
         </div>
 
-        <!-- 弹药选择 -->
-        <div class="answer-grid mt-3" id="answers">
-          ${q.options.map((o, i) => `<button class="missile" data-i="${i}" onclick="UI.choose(${i}, this)">${o}</button>`).join("")}
+        <!-- 弹药区 -->
+        <div class="${useGrid ? "answer-grid" : ""} mt-3" id="answers">
+          ${answersHtml}
         </div>
       </div>`);
 
     this._currentOptions = q.options;
+    this._spellBuffer = [];
     this._locked = false;
+
+    // 听音辨词：进入即自动播放一次发音
+    if (q.style === "listen") {
+      setTimeout(() => Sound.speak(q.speak), 350);
+    }
+    if (q.style === "spell") {
+      this._renderSpellSlots();
+    }
   },
 
   choose(i, elBtn) {
@@ -255,24 +319,167 @@ const UI = {
     const choice = this._currentOptions[i];
     const res = b.answer(choice);
 
-    // 视觉反馈
-    const buttons = Array.from(document.querySelectorAll(".missile"));
+    // 视觉反馈（选项染色）
+    const buttons = Array.from(document.querySelectorAll("#answers .missile"));
     buttons.forEach((btn) => {
+      if (btn.dataset.i === undefined) return;
       const opt = this._currentOptions[+btn.dataset.i];
       if (opt === res.question.correct) btn.classList.add("right");
       else if (btn === elBtn && !res.correct) btn.classList.add("wrong");
       else btn.classList.add("dim");
     });
 
+    this._afterAnswer(res);
+  },
+
+  // ---- 拼写填空 ----
+  spellTap(li, btn) {
+    if (this._locked) return;
+    if (btn.classList.contains("dim")) return;
+    btn.classList.add("dim");
+    this._spellBuffer.push({ li, char: btn.textContent });
+    this._renderSpellSlots();
+  },
+
+  spellBackspace() {
+    if (this._locked) return;
+    const last = this._spellBuffer.pop();
+    if (last) {
+      const btn = document.querySelector(`#letter-tray [data-li="${last.li}"]`);
+      if (btn) btn.classList.remove("dim");
+    }
+    this._renderSpellSlots();
+  },
+
+  _renderSpellSlots() {
+    const slots = document.getElementById("spell-slots");
+    if (!slots) return;
+    const word = this._spellBuffer.map((x) => x.char).join("");
+    slots.innerHTML =
+      word
+        .split("")
+        .map((c) => `<span class="chip" style="min-width:28px;justify-content:center;font-size:20px">${c}</span>`)
+        .join("") || `<span class="opacity-40 text-sm">点击字母拼出单词…</span>`;
+  },
+
+  spellFire() {
+    if (this._locked) return;
+    const word = this._spellBuffer.map((x) => x.char).join("");
+    if (!word) return;
+    this._locked = true;
+    const res = this.battle.answer(word);
+    // 反馈：显示正确答案
+    const slots = document.getElementById("spell-slots");
+    if (slots) {
+      slots.innerHTML = `<span class="chip" style="color:${res.correct ? "var(--ok)" : "var(--danger)"};font-size:18px">${res.correct ? "✓ " + word : "✗ 正确：" + res.question.correct}</span>`;
+    }
+    this._afterAnswer(res);
+  },
+
+  // ---- 口语评测（麦克风发音评分） ----
+  startSpeak() {
+    if (this._locked) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      this.skipSpeak();
+      return;
+    }
+    const status = document.getElementById("speak-status");
+    const micBtn = document.getElementById("mic-btn");
+    const target = this.battle.current.correct;
+
+    const rec = new SR();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 3;
+
+    if (status) status.innerHTML = '<span style="color:var(--accent)">🎙️ 聆听中…请朗读</span>';
+    if (micBtn) micBtn.textContent = "🎙️ 录音中…";
+
+    let done = false;
+    rec.onresult = (e) => {
+      done = true;
+      const alts = [];
+      for (let i = 0; i < e.results[0].length; i++) alts.push(e.results[0][i].transcript);
+      const quality = this._scorePronunciation(target, alts);
+      this._finishSpeak(quality, alts[0]);
+    };
+    rec.onerror = () => {
+      if (done) return;
+      if (status) status.innerHTML = '<span style="color:var(--danger)">没听清，可重试或跳过朗读。</span>';
+      if (micBtn) micBtn.textContent = "🎤 重新朗读";
+    };
+    rec.onend = () => {
+      if (!done && micBtn) micBtn.textContent = "🎤 重新朗读";
+    };
+    try {
+      rec.start();
+    } catch (err) {
+      this.skipSpeak();
+    }
+  },
+
+  // 跳过朗读：以普通伤害发射（不享受发音加成）
+  skipSpeak() {
+    if (this._locked) return;
+    this._finishSpeak(1, null, true);
+  },
+
+  _scorePronunciation(target, alternatives) {
+    const norm = (s) => s.toLowerCase().replace(/[^a-z' ]/g, "").trim();
+    const t = norm(target);
+    let best = 0;
+    alternatives.forEach((a) => {
+      const sim = this._similarity(t, norm(a));
+      if (sim > best) best = sim;
+    });
+    return best;
+  },
+
+  // 基于编辑距离的相似度（0~1）
+  _similarity(a, b) {
+    if (!a.length || !b.length) return 0;
+    const m = a.length, n = b.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++)
+      for (let j = 1; j <= n; j++)
+        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return 1 - dp[m][n] / Math.max(m, n);
+  },
+
+  _finishSpeak(quality, heard, skipped = false) {
+    if (this._locked) return;
+    this._locked = true;
+    const target = this.battle.current.correct;
+    // 发音相似度 >= 0.5 视为答对；评级供反馈
+    const correct = quality >= 0.5;
+    const res = this.battle.answer(correct ? target : (heard || "__"), { quality });
+
+    let rating = "Excellent!";
+    if (quality < 0.5) rating = "再试试~";
+    else if (quality < 0.7) rating = "Good";
+    else if (quality < 0.9) rating = "Great!";
+    const status = document.getElementById("speak-status");
+    if (status) {
+      status.innerHTML = skipped
+        ? '<span class="opacity-70">已跳过朗读，普通发射。</span>'
+        : `<span style="color:${correct ? "var(--ok)" : "var(--danger)"}">发音评分：${Math.round(quality * 100)} 分 · ${rating}${heard ? ` （听到：${heard}）` : ""}</span>`;
+    }
+    this._afterAnswer(res);
+  },
+
+  // ---- 统一的答题结算后处理 ----
+  _afterAnswer(res) {
+    const b = this.battle;
     if (res.correct) {
       this._fireLaser();
       this._hitMonster(res);
     } else {
       this._shipHit(res);
     }
-
     this._updateBars();
-
     setTimeout(() => {
       if (b.finished) {
         this._renderResult();
@@ -281,7 +488,7 @@ const UI = {
       } else {
         this._renderBattle();
       }
-    }, res.correct ? 750 : 950);
+    }, res.correct ? 850 : 1050);
   },
 
   _fireLaser() {

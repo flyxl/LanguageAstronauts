@@ -75,9 +75,12 @@ class Battle {
       return;
     }
     // 推图：词汇题 + 会话题混合，循环出题直到通关
+    // 词汇随机采用「选择 / 听音辨词 / 拼写填空」三种弹药库玩法
+    const vocabStyles = ["mc", "mc", "listen", "spell"];
+    const dialogueStyles = ["mc", "mc", "speak"];
     const q = [];
-    this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v)));
-    this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d)));
+    this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v, vocabStyles[Math.floor(Math.random() * vocabStyles.length)])));
+    this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, dialogueStyles[Math.floor(Math.random() * dialogueStyles.length)])));
     this.questionQueue = shuffle(q);
   }
 
@@ -91,15 +94,16 @@ class Battle {
   }
 
   // ---- 出题生成 ----
-  _makeVocabQuestion(v) {
-    // 怪物挂中文，玩家选英文导弹
+  // style: 'mc' 选择 | 'listen' 听音辨词 | 'spell' 拼写填空
+  _makeVocabQuestion(v, style = "mc") {
     const distractors = pick(
       allVocab().filter((x) => x.en !== v.en),
       3
     ).map((x) => x.en);
     const options = shuffle([v.en, ...distractors]);
-    return {
+    const q = {
       type: "vocab",
+      style,
       prompt: v.zh,
       promptLabel: "翻译密码",
       speak: v.en,
@@ -107,9 +111,16 @@ class Battle {
       correct: v.en,
       item: v,
     };
+    if (style === "spell") {
+      // 仅对单个英文单词（无空格）启用拼写；含空格的短语回退为选择
+      if (/\s/.test(v.en)) q.style = "mc";
+      else q.letters = shuffle(v.en.toLowerCase().split(""));
+    }
+    return q;
   }
 
-  _makeDialogueQuestion(d) {
+  // style: 'mc' 选择 | 'speak' 口语评测
+  _makeDialogueQuestion(d, style = "mc") {
     const distractors = pick(
       allDialogueAnswers().filter((x) => x !== d.answer),
       3
@@ -117,6 +128,7 @@ class Battle {
     const options = shuffle([d.answer, ...distractors]);
     return {
       type: "dialogue",
+      style,
       prompt: d.prompt,
       promptZh: d.zh,
       speaker: d.speaker,
@@ -130,11 +142,11 @@ class Battle {
 
   _makeQuestionFromEntry(entry) {
     if (entry.type === "vocab") {
-      const q = this._makeVocabQuestion(entry.item);
+      const q = this._makeVocabQuestion(entry.item, "mc");
       q.reviewEntry = entry;
       return q;
     }
-    const q = this._makeDialogueQuestion(entry.item);
+    const q = this._makeDialogueQuestion(entry.item, "mc");
     q.reviewEntry = entry;
     return q;
   }
@@ -157,9 +169,11 @@ class Battle {
    * 玩家作答
    * @returns {object} 结果详情供 UI 渲染
    */
-  answer(choice) {
+  answer(choice, opts = {}) {
     const q = this.current;
     const correct = choice === q.correct;
+    // 口语评测：quality 为发音标准度 0~1，决定激光炮伤害值（GDD 设定）
+    const quality = typeof opts.quality === "number" ? Math.max(0, Math.min(1, opts.quality)) : 1;
     const result = {
       correct,
       question: q,
@@ -169,6 +183,7 @@ class Battle {
       formEvolved: false,
       crystalGain: 0,
       combo: this.combo,
+      quality: opts.quality,
     };
 
     if (correct) {
@@ -181,7 +196,9 @@ class Battle {
       const crit = this.combo >= 3;
       result.crit = crit;
       const base = q.type === "dialogue" ? 22 : 16;
-      let dmg = crit ? base * 2 : base;
+      // 拼写填空难度更高，额外加成；口语评测按发音标准度缩放
+      const styleBonus = q.style === "spell" ? 1.3 : 1;
+      let dmg = Math.round((crit ? base * 2 : base) * styleBonus * (q.style === "speak" ? 0.5 + 0.5 * quality : 1));
       this.monster.hp = Math.max(0, this.monster.hp - dmg);
       result.damage = dmg;
 
