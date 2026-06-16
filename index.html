@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#060818" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect width='180' height='180' fill='%23060818'/%3E%3Ctext x='90' y='125' font-size='110' text-anchor='middle'%3E%F0%9F%9A%80%3C/text%3E%3C/svg%3E" />
+  <title>时空语航员 · Language Astronauts</title>
+
+  <!-- Tailwind CSS（CDN，第一期极简架构） -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Animate.css 动画库 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <!-- 自定义太空主题样式 -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- 星空背景层 -->
+  <div id="starfield"></div>
+
+  <!-- 应用容器 -->
+  <div id="app"></div>
+
+  <!-- 业务脚本（按依赖顺序加载） -->
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ebbinghaus.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

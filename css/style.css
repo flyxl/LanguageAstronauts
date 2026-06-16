@@ -1,0 +1,375 @@
+/* 《时空语航员》太空冒险主题样式 */
+
+:root {
+  --bg-deep: #060818;
+  --bg-mid: #0d1230;
+  --accent: #38bdf8;
+  --accent2: #a78bfa;
+  --gold: #fbbf24;
+  --crystal: #67e8f9;
+  --danger: #ef4444;
+  --ok: #34d399;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "PingFang SC", "Microsoft YaHei", "Nunito", system-ui, sans-serif;
+  color: #e5e7eb;
+  background: radial-gradient(ellipse at 50% -10%, #15205a 0%, var(--bg-mid) 35%, var(--bg-deep) 100%);
+  overflow-x: hidden;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+#app {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* ---------- 星空背景 ---------- */
+#starfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.star {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: twinkle var(--dur, 3s) ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.9; }
+}
+.nebula {
+  position: fixed;
+  z-index: 0;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.25;
+  pointer-events: none;
+}
+.nebula.a { top: -10%; left: -10%; background: #6d28d9; }
+.nebula.b { bottom: -15%; right: -10%; background: #0891b2; }
+
+/* ---------- 通用卡片/按钮 ---------- */
+.panel {
+  background: rgba(17, 24, 56, 0.7);
+  border: 1px solid rgba(120, 150, 255, 0.25);
+  border-radius: 18px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.35);
+}
+.btn:active { transform: scale(0.96); }
+.btn.secondary {
+  background: linear-gradient(135deg, #334155, #1e293b);
+  box-shadow: none;
+  border: 1px solid rgba(120, 150, 255, 0.25);
+}
+.btn.gold {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  box-shadow: 0 6px 18px rgba(251, 191, 36, 0.4);
+  color: #3b2606;
+}
+.btn:disabled { filter: grayscale(0.7) brightness(0.7); cursor: not-allowed; }
+
+.title-glow {
+  background: linear-gradient(90deg, #67e8f9, #a78bfa, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 30px rgba(103, 232, 249, 0.3);
+}
+
+/* ---------- 主菜单飞船 ---------- */
+.ship-hero {
+  font-size: 84px;
+  filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.6));
+  animation: float 3.5s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+
+/* ---------- 关卡卡片 ---------- */
+.unit-card {
+  position: relative;
+  padding: 14px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+.unit-card:active { transform: scale(0.97); }
+.unit-card .crystal-bar {
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  margin-top: 8px;
+}
+.unit-card .crystal-bar > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--crystal), var(--accent2));
+}
+.unit-locked { filter: grayscale(0.8) brightness(0.55); }
+.badge-done {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 12px;
+  background: var(--ok);
+  color: #06281c;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+/* ---------- 战斗界面 ---------- */
+.battle-stage {
+  position: relative;
+  height: 240px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, rgba(120, 80, 200, 0.25), transparent 60%);
+}
+.monster {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 76px;
+  filter: drop-shadow(0 0 18px currentColor);
+  animation: monster-bob 2.2s ease-in-out infinite;
+}
+@keyframes monster-bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-12px); }
+}
+.monster.hit { animation: monster-hit 0.35s ease; }
+@keyframes monster-hit {
+  0% { transform: translateX(-50%) scale(1); filter: brightness(3); }
+  50% { transform: translateX(-46%) scale(1.12) rotate(6deg); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+.player-ship {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 50px;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.7));
+}
+.player-ship.shake { animation: ship-shake 0.4s ease; }
+@keyframes ship-shake {
+  0%, 100% { transform: translateX(-50%); }
+  20% { transform: translateX(-58%) rotate(-6deg); }
+  60% { transform: translateX(-42%) rotate(6deg); }
+}
+
+/* 激光束 */
+.laser-beam {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  width: 6px;
+  height: 0;
+  transform: translateX(-50%);
+  background: linear-gradient(to top, #fff, var(--accent));
+  border-radius: 4px;
+  box-shadow: 0 0 16px var(--accent);
+  animation: fire-laser 0.3s ease-out forwards;
+  z-index: 5;
+}
+@keyframes fire-laser {
+  0% { height: 0; opacity: 1; }
+  60% { height: 150px; opacity: 1; }
+  100% { height: 150px; opacity: 0; }
+}
+
+/* 怪物血条 */
+.hpbar {
+  height: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.hpbar > i {
+  display: block;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+.hpbar.monster-hp > i { background: linear-gradient(90deg, #f87171, #fbbf24); }
+.hpbar.ship-hp > i { background: linear-gradient(90deg, #34d399, #38bdf8); }
+
+/* Combo 显示 */
+.combo-pop {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.7);
+  z-index: 6;
+}
+.combo-pop.bump { animation: combo-bump 0.3s ease; }
+@keyframes combo-bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5) rotate(-6deg); }
+  100% { transform: scale(1); }
+}
+
+/* 答题选项（导弹） */
+.answer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.missile {
+  position: relative;
+  padding: 16px 12px;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  background: linear-gradient(135deg, #1e293b, #273449);
+  border: 1px solid rgba(120, 150, 255, 0.3);
+  transition: transform 0.08s ease, background 0.2s ease;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.missile:active { transform: scale(0.96); }
+.missile.right { background: linear-gradient(135deg, #059669, #34d399); border-color: #34d399; }
+.missile.wrong { background: linear-gradient(135deg, #b91c1c, #ef4444); border-color: #ef4444; }
+.missile.dim { opacity: 0.45; }
+
+/* 浮动伤害数字 */
+.float-num {
+  position: absolute;
+  font-weight: 900;
+  font-size: 28px;
+  pointer-events: none;
+  z-index: 7;
+  animation: float-up 0.9s ease-out forwards;
+}
+@keyframes float-up {
+  0% { opacity: 1; transform: translateY(0) scale(0.8); }
+  100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
+}
+
+/* 红色警报突袭横幅 */
+.alert-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(120, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  animation: alert-flash 0.6s ease-in-out 3;
+}
+@keyframes alert-flash {
+  0%, 100% { background: rgba(120, 0, 0, 0.15); }
+  50% { background: rgba(220, 30, 30, 0.5); }
+}
+
+/* 花园植物 */
+.garden-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.plant-pot {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: linear-gradient(180deg, rgba(45,60,110,0.5), rgba(20,28,60,0.6));
+  border: 1px dashed rgba(120,150,255,0.3);
+}
+.plant-emoji { font-size: 40px; transition: transform 0.3s ease; }
+.plant-pot.watered .plant-emoji { animation: grow-pop 0.5s ease; }
+@keyframes grow-pop {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* 顶部状态条芯片 */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(15, 22, 50, 0.8);
+  border: 1px solid rgba(120, 150, 255, 0.25);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.screen { animation: fade-in 0.3s ease; }
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.scrollable { -webkit-overflow-scrolling: touch; }
+
+/* 复习突袭提醒小红点 */
+.review-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: var(--danger);
+  border-radius: 50%;
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
