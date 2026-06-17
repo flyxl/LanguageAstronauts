@@ -8,9 +8,9 @@ const CRYSTAL_GOAL = 30; // GDD 双轨制：水晶碎片上限
 
 // 怪兽进化形态（Word -> Dialogue -> Reading）
 const MONSTER_FORMS = [
-  { id: "word", name: "词汇吞噬怪", emoji: "👾", hp: 60, color: "#a78bfa" },
-  { id: "dialogue", name: "会话吞噬怪", emoji: "👹", hp: 90, color: "#f472b6" },
-  { id: "reading", name: "语篇吞噬怪 BOSS", emoji: "🐲", hp: 140, color: "#f87171" },
+  { id: "word", name: "词汇吞噬怪", emoji: "👾", hp: 45, color: "#a78bfa" },
+  { id: "dialogue", name: "会话吞噬怪", emoji: "👹", hp: 65, color: "#f472b6" },
+  { id: "reading", name: "语篇吞噬怪 BOSS", emoji: "🐲", hp: 85, color: "#f87171" },
 ];
 
 function shuffle(arr) {
@@ -49,8 +49,8 @@ class Battle {
     this.mode = mode;
     this.reviewEntries = reviewEntries;
 
-    this.maxHp = 100;
-    this.hp = 100;
+    this.maxHp = 120;
+    this.hp = 120;
     this.combo = 0;
     this.bestCombo = 0;
     this.crystals = mode === "campaign" ? Storage.getUnitProgress(unit.id).crystals : 0;
@@ -192,12 +192,19 @@ class Battle {
       this.bestCombo = Math.max(this.bestCombo, this.combo);
       result.combo = this.combo;
 
+      // 连击回血：每达到 3 的倍数连击时恢复 HP（鼓励连续答对）
+      if (this.combo > 0 && this.combo % 3 === 0) {
+        const heal = 8;
+        this.hp = Math.min(this.maxHp, this.hp + heal);
+        result.heal = heal;
+      }
+
       // 连击暴击：Combo>=3 触发双倍伤害
       const crit = this.combo >= 3;
       result.crit = crit;
-      const base = q.type === "dialogue" ? 22 : 16;
+      const base = q.type === "dialogue" ? 26 : 20;
       // 拼写填空难度更高，额外加成；口语评测按发音标准度缩放
-      const styleBonus = q.style === "spell" ? 1.3 : 1;
+      const styleBonus = q.style === "spell" ? 1.4 : 1;
       let dmg = Math.round((crit ? base * 2 : base) * styleBonus * (q.style === "speak" ? 0.5 + 0.5 * quality : 1));
       this.monster.hp = Math.max(0, this.monster.hp - dmg);
       result.damage = dmg;
@@ -236,8 +243,8 @@ class Battle {
       Sound.wrong();
       this.combo = 0;
       result.combo = 0;
-      // 怪兽反击：扣护盾
-      const back = q.type === "dialogue" ? 15 : 10;
+      // 怪兽反击：扣护盾（降低惩罚，鼓励孩子继续尝试）
+      const back = q.type === "dialogue" ? 10 : 7;
       this.hp = Math.max(0, this.hp - back);
       result.selfDamage = back;
       // 答错惩罚：层级重置回 1，高频重刷

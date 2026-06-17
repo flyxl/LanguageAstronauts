@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="pc1" cx="50%" cy="35%"><stop stop-color="#f5f3ff"/><stop offset=".5" stop-color="#c4b5fd"/><stop offset="1" stop-color="#6d28d9"/></radialGradient>
+  <filter id="pcg"><feGaussianBlur stdDeviation="1.2" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <radialGradient id="pce"><stop stop-color="#e9d5ff"/><stop offset="1" stop-color="#7c3aed"/></radialGradient>
+</defs>
+<ellipse cx="32" cy="40" rx="20" ry="17" fill="url(#pc1)" stroke="#7c3aed" stroke-width="1"/>
+<path d="M12 28 L16 6 L24 26 Z" fill="#ddd6fe" stroke="#8b5cf6" stroke-width="1.2"/>
+<path d="M40 26 L48 6 L52 28 Z" fill="#ddd6fe" stroke="#8b5cf6" stroke-width="1.2"/>
+<path d="M14 12 L16 6 L18 12" fill="#fde68a" opacity="0.7"/>
+<path d="M46 12 L48 6 L50 12" fill="#fde68a" opacity="0.7"/>
+<ellipse cx="23" cy="38" rx="8" ry="8.5" fill="#1e1b4b"/>
+<ellipse cx="41" cy="38" rx="8" ry="8.5" fill="#1e1b4b"/>
+<ellipse cx="23" cy="38" rx="6" ry="6.5" fill="url(#pce)" filter="url(#pcg)">
+  <animate attributeName="opacity" values="1;0.7;1" dur="2.5s" repeatCount="indefinite"/>
+</ellipse>
+<ellipse cx="41" cy="38" rx="6" ry="6.5" fill="url(#pce)" filter="url(#pcg)">
+  <animate attributeName="opacity" values="1;0.7;1" dur="2.5s" repeatCount="indefinite" begin="1.2s"/>
+</ellipse>
+<circle cx="26" cy="36" r="2.5" fill="#fff"/>
+<circle cx="44" cy="36" r="2.5" fill="#fff"/>
+<circle cx="25" cy="35" r="1" fill="#1e1b4b"/>
+<circle cx="43" cy="35" r="1" fill="#1e1b4b"/>
+<path d="M20 36 L18 34" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+<path d="M38 36 L36 34" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+<path d="M29 49 Q32 53 35 49" stroke="#7c3aed" stroke-width="2" fill="none" stroke-linecap="round"/>
+<ellipse cx="16" cy="42" rx="4.5" ry="3" fill="#fecdd3" opacity="0.5"/>
+<ellipse cx="48" cy="42" rx="4.5" ry="3" fill="#fecdd3" opacity="0.5"/>
+<path d="M10 36 L2 34 M10 38 L2 38 M10 40 L2 42" stroke="#ddd6fe" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M54 36 L62 34 M54 38 L62 38 M54 40 L62 42" stroke="#ddd6fe" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M32 56 Q28 62 32 64 Q36 62 32 56 Z" fill="#c4b5fd" stroke="#7c3aed" stroke-width="1"/>
+<circle cx="12" cy="10" r="1.5" fill="#e9d5ff"><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/></circle>
+<circle cx="52" cy="12" r="1" fill="#c4b5fd"><animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="0.5s"/></circle>
+<circle cx="32" cy="4" r="1.2" fill="#a78bfa"><animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite" begin="1s"/></circle>
+    </svg>

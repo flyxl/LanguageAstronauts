@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="wp4" x1="32" y1="0" x2="32" y2="64"><stop stop-color="#ecfeff"/><stop offset="1" stop-color="#0e7490"/></linearGradient>
+  <filter id="wg4"><feGaussianBlur stdDeviation="2.5" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <radialGradient id="wice4"><stop stop-color="#fff"/><stop offset=".5" stop-color="#a5f3fc"/><stop offset="1" stop-color="#06b6d4" stop-opacity="0.3"/></radialGradient>
+</defs>
+<polygon points="32,2 38,16 54,18 44,30 46,46 32,40 18,46 20,30 10,18 26,16" fill="url(#wp4)" stroke="#22d3ee" stroke-width="1.5" filter="url(#wg4)">
+  <animateTransform attributeName="transform" type="rotate" from="0 32 26" to="5 32 26" dur="3s" values="0 32 26;3 32 26;0 32 26;-3 32 26;0 32 26" repeatCount="indefinite"/>
+</polygon>
+<polygon points="32,10 35,18 43,20 38,26 39,34 32,30 25,34 26,26 21,20 29,18" fill="#cffafe" opacity="0.6"/>
+<circle cx="32" cy="24" r="8" fill="url(#wice4)" filter="url(#wg4)"/>
+<path d="M32 18 L32 30 M26 24 L38 24 M28 20 L36 28 M36 20 L28 28" stroke="#fff" stroke-width="1.5" stroke-linecap="round">
+  <animateTransform attributeName="transform" type="rotate" from="0 32 24" to="360 32 24" dur="4s" repeatCount="indefinite"/>
+</path>
+<circle cx="32" cy="24" r="3" fill="#fff" opacity="0.8">
+  <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite"/>
+  <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+</circle>
+<circle cx="24" cy="14" r="1.5" fill="#a5f3fc" opacity="0.6"><animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/></circle>
+<circle cx="42" cy="16" r="1" fill="#67e8f9" opacity="0.5"><animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite" begin="1s"/></circle>
+<circle cx="20" cy="32" r="1.2" fill="#a5f3fc" opacity="0.4"><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="0.5s"/></circle>
+<rect x="27" y="48" width="10" height="10" rx="4" fill="#164e63" stroke="#22d3ee" stroke-width="1"/>
+<circle cx="32" cy="53" r="2" fill="#67e8f9"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/></circle>
+    </svg>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="m1" x1="40" y1="8" x2="40" y2="72" gradientUnits="userSpaceOnUse"><stop stop-color="#c4b5fd"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs>
+<ellipse cx="40" cy="42" rx="24" ry="28" fill="url(#m1)" stroke="#a78bfa" stroke-width="2"/>
+<ellipse cx="32" cy="34" rx="6" ry="7" fill="#1e1b4b"/><ellipse cx="48" cy="34" rx="6" ry="7" fill="#1e1b4b"/>
+<circle cx="33" cy="33" r="2.5" fill="#f0abfc"/><circle cx="49" cy="33" r="2.5" fill="#f0abfc"/>
+<path d="M30 52 Q40 60 50 52" stroke="#1e1b4b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<rect x="34" y="52" width="4" height="6" rx="1" fill="#f0abfc" opacity="0.7"/>
+<rect x="42" y="52" width="4" height="6" rx="1" fill="#f0abfc" opacity="0.7"/>
+<ellipse cx="18" cy="32" rx="4" ry="8" fill="#a78bfa" opacity="0.6"/>
+<ellipse cx="62" cy="32" rx="4" ry="8" fill="#a78bfa" opacity="0.6"/>
+<text x="40" y="76" text-anchor="middle" font-size="8" fill="#c4b5fd" font-weight="bold">ABC</text>
+    </svg>
