@@ -4,11 +4,48 @@
  */
 
 const SUITS = {
-  classic: { name: "经典宇航服", emoji: "🚀", price: 0 },
-  star: { name: "星空机甲款", emoji: "🛰️", price: 200 },
-  school: { name: "开学限定款", emoji: "🛸", price: 350 },
-  dragon: { name: "巡航龙骑款", emoji: "🚁", price: 600 },
+  classic: { name: "经典宇航服", emoji: "🚀", price: 0, trail: "#38bdf8", ability: "" },
+  star: { name: "星空机甲款", emoji: "🛰️", price: 200, trail: "#a78bfa", ability: "暴击率+10%" },
+  school: { name: "开学限定款", emoji: "🛸", price: 350, trail: "#34d399", ability: "水晶获取+20%" },
+  dragon: { name: "巡航龙骑款", emoji: "🚁", price: 600, trail: "#ef4444", ability: "护盾回复+5/题" },
 };
+
+// 段位/军衔系统（累计战功自动晋升）
+const RANKS = [
+  { name: "见习语航员", icon: "🌑", min: 0, color: "#94a3b8" },
+  { name: "三等兵", icon: "🌘", min: 50, color: "#67e8f9" },
+  { name: "二等兵", icon: "🌗", min: 150, color: "#38bdf8" },
+  { name: "一等兵", icon: "🌖", min: 300, color: "#818cf8" },
+  { name: "上等兵", icon: "🌕", min: 600, color: "#a78bfa" },
+  { name: "下士", icon: "⭐", min: 1000, color: "#fbbf24" },
+  { name: "中士", icon: "⭐⭐", min: 1800, color: "#f59e0b" },
+  { name: "上士", icon: "⭐⭐⭐", min: 3000, color: "#f97316" },
+  { name: "准尉", icon: "🎖️", min: 5000, color: "#ef4444" },
+  { name: "少尉", icon: "🏅", min: 8000, color: "#e879f9" },
+  { name: "语航王牌", icon: "👑", min: 15000, color: "#fbbf24" },
+];
+
+function getPlayerRank(score) {
+  let rank = RANKS[0];
+  for (const r of RANKS) {
+    if (score >= r.min) rank = r;
+  }
+  return rank;
+}
+
+// 成就徽章系统
+const ACHIEVEMENTS = [
+  { id: "first_win", name: "初次解放", desc: "首次通关一个星域", icon: "🎯", check: (s) => Object.values(s.progress).some((p) => p.completed) },
+  { id: "combo5", name: "连击达人", desc: "单场达成 5 连击", icon: "🔥", check: (s) => Object.values(s.progress).some((p) => p.bestCombo >= 5) },
+  { id: "combo10", name: "连击大师", desc: "单场达成 10 连击", icon: "💥", check: (s) => Object.values(s.progress).some((p) => p.bestCombo >= 10) },
+  { id: "perfect1", name: "完美主义", desc: "达成首个完美通关", icon: "⭐", check: (s) => Object.values(s.progress).some((p) => p.perfectClear) },
+  { id: "vocab50", name: "词汇猎手", desc: "接触 50 个语言点", icon: "📚", check: (s) => Object.keys(s.mastery).length >= 50 },
+  { id: "vocab100", name: "词汇大师", desc: "接触 100 个语言点", icon: "🏆", check: (s) => Object.keys(s.mastery).length >= 100 },
+  { id: "units5", name: "星域探索家", desc: "通关 5 个星域", icon: "🌌", check: (s) => Object.values(s.progress).filter((p) => p.completed).length >= 5 },
+  { id: "garden3", name: "园艺达人", desc: "培育 3 棵植物至满级", icon: "🌸", check: (s) => s.garden.filter((p) => p.growth >= 3).length >= 3 },
+  { id: "rank_star", name: "闪耀星辰", desc: "晋升至一等兵", icon: "🌖", check: (s) => s.player.score >= 300 },
+  { id: "score5k", name: "战功赫赫", desc: "累计战功突破 5000", icon: "🎖️", check: (s) => s.player.score >= 5000 },
+];
 
 const PLANT_SEEDS = {
   glowflower: { name: "辉光花", stages: ["🌱", "🌿", "🌷", "🌸"], price: 80 },
@@ -46,10 +83,11 @@ const UI = {
   _topBar() {
     const p = Storage.get().player;
     const due = ReviewQueue.getDue().length;
+    const rank = getPlayerRank(p.score);
     return `
       <div class="flex items-center justify-between gap-2 mb-3">
         <div class="flex gap-2 flex-wrap">
-          <span class="chip">${getShipSVG(p.suit, 20)} ${p.name}</span>
+          <span class="chip">${getShipSVG(p.suit, 20)} <span style="color:${rank.color}">${rank.icon} ${rank.name}</span></span>
           <span class="chip" style="color:var(--gold)">🏅 ${p.score}</span>
           <span class="chip" style="color:var(--crystal)">💎 ${p.crystals}</span>
         </div>
@@ -474,30 +512,66 @@ const UI = {
   _afterAnswer(res) {
     const b = this.battle;
     if (res.correct) {
-      this._fireLaser();
+      this._fireLaser(res.crit);
       this._hitMonster(res);
+      // 连击分级视觉
+      const comboEl = document.getElementById("combo");
+      if (comboEl) {
+        comboEl.classList.remove("fire", "inferno");
+        if (res.combo >= 10) comboEl.classList.add("inferno");
+        else if (res.combo >= 5) comboEl.classList.add("fire");
+      }
+      // 粒子特效
+      const monster = document.getElementById("monster");
+      if (monster) {
+        const r = monster.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        if (res.crit) {
+          FX.critRing(cx, cy);
+          FX.shake(6, 250);
+        } else {
+          FX.explode(cx, cy, 10, ["#fbbf24", "#f97316", "#38bdf8"]);
+          FX.shake(3, 120);
+        }
+        if (res.combo >= 5) FX.comboWave(res.combo);
+        if (res.crystalGain) FX.crystalBurst(cx, cy + 40, res.crystalGain * 3);
+      }
+      // BOSS 击杀庆祝
+      if (res.monsterDead && !res.formEvolved) {
+        setTimeout(() => FX.bossKill(), 200);
+      }
     } else {
       this._shipHit(res);
+      FX.shake(10, 400);
+      FX.flash("#ef4444", 150);
     }
     this._updateBars();
     setTimeout(() => {
       if (b.finished) {
+        if (b.win) FX.victory();
         this._renderResult();
       } else if (res.formEvolved) {
+        FX.evolve();
         this._showEvolve(() => this._renderBattle());
       } else {
         this._renderBattle();
       }
-    }, res.correct ? 850 : 1050);
+    }, res.correct ? 900 : 1100);
   },
 
-  _fireLaser() {
+  _fireLaser(crit) {
     const stage = document.getElementById("stage");
     if (!stage) return;
     const beam = document.createElement("div");
-    beam.className = "laser-beam";
+    beam.className = "laser-beam" + (crit ? " crit" : "");
     stage.appendChild(beam);
-    setTimeout(() => beam.remove(), 320);
+    if (crit) {
+      const flash = document.createElement("div");
+      flash.className = "crit-flash";
+      stage.appendChild(flash);
+      setTimeout(() => flash.remove(), 450);
+    }
+    setTimeout(() => beam.remove(), 380);
   },
 
   _hitMonster(res) {
@@ -655,6 +729,7 @@ const UI = {
         <div class="panel p-4 text-center">
           <div class="flex justify-center">${getShipSVG(id, 56)}</div>
           <div class="font-bold mt-1">${s.name}</div>
+          ${s.ability ? `<div class="text-xs mt-1" style="color:var(--gold)">${s.ability}</div>` : ""}
           <div class="text-xs opacity-60 mb-2">${owned ? "已拥有" : "🏅 " + s.price}</div>
           ${
             equipped
@@ -824,11 +899,51 @@ const UI = {
         </div>
         <h2 class="text-lg font-bold mt-4 mb-2">⚠️ 高频易错单词</h2>
         <div class="flex flex-wrap gap-2">${wrongList || '<span class="opacity-50 text-sm">暂无易错记录，棒极了！</span>'}</div>
+
+        <h2 class="text-lg font-bold mt-5 mb-2">🏅 成就徽章</h2>
+        <div class="grid grid-cols-2 gap-2">${this._renderAchievements()}</div>
+
+        <h2 class="text-lg font-bold mt-5 mb-2">🎖️ 段位晋升</h2>
+        ${this._renderRankProgress()}
+
         <div class="mt-6">
           <button class="btn secondary" style="width:100%" onclick="UI.confirmReset()">🗑️ 重置所有存档</button>
         </div>
         <div class="h-6"></div>
       </div>`);
+  },
+
+  _renderAchievements() {
+    const save = Storage.get();
+    return ACHIEVEMENTS.map((a) => {
+      const unlocked = a.check(save);
+      return `<div class="panel p-3 ${unlocked ? "" : "opacity-40"}" style="text-align:center">
+        <div style="font-size:28px">${a.icon}</div>
+        <div class="font-bold text-sm mt-1">${a.name}</div>
+        <div class="text-xs opacity-60">${a.desc}</div>
+        ${unlocked ? '<div class="text-xs mt-1" style="color:var(--ok)">✓ 已解锁</div>' : ""}
+      </div>`;
+    }).join("");
+  },
+
+  _renderRankProgress() {
+    const score = Storage.get().player.score;
+    const rank = getPlayerRank(score);
+    const nextIdx = RANKS.indexOf(rank) + 1;
+    const next = nextIdx < RANKS.length ? RANKS[nextIdx] : null;
+    const pct = next ? Math.min(100, Math.round(((score - rank.min) / (next.min - rank.min)) * 100)) : 100;
+    return `
+      <div class="panel p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <span style="font-size:24px">${rank.icon}</span>
+            <span class="font-bold ml-2" style="color:${rank.color}">${rank.name}</span>
+          </div>
+          ${next ? `<span class="text-xs opacity-60">下一段：${next.icon} ${next.name} (${next.min}分)</span>` : `<span class="text-xs" style="color:var(--gold)">满段位 MAX</span>`}
+        </div>
+        <div class="hpbar mt-2"><i style="width:${pct}%;background:linear-gradient(90deg,${rank.color},${next ? next.color : rank.color})"></i></div>
+        <div class="text-xs opacity-60 mt-1 text-right">${score} / ${next ? next.min : "MAX"}</div>
+      </div>`;
   },
 
   confirmReset() {

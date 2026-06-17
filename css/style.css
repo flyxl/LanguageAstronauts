@@ -164,43 +164,83 @@ body {
 /* ---------- 战斗界面 ---------- */
 .battle-stage {
   position: relative;
-  height: 240px;
+  height: 260px;
   border-radius: 18px;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 30%, rgba(120, 80, 200, 0.25), transparent 60%);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(120, 80, 200, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 80%, rgba(249, 115, 22, 0.1) 0%, transparent 40%),
+    linear-gradient(180deg, #0a0f2e, #060818);
+  border: 1px solid rgba(120, 150, 255, 0.15);
 }
+.battle-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, #fff 50%, transparent 100%),
+    radial-gradient(1px 1px at 30% 50%, #fff 50%, transparent 100%),
+    radial-gradient(1px 1px at 50% 10%, #fff 50%, transparent 100%),
+    radial-gradient(1px 1px at 70% 60%, #fff 50%, transparent 100%),
+    radial-gradient(1px 1px at 90% 30%, #fff 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 25% 75%, #67e8f9 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 25%, #a78bfa 50%, transparent 100%);
+  opacity: 0.5;
+  animation: stars-drift 8s linear infinite;
+  pointer-events: none;
+}
+@keyframes stars-drift {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(20px); }
+}
+
 .monster {
   position: absolute;
-  top: 24px;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 76px;
-  filter: drop-shadow(0 0 18px currentColor);
+  filter: drop-shadow(0 0 20px rgba(167, 139, 250, 0.6));
   animation: monster-bob 2.2s ease-in-out infinite;
+  transition: filter 0.2s;
 }
 @keyframes monster-bob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-12px); }
+  0%, 100% { transform: translateX(-50%) translateY(0) scale(1); }
+  50% { transform: translateX(-50%) translateY(-14px) scale(1.03); }
 }
-.monster.hit { animation: monster-hit 0.35s ease; }
+.monster.hit {
+  animation: monster-hit 0.4s cubic-bezier(.36,.07,.19,.97);
+  filter: brightness(2.5) drop-shadow(0 0 30px #fbbf24);
+}
 @keyframes monster-hit {
-  0% { transform: translateX(-50%) scale(1); filter: brightness(3); }
-  50% { transform: translateX(-46%) scale(1.12) rotate(6deg); }
-  100% { transform: translateX(-50%) scale(1); }
+  0% { transform: translateX(-50%) scale(1); }
+  20% { transform: translateX(-46%) scale(1.15) rotate(8deg); }
+  40% { transform: translateX(-54%) scale(0.95) rotate(-5deg); }
+  60% { transform: translateX(-48%) scale(1.05) rotate(3deg); }
+  100% { transform: translateX(-50%) scale(1) rotate(0); }
 }
+
 .player-ship {
   position: absolute;
-  bottom: 8px;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 50px;
-  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.7));
+  filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.8));
+  animation: ship-idle 3s ease-in-out infinite;
 }
-.player-ship.shake { animation: ship-shake 0.4s ease; }
+@keyframes ship-idle {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-4px); }
+}
+.player-ship.shake { animation: ship-shake 0.45s cubic-bezier(.36,.07,.19,.97); }
 @keyframes ship-shake {
   0%, 100% { transform: translateX(-50%); }
-  20% { transform: translateX(-58%) rotate(-6deg); }
-  60% { transform: translateX(-42%) rotate(6deg); }
+  15% { transform: translateX(-58%) rotate(-8deg) scale(0.95); }
+  30% { transform: translateX(-42%) rotate(6deg); }
+  50% { transform: translateX(-55%) rotate(-4deg); }
+  70% { transform: translateX(-45%) rotate(3deg); }
 }
 
 /* 激光束 */
@@ -208,19 +248,36 @@ body {
   position: absolute;
   left: 50%;
   bottom: 56px;
-  width: 6px;
+  width: 8px;
   height: 0;
   transform: translateX(-50%);
-  background: linear-gradient(to top, #fff, var(--accent));
+  background: linear-gradient(to top, #fff, var(--accent), #a78bfa);
   border-radius: 4px;
-  box-shadow: 0 0 16px var(--accent);
-  animation: fire-laser 0.3s ease-out forwards;
+  box-shadow: 0 0 20px var(--accent), 0 0 40px rgba(167,139,250,0.4);
+  animation: fire-laser 0.35s ease-out forwards;
   z-index: 5;
+}
+.laser-beam::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px var(--accent), 0 0 24px var(--accent);
+}
+.laser-beam.crit {
+  width: 12px;
+  background: linear-gradient(to top, #fff, #fbbf24, #ef4444);
+  box-shadow: 0 0 24px #fbbf24, 0 0 48px #f97316;
 }
 @keyframes fire-laser {
   0% { height: 0; opacity: 1; }
-  60% { height: 150px; opacity: 1; }
-  100% { height: 150px; opacity: 0; }
+  50% { height: 170px; opacity: 1; }
+  100% { height: 170px; opacity: 0; }
 }
 
 /* 怪物血条 */
@@ -241,19 +298,48 @@ body {
 /* Combo 显示 */
 .combo-pop {
   position: absolute;
-  top: 12px;
+  top: 10px;
   right: 14px;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 900;
-  color: var(--gold);
-  text-shadow: 0 0 12px rgba(251, 191, 36, 0.7);
   z-index: 6;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.8), 0 0 24px rgba(251, 191, 36, 0.4);
+  transition: color 0.3s, text-shadow 0.3s;
 }
-.combo-pop.bump { animation: combo-bump 0.3s ease; }
+.combo-pop.fire {
+  color: #f97316;
+  text-shadow: 0 0 16px #f97316, 0 0 32px #ef4444;
+}
+.combo-pop.inferno {
+  color: #ef4444;
+  text-shadow: 0 0 20px #ef4444, 0 0 40px #b91c1c, 0 2px 60px #f97316;
+  animation: combo-pulse 0.5s ease-in-out infinite;
+}
+.combo-pop.bump { animation: combo-bump 0.35s cubic-bezier(.36,.07,.19,.97); }
 @keyframes combo-bump {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.5) rotate(-6deg); }
-  100% { transform: scale(1); }
+  0% { transform: scale(1) rotate(0); }
+  35% { transform: scale(1.7) rotate(-8deg); }
+  65% { transform: scale(0.9) rotate(4deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes combo-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* 暴击特写效果 */
+.crit-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, rgba(251,191,36,0.4), transparent 60%);
+  animation: crit-glow 0.4s ease-out forwards;
+  pointer-events: none;
+  z-index: 4;
+}
+@keyframes crit-glow {
+  0% { opacity: 1; transform: scale(0.8); }
+  100% { opacity: 0; transform: scale(1.5); }
 }
 
 /* 答题选项（导弹） */
