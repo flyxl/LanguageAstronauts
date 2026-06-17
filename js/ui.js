@@ -99,7 +99,7 @@ const UI = {
         const pct = Math.round((prog.crystals / CRYSTAL_GOAL) * 100);
         body += `
           <div class="panel unit-card ${locked ? "unit-locked" : ""}" ${locked ? "" : `onclick="UI.startCampaign('${unit.id}')"`}>
-            ${prog.completed ? '<span class="badge-done">完美通关 ✓</span>' : ""}
+            ${prog.perfectClear ? '<span class="badge-done">⭐ 完美通关</span>' : prog.completed ? '<span class="badge-done" style="background:#38bdf8;color:#0c1a33">已解放 ✓</span>' : ""}
             <div class="flex items-center gap-3">
               <div class="text-3xl">${locked ? "🔒" : "🪐"}</div>
               <div class="flex-1">
@@ -606,10 +606,14 @@ const UI = {
       title = "突袭击退！";
       sub = "成功剿灭来袭的遗忘怪兽，记忆又巩固了一层！";
       icon = "✨";
-    } else if (b.win) {
-      title = "完美通关！";
-      sub = "水晶碎片已集齐，遗忘队列清零，星域恢复光明！";
+    } else if (b.win && b.perfectClear) {
+      title = "⭐ 完美通关！";
+      sub = "三形态 BOSS 全灭 + 水晶集齐 + 遗忘队列清零，星域恢复光明！";
       icon = "🏆";
+    } else if (b.win) {
+      title = "星域解放！";
+      sub = "三形态遗忘吞噬怪全部击败！新星域已解锁！继续复习可达成「完美通关」。";
+      icon = "🎉";
     } else if (hpZero) {
       title = "飞船进入充能模式";
       sub = "护盾耗尽，飞船自动休眠充能。先去现实世界休息一下吧！";

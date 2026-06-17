@@ -254,9 +254,12 @@ class Battle {
       return;
     }
     if (this.mode === "campaign") {
-      // 双轨制通关：水晶达上限 AND 复习队列清空（本单元）
-      const unitPending = Storage.get().reviewQueue.filter((e) => e.unitId === this.unit.id).length;
-      if (this.crystals >= CRYSTAL_GOAL && unitPending === 0 && this.formIndex >= MONSTER_FORMS.length - 1 && this.monster.hp <= 0) {
+      // 普通通关：击杀全部三形态 BOSS（给孩子即时成就感）
+      const allBossKilled = this.formIndex >= MONSTER_FORMS.length - 1 && this.monster.hp <= 0;
+      if (allBossKilled) {
+        // 双轨制完美通关（额外成就）：水晶达上限 AND 本单元复习队列清空
+        const unitPending = Storage.get().reviewQueue.filter((e) => e.unitId === this.unit.id).length;
+        this.perfectClear = this.crystals >= CRYSTAL_GOAL && unitPending === 0;
         this._end(true);
       }
     }
@@ -276,6 +279,7 @@ class Battle {
       prog.crystals = this.crystals;
       prog.bestCombo = Math.max(prog.bestCombo, this.bestCombo);
       if (win) prog.completed = true;
+      if (this.perfectClear) prog.perfectClear = true;
       Storage.save();
     }
   }
