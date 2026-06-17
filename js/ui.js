@@ -49,7 +49,7 @@ const UI = {
     return `
       <div class="flex items-center justify-between gap-2 mb-3">
         <div class="flex gap-2 flex-wrap">
-          <span class="chip">${SUITS[p.suit]?.emoji || "🚀"} ${p.name}</span>
+          <span class="chip">${getShipSVG(p.suit, 20)} ${p.name}</span>
           <span class="chip" style="color:var(--gold)">🏅 ${p.score}</span>
           <span class="chip" style="color:var(--crystal)">💎 ${p.crystals}</span>
         </div>
@@ -66,7 +66,7 @@ const UI = {
       <div class="screen">
         ${this._topBar()}
         <div class="panel text-center p-6 mt-6">
-          <div class="ship-hero">${SUITS[p.suit]?.emoji || "🚀"}</div>
+          <div class="ship-hero">${getShipSVG(p.suit, 100)}</div>
           <h1 class="text-3xl font-black title-glow mt-2">时空语航员</h1>
           <p class="text-sm opacity-70 mt-1">Language Astronauts · 沪教牛津深圳版</p>
           <p class="text-xs opacity-50 mt-3 leading-relaxed px-2">
@@ -218,7 +218,7 @@ const UI = {
       // 口语评测：麦克风发音评分
       const supported = "webkitSpeechRecognition" in window || "SpeechRecognition" in window;
       promptHtml = `
-        <div class="text-xs opacity-60 mb-1">👤 ${q.speaker || "NPC"} 说：</div>
+        <div class="flex items-center justify-center gap-2 mb-1">${getNpcSVG(q.speaker || "Peter", 28)}<span class="text-xs opacity-60">${q.speaker || "NPC"} 说：</span></div>
         <div class="text-lg font-bold">${q.prompt}</div>
         <div class="text-sm opacity-60 mt-1">${q.promptZh || ""}</div>
         <div class="mt-2 p-2 rounded-lg" style="background:rgba(56,189,248,0.12)">
@@ -235,7 +235,7 @@ const UI = {
     } else if (q.type === "dialogue") {
       // 角色扮演：选择最合适回应
       promptHtml = `
-        <div class="text-xs opacity-60 mb-1">👤 ${q.speaker || "NPC"} 说：</div>
+        <div class="flex items-center justify-center gap-2 mb-1">${getNpcSVG(q.speaker || "Peter", 28)}<span class="text-xs opacity-60">${q.speaker || "NPC"} 说：</span></div>
         <div class="text-xl font-bold">${q.prompt}</div>
         <div class="text-sm opacity-60 mt-1">${q.promptZh || ""}</div>
         <div class="text-xs opacity-50 mt-2">选择最合适的回应，发射激光炮 →</div>`;
@@ -261,8 +261,8 @@ const UI = {
         <!-- 战场 -->
         <div class="panel battle-stage" id="stage">
           <div class="combo-pop" id="combo" style="${st.combo >= 2 ? "" : "display:none"}">Combo x${st.combo}</div>
-          <div class="monster" id="monster" style="color:${st.monster.color}">${st.monster.emoji}</div>
-          <div class="player-ship" id="ship">${SUITS[Storage.get().player.suit]?.emoji || "🚀"}</div>
+          <div class="monster" id="monster">${getMonsterSVG(st.monster.id, 90)}</div>
+          <div class="player-ship" id="ship">${getShipSVG(Storage.get().player.suit, 56)}</div>
         </div>
 
         <!-- 怪兽信息 + 血条 -->
@@ -653,7 +653,7 @@ const UI = {
       const equipped = p.suit === id;
       return `
         <div class="panel p-4 text-center">
-          <div style="font-size:40px">${s.emoji}</div>
+          <div class="flex justify-center">${getShipSVG(id, 56)}</div>
           <div class="font-bold mt-1">${s.name}</div>
           <div class="text-xs opacity-60 mb-2">${owned ? "已拥有" : "🏅 " + s.price}</div>
           ${
