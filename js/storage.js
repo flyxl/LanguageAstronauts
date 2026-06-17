@@ -19,8 +19,10 @@ const DEFAULT_SAVE = {
   reviewQueue: [],
   // 单词掌握度记录： key -> { level, correct, wrong }
   mastery: {},
-  // 星际花园： [ { id, species, growth, plantedAt, lastWater } ]
+  // 星际花园（旧系统保留兼容）
   garden: [],
+  // 宠物系统： [ { species, level, exp, fedAt } ]
+  pets: [],
   settings: {
     sound: true,
   },

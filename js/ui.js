@@ -3,12 +3,60 @@
  * 屏幕：主菜单 / 关卡选择 / 战斗 / 结算 / 战功商店 / 星际花园
  */
 
-const SUITS = {
-  classic: { name: "经典宇航服", emoji: "🚀", price: 0, trail: "#38bdf8", ability: "" },
-  star: { name: "星空机甲款", emoji: "🛰️", price: 200, trail: "#a78bfa", ability: "暴击率+10%" },
-  school: { name: "开学限定款", emoji: "🛸", price: 350, trail: "#34d399", ability: "水晶获取+20%" },
-  dragon: { name: "巡航龙骑款", emoji: "🚁", price: 600, trail: "#ef4444", ability: "护盾回复+5/题" },
+// ======== 武器系统 ========
+const WEAPONS = {
+  pulse: {
+    name: "脉冲光炮", price: 0,
+    desc: "标准配备", ability: "",
+    color: "#38bdf8", beam: "linear-gradient(to top, #fff, #38bdf8)",
+    beamWidth: 8, critColor: "#67e8f9",
+    svg: `<svg viewBox="0 0 48 48" fill="none"><rect x="18" y="8" width="12" height="32" rx="4" fill="#38bdf8" stroke="#0891b2" stroke-width="1.5"/><circle cx="24" cy="16" r="5" fill="#0f172a" stroke="#67e8f9"/><rect x="20" y="34" width="8" height="6" rx="2" fill="#0891b2"/></svg>`,
+  },
+  plasma: {
+    name: "等离子双管炮", price: 200,
+    desc: "双倍射速，连击更猛", ability: "连击伤害+25%",
+    color: "#a78bfa", beam: "linear-gradient(to top, #fff, #a78bfa, #7c3aed)",
+    beamWidth: 6, critColor: "#c4b5fd",
+    svg: `<svg viewBox="0 0 48 48" fill="none"><rect x="14" y="10" width="8" height="30" rx="3" fill="#a78bfa" stroke="#7c3aed" stroke-width="1.5"/><rect x="26" y="10" width="8" height="30" rx="3" fill="#a78bfa" stroke="#7c3aed" stroke-width="1.5"/><rect x="18" y="26" width="12" height="8" rx="2" fill="#7c3aed"/><circle cx="18" cy="14" r="3" fill="#c4b5fd"/><circle cx="30" cy="14" r="3" fill="#c4b5fd"/></svg>`,
+  },
+  flame: {
+    name: "烈焰喷射器", price: 350,
+    desc: "范围伤害，灼烧持续", ability: "答对后额外灼烧 5 伤害",
+    color: "#f97316", beam: "linear-gradient(to top, #fbbf24, #f97316, #ef4444)",
+    beamWidth: 14, critColor: "#fbbf24",
+    svg: `<svg viewBox="0 0 48 48" fill="none"><path d="M24 6 L32 20 L30 36 L26 40 L22 40 L18 36 L16 20 Z" fill="#f97316" stroke="#ef4444" stroke-width="1.5"/><path d="M20 14 Q24 8 28 14" stroke="#fbbf24" stroke-width="2" fill="none"/><ellipse cx="24" cy="26" rx="4" ry="6" fill="#fbbf24" opacity="0.6"/><rect x="20" y="36" width="8" height="6" rx="2" fill="#b91c1c"/></svg>`,
+  },
+  frost: {
+    name: "冰霜水晶炮", price: 500,
+    desc: "冻结怪兽，水晶加成", ability: "水晶获取+30%",
+    color: "#67e8f9", beam: "linear-gradient(to top, #fff, #67e8f9, #06b6d4)",
+    beamWidth: 10, critColor: "#a5f3fc",
+    svg: `<svg viewBox="0 0 48 48" fill="none"><polygon points="24,4 30,16 40,20 32,28 34,40 24,34 14,40 16,28 8,20 18,16" fill="#67e8f9" stroke="#0891b2" stroke-width="1.5"/><circle cx="24" cy="22" r="6" fill="#0f172a" stroke="#a5f3fc"/><path d="M24 18 L24 26 M20 22 L28 22" stroke="#a5f3fc" stroke-width="1.5"/></svg>`,
+  },
+  thunder: {
+    name: "雷神电弧炮", price: 800,
+    desc: "闪电连锁，暴击毁灭", ability: "暴击率+15%，暴击伤害+50%",
+    color: "#fbbf24", beam: "linear-gradient(to top, #fff, #fbbf24, #f59e0b)",
+    beamWidth: 12, critColor: "#fde68a",
+    svg: `<svg viewBox="0 0 48 48" fill="none"><path d="M28 4 L20 20 L26 20 L18 44 L36 22 L28 22 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="1.5"/><circle cx="24" cy="24" r="10" fill="none" stroke="#fde68a" stroke-width="1" stroke-dasharray="3 3"/></svg>`,
+  },
 };
+
+// 宠物系统
+const PETS = [
+  { id: "star_fox", name: "星尘狐", emoji: "🦊", price: 80, ability: "答对护盾+3", maxLevel: 5, color: "#f97316",
+    stages: ["🥚", "🦊", "🦊✨", "🔥🦊", "⭐🦊"],
+    svg: `<svg viewBox="0 0 48 48" fill="none"><ellipse cx="24" cy="28" rx="14" ry="12" fill="#fdba74" stroke="#f97316" stroke-width="1.5"/><path d="M14 18 L18 10 L22 18" fill="#fdba74" stroke="#f97316"/><path d="M26 18 L30 10 L34 18" fill="#fdba74" stroke="#f97316"/><circle cx="20" cy="26" r="3" fill="#1e293b"/><circle cx="28" cy="26" r="3" fill="#1e293b"/><circle cx="21" cy="25" r="1" fill="#fff"/><circle cx="29" cy="25" r="1" fill="#fff"/><ellipse cx="24" cy="32" rx="2" ry="1.5" fill="#1e293b"/><path d="M12 34 Q8 38 10 40" stroke="#f97316" stroke-width="2" fill="none"/></svg>` },
+  { id: "nebula_cat", name: "星云猫", emoji: "🐱", price: 120, ability: "连击门槛-1（2连开始算暴击）", maxLevel: 5, color: "#a78bfa",
+    stages: ["🥚", "🐱", "🐱✨", "💜🐱", "👑🐱"],
+    svg: `<svg viewBox="0 0 48 48" fill="none"><ellipse cx="24" cy="28" rx="13" ry="12" fill="#c4b5fd" stroke="#7c3aed" stroke-width="1.5"/><path d="M12 18 L16 8 L20 18" fill="#c4b5fd" stroke="#7c3aed"/><path d="M28 18 L32 8 L36 18" fill="#c4b5fd" stroke="#7c3aed"/><circle cx="19" cy="26" r="3.5" fill="#1e1b4b"/><circle cx="29" cy="26" r="3.5" fill="#1e1b4b"/><circle cx="20" cy="25" r="1.5" fill="#a78bfa"/><circle cx="30" cy="25" r="1.5" fill="#a78bfa"/><path d="M22 33 Q24 35 26 33" stroke="#7c3aed" stroke-width="1.5" fill="none"/><path d="M12 28 L6 27 M12 30 L6 31 M36 28 L42 27 M36 30 L42 31" stroke="#a78bfa" stroke-width="1"/></svg>` },
+  { id: "crystal_dragon", name: "水晶龙", emoji: "🐉", price: 150, ability: "每3回合自动恢复15护盾", maxLevel: 5, color: "#67e8f9",
+    stages: ["🥚", "🐉", "🐉✨", "💎🐉", "🌟🐉"],
+    svg: `<svg viewBox="0 0 48 48" fill="none"><ellipse cx="24" cy="26" rx="12" ry="14" fill="#a5f3fc" stroke="#0891b2" stroke-width="1.5"/><path d="M16 16 L12 8 L18 14" fill="#67e8f9" stroke="#0891b2"/><path d="M32 16 L36 8 L30 14" fill="#67e8f9" stroke="#0891b2"/><circle cx="20" cy="24" r="3" fill="#083344"/><circle cx="28" cy="24" r="3" fill="#083344"/><circle cx="21" cy="23" r="1.2" fill="#67e8f9"/><circle cx="29" cy="23" r="1.2" fill="#67e8f9"/><path d="M20 32 Q24 36 28 32" stroke="#0891b2" stroke-width="1.5" fill="none"/><path d="M14 34 Q10 38 12 42" stroke="#0891b2" stroke-width="2" fill="none"/><path d="M34 34 Q38 38 36 42" stroke="#0891b2" stroke-width="2" fill="none"/></svg>` },
+];
+
+// 向后兼容旧存档（suit字段 → weapon字段）
+const SUITS = Object.fromEntries(Object.entries(WEAPONS).map(([k,v])=>[k, {...v, emoji: "🔫"}]));
 
 // 段位/军衔系统（累计战功自动晋升）
 const RANKS = [
@@ -47,6 +95,7 @@ const ACHIEVEMENTS = [
   { id: "score5k", name: "战功赫赫", desc: "累计战功突破 5000", icon: "🎖️", check: (s) => s.player.score >= 5000 },
 ];
 
+// 保留旧数据结构兼容
 const PLANT_SEEDS = {
   glowflower: { name: "辉光花", stages: ["🌱", "🌿", "🌷", "🌸"], price: 80 },
   startree: { name: "星辰树", stages: ["🌱", "🌿", "🪴", "🌳"], price: 120 },
@@ -87,7 +136,7 @@ const UI = {
     return `
       <div class="flex items-center justify-between gap-2 mb-3">
         <div class="flex gap-2 flex-wrap">
-          <span class="chip">${getShipSVG(p.suit, 20)} <span style="color:${rank.color}">${rank.icon} ${rank.name}</span></span>
+          <span class="chip"><span style="display:inline-block;width:18px;height:18px;vertical-align:middle">${(WEAPONS[p.suit]||WEAPONS.pulse).svg}</span> <span style="color:${rank.color}">${rank.icon} ${rank.name}</span></span>
           <span class="chip" style="color:var(--gold)">🏅 ${p.score}</span>
           <span class="chip" style="color:var(--crystal)">💎 ${p.crystals}</span>
         </div>
@@ -104,7 +153,7 @@ const UI = {
       <div class="screen">
         ${this._topBar()}
         <div class="panel text-center p-6 mt-6">
-          <div class="ship-hero">${getShipSVG(p.suit, 100)}</div>
+          <div class="ship-hero" style="position:relative">${getShipSVG("classic", 100)}<div style="position:absolute;bottom:0;right:-10px;width:36px;height:36px">${(WEAPONS[p.suit]||WEAPONS.pulse).svg}</div></div>
           <h1 class="text-3xl font-black title-glow mt-2">时空语航员</h1>
           <p class="text-sm opacity-70 mt-1">Language Astronauts · 沪教牛津深圳版</p>
           <p class="text-xs opacity-50 mt-3 leading-relaxed px-2">
@@ -114,8 +163,8 @@ const UI = {
             <button class="btn" onclick="UI.showLevelSelect()">🌌 星图远征</button>
             ${due > 0 ? `<button class="btn gold animate__animated animate__pulse animate__infinite" onclick="UI.startReview()">🚨 红色警报突袭 (${due})</button>` : ""}
             <div class="grid grid-cols-2 gap-3">
-              <button class="btn secondary" onclick="UI.showStore()">🛍️ 战功商店</button>
-              <button class="btn secondary" onclick="UI.showGarden()">🪴 星际花园</button>
+              <button class="btn secondary" onclick="UI.showStore()">⚔️ 武器库</button>
+              <button class="btn secondary" onclick="UI.showPets()">🐾 宠物舱</button>
             </div>
             <button class="btn secondary" onclick="UI.showStats()">📊 学情数据</button>
           </div>
@@ -300,7 +349,10 @@ const UI = {
         <div class="panel battle-stage" id="stage">
           <div class="combo-pop" id="combo" style="${st.combo >= 2 ? "" : "display:none"}">Combo x${st.combo}</div>
           <div class="monster" id="monster">${getMonsterSVG(st.monster.id, 90)}</div>
-          <div class="player-ship" id="ship">${getShipSVG(Storage.get().player.suit, 56)}</div>
+          <div class="player-ship" id="ship">
+            ${getShipSVG("classic", 56)}
+            <div style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:28px;height:28px">${(WEAPONS[Storage.get().player.suit] || WEAPONS.pulse).svg}</div>
+          </div>
         </div>
 
         <!-- 怪兽信息 + 血条 -->
@@ -562,12 +614,17 @@ const UI = {
   _fireLaser(crit) {
     const stage = document.getElementById("stage");
     if (!stage) return;
+    const w = WEAPONS[Storage.get().player.suit] || WEAPONS.pulse;
     const beam = document.createElement("div");
     beam.className = "laser-beam" + (crit ? " crit" : "");
+    beam.style.background = crit ? `linear-gradient(to top, #fff, ${w.critColor}, ${w.color})` : w.beam;
+    beam.style.width = (crit ? w.beamWidth + 6 : w.beamWidth) + "px";
+    beam.style.boxShadow = `0 0 24px ${w.color}, 0 0 48px ${w.color}44`;
     stage.appendChild(beam);
     if (crit) {
       const flash = document.createElement("div");
       flash.className = "crit-flash";
+      flash.style.background = `radial-gradient(circle at 50% 30%, ${w.critColor}66, transparent 60%)`;
       stage.appendChild(flash);
       setTimeout(() => flash.remove(), 450);
     }
@@ -719,60 +776,68 @@ const UI = {
       </div>`);
   },
 
-  // ============ 战功商店 ============
+  // ============ 武器库 ============
   showStore() {
     const p = Storage.get().player;
-    const suitCards = Object.entries(SUITS).map(([id, s]) => {
+    const weaponCards = Object.entries(WEAPONS).map(([id, w]) => {
       const owned = p.ownedSuits.includes(id);
       const equipped = p.suit === id;
       return `
-        <div class="panel p-4 text-center">
-          <div class="flex justify-center">${getShipSVG(id, 56)}</div>
-          <div class="font-bold mt-1">${s.name}</div>
-          ${s.ability ? `<div class="text-xs mt-1" style="color:var(--gold)">${s.ability}</div>` : ""}
-          <div class="text-xs opacity-60 mb-2">${owned ? "已拥有" : "🏅 " + s.price}</div>
-          ${
-            equipped
-              ? `<button class="btn gold" style="width:100%" disabled>使用中</button>`
-              : owned
-              ? `<button class="btn" style="width:100%" onclick="UI.equipSuit('${id}')">装备</button>`
-              : `<button class="btn secondary" style="width:100%" ${p.score < s.price ? "disabled" : ""} onclick="UI.buySuit('${id}')">兑换</button>`
+        <div class="panel p-4 text-center" style="border-color:${equipped ? w.color : ""}">
+          <div class="flex justify-center"><div style="width:48px;height:48px">${w.svg}</div></div>
+          <div class="font-bold mt-1" style="color:${w.color}">${w.name}</div>
+          <div class="text-xs opacity-60">${w.desc}</div>
+          ${w.ability ? `<div class="text-xs mt-1" style="color:var(--gold)">⚡ ${w.ability}</div>` : ""}
+          <div class="text-xs opacity-60 mb-2">${owned ? "已拥有" : "🏅 " + w.price}</div>
+          ${equipped
+            ? `<button class="btn gold" style="width:100%" disabled>装备中</button>`
+            : owned
+            ? `<button class="btn" style="width:100%" onclick="UI.equipSuit('${id}')">装备</button>`
+            : `<button class="btn secondary" style="width:100%" ${p.score < w.price ? "disabled" : ""} onclick="UI.buySuit('${id}')">兑换</button>`
           }
         </div>`;
     }).join("");
 
-    const seedCards = Object.entries(PLANT_SEEDS).map(([id, s]) => `
-      <div class="panel p-4 text-center">
-        <div style="font-size:40px">${s.stages[3]}</div>
-        <div class="font-bold mt-1">${s.name}种子</div>
-        <div class="text-xs opacity-60 mb-2">💎 ${s.price}</div>
-        <button class="btn secondary" style="width:100%" ${p.crystals < s.price ? "disabled" : ""} onclick="UI.buySeed('${id}')">购买种子</button>
-      </div>`).join("");
+    const petCards = PETS.map((pet) => {
+      const owned = (Storage.get().pets || []).find(pp => pp.species === pet.id);
+      return `
+        <div class="panel p-4 text-center">
+          <div class="flex justify-center"><div style="width:52px;height:52px">${pet.svg}</div></div>
+          <div class="font-bold mt-1" style="color:${pet.color}">${pet.name}</div>
+          <div class="text-xs opacity-60">${pet.ability}</div>
+          <div class="text-xs opacity-60 mb-2">${owned ? "Lv." + owned.level : "💎 " + pet.price}</div>
+          ${owned
+            ? `<button class="btn" style="width:100%" onclick="UI.showPets()">查看</button>`
+            : `<button class="btn secondary" style="width:100%" ${p.crystals < pet.price ? "disabled" : ""} onclick="UI.buyPet('${pet.id}')">领养</button>`
+          }
+        </div>`;
+    }).join("");
 
     this._render(`
       <div class="screen">
         ${this._topBar()}
         <div class="flex items-center justify-between">
-          <h1 class="text-2xl font-black title-glow">🛍️ 战功商店</h1>
+          <h1 class="text-2xl font-black title-glow">⚔️ 武器库 & 宠物</h1>
           <button class="btn secondary" onclick="UI.showMenu()">返回</button>
         </div>
-        <h2 class="text-lg font-bold mt-4 mb-2">宇航服皮肤（用战功🏅兑换）</h2>
-        <div class="grid grid-cols-2 gap-3">${suitCards}</div>
-        <h2 class="text-lg font-bold mt-5 mb-2">花园种子（用水晶💎购买）</h2>
-        <div class="grid grid-cols-2 gap-3">${seedCards}</div>
+        <h2 class="text-lg font-bold mt-4 mb-2">🔫 武器系统（用战功🏅兑换）</h2>
+        <div class="grid grid-cols-2 gap-3">${weaponCards}</div>
+        <h2 class="text-lg font-bold mt-5 mb-2">🐾 太空宠物（用水晶💎领养）</h2>
+        <div class="grid grid-cols-2 gap-3">${petCards}</div>
         <div class="h-6"></div>
       </div>`);
   },
 
   buySuit(id) {
     const p = Storage.get().player;
-    const s = SUITS[id];
-    if (p.score < s.price) return;
-    p.score -= s.price;
+    const w = WEAPONS[id];
+    if (p.score < w.price) return;
+    p.score -= w.price;
     p.ownedSuits.push(id);
     p.suit = id;
     Storage.save();
     Sound.win();
+    FX.explode(window.innerWidth / 2, window.innerHeight / 2, 20, [w.color, "#fbbf24", "#fff"]);
     this.showStore();
   },
 
@@ -782,39 +847,44 @@ const UI = {
     this.showStore();
   },
 
-  buySeed(id) {
+  buyPet(speciesId) {
     const p = Storage.get().player;
-    const s = PLANT_SEEDS[id];
-    if (p.crystals < s.price) return;
-    p.crystals -= s.price;
-    Storage.get().garden.push({
-      id: "plant_" + Date.now(),
-      species: id,
-      growth: 0,
-      plantedAt: Date.now(),
-      lastWater: 0,
-    });
+    const pet = PETS.find(pp => pp.id === speciesId);
+    if (p.crystals < pet.price) return;
+    p.crystals -= pet.price;
+    if (!Storage.get().pets) Storage.get().pets = [];
+    Storage.get().pets.push({ species: speciesId, level: 1, exp: 0, fedAt: Date.now() });
     Storage.save();
-    Sound.correct();
-    this.showGarden();
+    Sound.win();
+    FX.crystalBurst(window.innerWidth / 2, window.innerHeight / 2, 12);
+    this.showPets();
   },
 
-  // ============ 星际花园 ============
-  showGarden() {
-    const garden = Storage.get().garden;
-    let pots = "";
-    if (!garden.length) {
-      pots = `<div class="panel p-6 text-center opacity-70 col-span-3">花园空空如也。<br/>去战功商店用💎购买种子吧！</div>`;
+  // ============ 宠物舱 ============
+  showPets() {
+    const pets = Storage.get().pets || [];
+    const p = Storage.get().player;
+    let content;
+    if (!pets.length) {
+      content = `<div class="panel p-6 text-center opacity-70">还没有宠物。<br/>去武器库用💎领养一只吧！</div>`;
     } else {
-      pots = garden.map((plant) => {
-        const seed = PLANT_SEEDS[plant.species];
-        const stage = seed.stages[Math.min(plant.growth, seed.stages.length - 1)];
-        const maxed = plant.growth >= seed.stages.length - 1;
+      content = pets.map((pp) => {
+        const def = PETS.find(d => d.id === pp.species);
+        const maxed = pp.level >= def.maxLevel;
+        const feedCost = pp.level * 8;
+        const expNeeded = pp.level * 20;
+        const pct = Math.min(100, Math.round((pp.exp / expNeeded) * 100));
         return `
-          <div class="plant-pot" id="pot-${plant.id}">
-            <div class="plant-emoji">${stage}</div>
-            <div class="text-xs opacity-70">${seed.name}</div>
-            <button class="chip" style="font-size:12px;padding:3px 8px" ${maxed ? "disabled" : ""} onclick="UI.water('${plant.id}')">${maxed ? "🌟 已养成" : "💧 浇水"}</button>
+          <div class="panel p-4 text-center">
+            <div class="flex justify-center"><div style="width:64px;height:64px">${def.svg}</div></div>
+            <div class="font-bold mt-1" style="color:${def.color}">${def.name}</div>
+            <div class="text-xs" style="color:var(--gold)">Lv.${pp.level}${maxed ? " MAX" : ""}</div>
+            <div class="text-xs opacity-60 mt-1">⚡ ${def.ability}</div>
+            <div class="hpbar mt-2"><i style="width:${pct}%;background:linear-gradient(90deg,${def.color},var(--gold))"></i></div>
+            <div class="text-xs opacity-50 mt-1">EXP ${pp.exp}/${expNeeded}</div>
+            ${maxed ? `<div class="text-xs mt-2" style="color:var(--gold)">🌟 满级！能力全开</div>` :
+              `<button class="btn" style="width:100%;margin-top:8px" ${p.crystals < feedCost ? "disabled" : ""} onclick="UI.feedPet('${pp.species}')">🍖 喂养 (${feedCost}💎)</button>`
+            }
           </div>`;
       }).join("");
     }
@@ -823,34 +893,37 @@ const UI = {
       <div class="screen">
         ${this._topBar()}
         <div class="flex items-center justify-between">
-          <h1 class="text-2xl font-black title-glow">🪴 星际花园</h1>
+          <h1 class="text-2xl font-black title-glow">🐾 宠物舱</h1>
           <button class="btn secondary" onclick="UI.showMenu()">返回</button>
         </div>
-        <p class="text-xs opacity-60 mt-2">每浇一次水消耗 5 💎，培育专属外星植物。</p>
-        <div class="garden-grid mt-4">${pots}</div>
+        <p class="text-xs opacity-60 mt-2">喂养宠物提升等级，解锁更强的战斗加成！</p>
+        <div class="grid grid-cols-2 gap-3 mt-4">${content}</div>
         <div class="h-6"></div>
       </div>`);
   },
 
-  water(plantId) {
+  feedPet(speciesId) {
     const p = Storage.get().player;
-    if (p.crystals < 5) {
-      alert("水晶不足，去通关获取更多💎吧！");
-      return;
+    const pets = Storage.get().pets || [];
+    const pp = pets.find(x => x.species === speciesId);
+    const def = PETS.find(d => d.id === speciesId);
+    if (!pp || pp.level >= def.maxLevel) return;
+    const feedCost = pp.level * 8;
+    if (p.crystals < feedCost) return;
+    p.crystals -= feedCost;
+    pp.exp += 10 + Math.floor(Math.random() * 6);
+    const expNeeded = pp.level * 20;
+    if (pp.exp >= expNeeded) {
+      pp.level += 1;
+      pp.exp = 0;
+      Sound.win();
+      FX.explode(window.innerWidth / 2, window.innerHeight / 3, 24, [def.color, "#fbbf24", "#fff"]);
+    } else {
+      Sound.correct();
     }
-    const plant = Storage.get().garden.find((x) => x.id === plantId);
-    const seed = PLANT_SEEDS[plant.species];
-    if (plant.growth >= seed.stages.length - 1) return;
-    p.crystals -= 5;
-    plant.growth += 1;
-    plant.lastWater = Date.now();
+    pp.fedAt = Date.now();
     Storage.save();
-    Sound.correct();
-    const pot = document.getElementById("pot-" + plantId);
-    if (pot) {
-      pot.classList.add("watered");
-    }
-    setTimeout(() => this.showGarden(), 300);
+    this.showPets();
   },
 
   // ============ 学情数据（家长端预览） ============
