@@ -310,7 +310,12 @@ const UI = {
   init() {
     this.el = document.getElementById("app");
     this._buildStarfield();
-    this.showMenu();
+    const save = Storage.get();
+    if (!save.player.grade) {
+      this.showOnboarding();
+    } else {
+      this.showMenu();
+    }
   },
 
   _buildStarfield() {
@@ -328,6 +333,34 @@ const UI = {
 
   _render(html) {
     this.el.innerHTML = html;
+  },
+
+  // ============ 首次使用引导 ============
+  showOnboarding() {
+    const grades = COURSE_DATA.map(g => g.id);
+    const gradeLabels = { "1A":"一年级上","1B":"一年级下","2A":"二年级上","2B":"二年级下","3A":"三年级上","3B":"三年级下","4A":"四年级上","4B":"四年级下","5A":"五年级上","5B":"五年级下","6A":"六年级上","6B":"六年级下" };
+    const btns = grades.map(g =>
+      `<button class="panel p-3 text-center" style="cursor:pointer" onclick="UI.selectGrade('${g}')">
+        <div class="font-bold">${gradeLabels[g]}</div>
+        <div class="text-xs opacity-60">${g}</div>
+      </button>`
+    ).join("");
+    this._render(`
+      <div class="screen">
+        <div class="text-center mt-8 mb-6">
+          <h1 class="text-2xl font-black title-glow">🚀 欢迎，小航员！</h1>
+          <p class="text-sm opacity-70 mt-2">选择你当前的年级和学期</p>
+          <p class="text-xs opacity-50 mt-1">之后可以随时更改</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">${btns}</div>
+      </div>`);
+  },
+
+  selectGrade(gradeId) {
+    const save = Storage.get();
+    save.player.grade = gradeId;
+    Storage.save();
+    this.showMenu();
   },
 
   // ============ 顶部资源条 ============
@@ -351,6 +384,8 @@ const UI = {
     Sound._ensure();
     const due = ReviewQueue.getDue().length;
     const p = Storage.get().player;
+    const gradeLabels = { "1A":"一年级上","1B":"一年级下","2A":"二年级上","2B":"二年级下","3A":"三年级上","3B":"三年级下","4A":"四年级上","4B":"四年级下","5A":"五年级上","5B":"五年级下","6A":"六年级上","6B":"六年级下" };
+    const gradeLabel = gradeLabels[p.grade] || p.grade || "";
     this._render(`
       <div class="screen">
         ${this._topBar()}
@@ -358,10 +393,8 @@ const UI = {
           <div class="ship-hero" style="position:relative">${getShipSVG("classic", 100)}<div style="position:absolute;bottom:0;right:-10px;width:36px;height:36px">${(WEAPONS[p.suit]||WEAPONS.pulse).svg}</div></div>
           <h1 class="text-3xl font-black title-glow mt-2">时空语航员</h1>
           <p class="text-sm opacity-70 mt-1">Language Astronauts · 沪教牛津深圳版</p>
-          <p class="text-xs opacity-50 mt-3 leading-relaxed px-2">
-            语航星系的「核心语言水晶」碎裂了，<br/>驾驶能核飞船，用语言密码击败遗忘吞噬怪，修复宇宙！
-          </p>
-          <div class="grid gap-3 mt-6">
+          ${gradeLabel ? `<p class="text-xs mt-2"><span class="chip" style="cursor:pointer" onclick="UI.showOnboarding()">📍 ${gradeLabel} <span class="opacity-60">切换</span></span></p>` : ""}
+          <div class="grid gap-3 mt-5">
             <button class="btn" onclick="UI.showLevelSelect()">🌌 星图远征</button>
             ${due > 0 ? `<button class="btn gold animate__animated animate__pulse animate__infinite" onclick="UI.startReview()">🚨 红色警报突袭 (${due})</button>` : ""}
             <div class="grid grid-cols-2 gap-3">
@@ -377,30 +410,36 @@ const UI = {
 
   // ============ 关卡选择（星图） ============
   showLevelSelect() {
+    const currentGrade = Storage.get().player.grade || "3A";
     let body = "";
     COURSE_DATA.forEach((grade) => {
-      body += `<h2 class="text-lg font-bold mt-4 mb-2 opacity-90">${grade.name}</h2><div class="grid gap-3">`;
-      grade.units.forEach((unit, i) => {
+      const isCurrentGrade = grade.id === currentGrade;
+      const expanded = isCurrentGrade;
+      body += `
+        <div class="mt-3">
+          <div class="panel p-2 flex items-center justify-between" style="cursor:pointer;${isCurrentGrade ? 'border-color:var(--accent)' : ''}" onclick="UI._toggleGrade('${grade.id}')">
+            <h2 class="font-bold ${isCurrentGrade ? '' : 'opacity-70'}">${isCurrentGrade ? '📍 ' : ''}${grade.name}</h2>
+            <span class="text-xs opacity-60" id="grade-arrow-${grade.id}">${expanded ? '▼' : '▶'}</span>
+          </div>
+          <div class="grid gap-2 mt-2" id="grade-body-${grade.id}" style="${expanded ? '' : 'display:none'}">`;
+      grade.units.forEach((unit) => {
         const prog = Storage.getUnitProgress(unit.id);
-        // 解锁规则：每个年级第一关默认解锁，其余需前一关完成
-        const prevUnit = grade.units[i - 1];
-        const locked = i > 0 && prevUnit && !Storage.getUnitProgress(prevUnit.id).completed;
         const pct = Math.round((prog.crystals / CRYSTAL_GOAL) * 100);
         body += `
-          <div class="panel unit-card ${locked ? "unit-locked" : ""}" ${locked ? "" : `onclick="UI.startCampaign('${unit.id}')"`}>
-            ${prog.perfectClear ? '<span class="badge-done">⭐ 完美通关</span>' : prog.completed ? '<span class="badge-done" style="background:#38bdf8;color:#0c1a33">已解放 ✓</span>' : ""}
-            <div class="flex items-center gap-3">
-              <div class="text-3xl">${locked ? "🔒" : "🪐"}</div>
-              <div class="flex-1">
-                <div class="font-bold">${unit.name}</div>
-                <div class="text-xs opacity-60">${unit.theme} · 词汇 ${unit.vocab.length} · 会话 ${unit.dialogue.length}</div>
-                <div class="crystal-bar"><i style="width:${pct}%"></i></div>
+            <div class="panel unit-card" onclick="UI.startCampaign('${unit.id}')" style="cursor:pointer">
+              ${prog.perfectClear ? '<span class="badge-done">⭐ 完美通关</span>' : prog.completed ? '<span class="badge-done" style="background:#38bdf8;color:#0c1a33">已解放 ✓</span>' : ""}
+              <div class="flex items-center gap-3">
+                <div class="text-2xl">🪐</div>
+                <div class="flex-1">
+                  <div class="font-bold text-sm">${unit.name}</div>
+                  <div class="text-xs opacity-60">${unit.theme} · 词汇 ${unit.vocab.length} · 会话 ${unit.dialogue.length}</div>
+                  <div class="crystal-bar"><i style="width:${pct}%"></i></div>
+                </div>
+                <div class="text-xs opacity-70" style="color:var(--crystal)">💎${prog.crystals}/${CRYSTAL_GOAL}</div>
               </div>
-              <div class="text-xs opacity-70" style="color:var(--crystal)">💎${prog.crystals}/${CRYSTAL_GOAL}</div>
-            </div>
-          </div>`;
+            </div>`;
       });
-      body += `</div>`;
+      body += `</div></div>`;
     });
     this._render(`
       <div class="screen">
@@ -412,6 +451,15 @@ const UI = {
         <div class="scrollable">${body}</div>
         <div class="h-6"></div>
       </div>`);
+  },
+
+  _toggleGrade(gradeId) {
+    const body = document.getElementById("grade-body-" + gradeId);
+    const arrow = document.getElementById("grade-arrow-" + gradeId);
+    if (!body) return;
+    const visible = body.style.display !== "none";
+    body.style.display = visible ? "none" : "";
+    if (arrow) arrow.textContent = visible ? "▶" : "▼";
   },
 
   // ============ 启动战斗 ============

@@ -8,10 +8,11 @@ const STORAGE_KEY = "language_astronauts_save_v1";
 const DEFAULT_SAVE = {
   player: {
     name: "小航员",
-    score: 0, // 战功积分
-    crystals: 0, // 累计水晶碎片（用于商店）
-    suit: "classic", // 当前宇航服皮肤
+    score: 0,
+    crystals: 0,
+    suit: "classic",
     ownedSuits: ["classic"],
+    grade: null, // 用户当前年级（如 "4A"），null 表示未设置
   },
   // 每个关卡进度： unitId -> { crystals, completed, bestCombo }
   progress: {},
