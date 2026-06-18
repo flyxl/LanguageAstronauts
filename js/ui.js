@@ -514,10 +514,10 @@ const UI = {
           <div class="text-xs opacity-60">请大声读出回应：</div>
           <div class="text-xl font-black" style="color:var(--accent)">${q.correct}</div>
         </div>
-        <div id="speak-status" class="text-sm mt-2 opacity-70">${supported ? "点击麦克风，发音越标准激光炮越强！" : "当前浏览器不支持语音识别，可点击「跳过朗读」直接发射。"}</div>`;
+        <div id="speak-status" class="text-sm mt-2 opacity-70">${supported ? "长按麦克风录音，松开结束" : "当前浏览器不支持语音识别，可点击「跳过朗读」直接发射。"}</div>`;
       answersHtml = supported
         ? `<div class="grid grid-cols-2 gap-3">
-             <button class="btn gold" id="mic-btn" onclick="UI.startSpeak()">🎤 开始朗读</button>
+             <button class="btn gold" id="mic-btn" onmousedown="UI.startSpeak()" onmouseup="UI.stopSpeak()" ontouchstart="UI.startSpeak(event)" ontouchend="UI.stopSpeak(event)" ontouchcancel="UI.stopSpeak(event)">🎤 按住说话</button>
              <button class="btn secondary" onclick="UI.skipSpeak()">跳过朗读</button>
            </div>`
         : `<button class="btn" onclick="UI.skipSpeak()">🚀 发射激光炮</button>`;
@@ -668,14 +668,14 @@ const UI = {
     this._afterAnswer(res);
   },
 
-  // ---- 口语评测（麦克风发音评分） ----
-  startSpeak() {
+  // ---- 口语评测（长按录音，松开结束，类似微信语音） ----
+  startSpeak(e) {
+    if (e && e.preventDefault) e.preventDefault();
     if (this._locked) return;
+    if (this._speakRec) return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      this.skipSpeak();
-      return;
-    }
+    if (!SR) { this.skipSpeak(); return; }
+
     const status = document.getElementById("speak-status");
     const micBtn = document.getElementById("mic-btn");
     const target = this.battle.current.correct;
@@ -684,30 +684,42 @@ const UI = {
     rec.lang = "en-US";
     rec.interimResults = false;
     rec.maxAlternatives = 3;
+    rec.continuous = true;
+    this._speakRec = rec;
+    this._speakDone = false;
 
-    if (status) status.innerHTML = '<span style="color:var(--accent)">🎙️ 聆听中…请朗读</span>';
-    if (micBtn) micBtn.textContent = "🎙️ 录音中…";
+    if (status) status.innerHTML = '<span style="color:#4ade80">🎙️ 录音中…松开结束</span>';
+    if (micBtn) { micBtn.textContent = "🎙️ 录音中…"; micBtn.style.transform = "scale(1.1)"; }
 
-    let done = false;
     rec.onresult = (e) => {
-      done = true;
+      this._speakDone = true;
       const alts = [];
       for (let i = 0; i < e.results[0].length; i++) alts.push(e.results[0][i].transcript);
       const quality = this._scorePronunciation(target, alts);
+      this._speakRec = null;
       this._finishSpeak(quality, alts[0]);
     };
     rec.onerror = () => {
-      if (done) return;
-      if (status) status.innerHTML = '<span style="color:var(--danger)">没听清，可重试或跳过朗读。</span>';
-      if (micBtn) micBtn.textContent = "🎤 重新朗读";
+      if (this._speakDone) return;
+      this._speakRec = null;
+      if (status) status.innerHTML = '<span style="color:var(--danger)">没听清，再长按一次试试</span>';
+      if (micBtn) { micBtn.textContent = "🎤 按住说话"; micBtn.style.transform = ""; }
     };
     rec.onend = () => {
-      if (!done && micBtn) micBtn.textContent = "🎤 重新朗读";
+      if (!this._speakDone) {
+        this._speakRec = null;
+        if (micBtn) { micBtn.textContent = "🎤 按住说话"; micBtn.style.transform = ""; }
+      }
     };
-    try {
-      rec.start();
-    } catch (err) {
-      this.skipSpeak();
+    try { rec.start(); } catch (err) { this._speakRec = null; this.skipSpeak(); }
+  },
+
+  stopSpeak(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const micBtn = document.getElementById("mic-btn");
+    if (micBtn) micBtn.style.transform = "";
+    if (this._speakRec) {
+      try { this._speakRec.stop(); } catch (err) { /* ignore */ }
     }
   },
 

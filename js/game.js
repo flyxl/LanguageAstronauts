@@ -171,7 +171,9 @@ class Battle {
    */
   answer(choice, opts = {}) {
     const q = this.current;
-    const correct = choice === q.correct;
+    const correct = q.style === "spell"
+      ? choice.toLowerCase() === q.correct.toLowerCase()
+      : choice === q.correct;
     // 口语评测：quality 为发音标准度 0~1，决定激光炮伤害值（GDD 设定）
     const quality = typeof opts.quality === "number" ? Math.max(0, Math.min(1, opts.quality)) : 1;
     const result = {
