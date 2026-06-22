@@ -459,3 +459,84 @@ body {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.4); opacity: 0.6; }
 }
+
+/* ======== 录音弹层（微信风格） ======== */
+.rec-overlay-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  animation: fade-in 0.2s ease;
+}
+.rec-overlay-card {
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 16px;
+  padding: 32px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.rec-wave-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+}
+.rec-wave-bar {
+  width: 4px;
+  height: 12px;
+  background: #4ade80;
+  border-radius: 2px;
+  animation: rec-wave 0.6s ease-in-out infinite alternate;
+}
+.rec-wave-bar:nth-child(1) { animation-delay: 0s; }
+.rec-wave-bar:nth-child(2) { animation-delay: 0.08s; }
+.rec-wave-bar:nth-child(3) { animation-delay: 0.16s; }
+.rec-wave-bar:nth-child(4) { animation-delay: 0.24s; }
+.rec-wave-bar:nth-child(5) { animation-delay: 0.32s; height: 40px; }
+.rec-wave-bar:nth-child(6) { animation-delay: 0.24s; }
+.rec-wave-bar:nth-child(7) { animation-delay: 0.16s; }
+.rec-wave-bar:nth-child(8) { animation-delay: 0.08s; }
+.rec-wave-bar:nth-child(9) { animation-delay: 0s; }
+@keyframes rec-wave {
+  from { height: 8px; }
+  to { height: 40px; }
+}
+.rec-timer {
+  font-size: 32px;
+  font-weight: 900;
+  color: #4ade80;
+}
+.rec-hint {
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+}
+.rec-cancel-hint {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+}
+.rec-stop-btn {
+  width: 200px;
+  padding: 16px 0;
+  border-radius: 40px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.rec-stop-btn:active {
+  transform: scale(0.95);
+  background: #dc2626;
+}

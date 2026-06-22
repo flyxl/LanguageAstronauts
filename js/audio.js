@@ -11,10 +11,12 @@ const Sound = {
     if (!this.ctx) {
       try {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this._warmupTTS();
       } catch (e) {
         this.ctx = null;
       }
     }
+    if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
     return this.ctx;
   },
 
@@ -83,14 +85,34 @@ const Sound = {
     if (!this._enabled()) return;
     if (!("speechSynthesis" in window)) return;
     try {
-      window.speechSynthesis.cancel();
+      const synth = window.speechSynthesis;
+      synth.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "en-US";
-      u.rate = 0.9;
-      window.speechSynthesis.speak(u);
+      u.rate = 0.85;
+      u.pitch = 1;
+      // 优先选择英文语音
+      const voices = synth.getVoices();
+      const enVoice = voices.find(v => v.lang.startsWith("en") && !v.localService === false)
+        || voices.find(v => v.lang.startsWith("en"));
+      if (enVoice) u.voice = enVoice;
+      synth.speak(u);
+      // iOS workaround: speechSynthesis 会在后台暂停，需要恢复
+      if (synth.paused) synth.resume();
     } catch (e) {
       /* 忽略 */
     }
+  },
+
+  /** 预加载语音列表（应在首次用户交互时调用） */
+  _warmupTTS() {
+    if (!("speechSynthesis" in window)) return;
+    // 触发 voices 加载
+    window.speechSynthesis.getVoices();
+    // iOS/Safari 需要一次空的 speak 来解锁
+    const u = new SpeechSynthesisUtterance("");
+    u.volume = 0;
+    window.speechSynthesis.speak(u);
   },
 };
 
