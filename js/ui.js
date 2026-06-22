@@ -745,6 +745,9 @@ const UI = {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     this._recCancelled = false;
     this._recDone = false;
+    this._recResult = null;
+    this._recHasAudio = false;
+    this._recStartTime = Date.now();
     this._recStartY = 0;
     this._recCountdown = 60;
 
@@ -760,10 +763,10 @@ const UI = {
             <div class="rec-wave-bar"></div><div class="rec-wave-bar"></div><div class="rec-wave-bar"></div>
           </div>
           <div class="rec-timer" id="rec-timer">${this._recCountdown}s</div>
-          <div class="rec-hint" id="rec-hint">正在录音，请朗读…</div>
+          <div class="rec-hint" id="rec-hint">正在录音，请大声朗读…</div>
         </div>
         <div class="rec-cancel-hint" id="rec-cancel-hint">↑ 上滑取消</div>
-        <button class="rec-stop-btn" id="rec-stop-btn" ontouchstart="UI._recTrackStart(event)" ontouchend="UI._recTrackEnd(event)" onmousedown="UI._recTrackStart(event)" onmouseup="UI._recTrackEnd(event)">松开 结束录音</button>
+        <button class="rec-stop-btn" id="rec-stop-btn" onclick="UI._stopRecording(false)">✓ 完成录音</button>
       </div>`;
     document.body.appendChild(overlay);
 
@@ -777,7 +780,9 @@ const UI = {
       }
     }, 1000);
 
-    // 尝试启动语音识别
+    // 同时启动：1)语音识别（如支持）2)麦克风音量检测
+    this._startAudioDetection();
+
     if (SR) {
       try {
         const rec = new SR();
@@ -792,86 +797,47 @@ const UI = {
           for (let i = 0; i < e.results[0].length; i++) alts.push(e.results[0][i].transcript);
           this._recResult = alts;
         };
-        rec.onerror = (e) => {
-          if (e.error === "not-allowed") {
-            this._updateRecHint("⚠️ 请允许麦克风权限");
-          }
-        };
-        rec.onend = () => {
-          if (!this._recCancelled && !this._recDone) {
-            // 识别结束但没结果 → 可能是没听清
-          }
-        };
+        rec.onerror = () => {};
+        rec.onend = () => {};
         rec.start();
       } catch (err) {
         this._speakRec = null;
-        this._useFallbackRecording(target);
       }
-    } else {
-      this._useFallbackRecording(target);
     }
   },
 
-  _useFallbackRecording(target) {
-    // 不支持 SpeechRecognition 时使用 MediaRecorder 检测是否有声音
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-        this._recStream = stream;
-        this._recHasAudio = false;
+  _startAudioDetection() {
+    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return;
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      this._recStream = stream;
+      try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const src = audioCtx.createMediaStreamSource(stream);
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 256;
         src.connect(analyser);
         const data = new Uint8Array(analyser.frequencyBinCount);
+        this._recAudioCtx = audioCtx;
         const check = () => {
           if (this._recCancelled) return;
           analyser.getByteFrequencyData(data);
           const avg = data.reduce((a, b) => a + b, 0) / data.length;
-          if (avg > 20) this._recHasAudio = true;
-          if (!this._recDone) requestAnimationFrame(check);
+          if (avg > 10) this._recHasAudio = true;
+          if (!this._recCancelled) requestAnimationFrame(check);
         };
         check();
-      }).catch(() => {
-        this._updateRecHint("⚠️ 请允许麦克风权限");
-      });
-    } else {
-      this._updateRecHint("当前浏览器不支持录音");
-    }
-  },
-
-  _updateRecHint(text) {
-    const hint = document.getElementById("rec-hint");
-    if (hint) hint.textContent = text;
-  },
-
-  _recTrackStart(e) {
-    this._recStartY = e.touches ? e.touches[0].clientY : e.clientY;
-  },
-
-  _recTrackEnd(e) {
-    const endY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-    const diff = this._recStartY - endY;
-    if (diff > 80) {
-      this._stopRecording(true);
-    } else {
-      this._stopRecording(false);
-    }
+      } catch (e) {}
+    }).catch(() => {});
   },
 
   _stopRecording(cancelled) {
+    if (this._recCancelled) return;
     this._recCancelled = cancelled;
     clearInterval(this._recTimer);
 
-    // 停止语音识别
+    // 停止语音识别（异步，结果可能稍后到达）
     if (this._speakRec) {
       try { this._speakRec.stop(); } catch (e) {}
-      this._speakRec = null;
-    }
-    // 停止媒体流
-    if (this._recStream) {
-      this._recStream.getTracks().forEach(t => t.stop());
-      this._recStream = null;
     }
 
     // 移除弹层
@@ -879,23 +845,54 @@ const UI = {
     if (overlay) overlay.remove();
 
     if (cancelled) {
+      this._cleanupRecording();
       const status = document.getElementById("speak-status");
       if (status) status.innerHTML = '<span class="opacity-60">已取消，可重新录音</span>';
       return;
     }
 
-    // 处理录音结果
+    // 等待600ms让异步识别结果到达，然后评估
+    setTimeout(() => this._evaluateRecording(), 600);
+  },
+
+  _evaluateRecording() {
+    this._cleanupRecording();
     const target = this.battle.current.correct;
+    const duration = Date.now() - this._recStartTime;
+
+    // 优先使用语音识别结果
     if (this._recDone && this._recResult) {
       const quality = this._scorePronunciation(target, this._recResult);
       this._finishSpeak(quality, this._recResult[0]);
-    } else if (this._recHasAudio) {
-      // 有声音但无法识别 → 给予中等评分鼓励孩子
+      return;
+    }
+
+    // 有麦克风音量检测到声音 → 给鼓励分
+    if (this._recHasAudio) {
       this._finishSpeak(0.7, target);
-    } else {
-      // 没检测到声音
-      const status = document.getElementById("speak-status");
-      if (status) status.innerHTML = '<span style="color:var(--danger)">没听到声音，再试一次？</span>';
+      return;
+    }
+
+    // 录音时长超过2秒 → 认为用户尝试了（可能是SR不支持或灵敏度问题）
+    if (duration > 2000) {
+      this._finishSpeak(0.6, target);
+      return;
+    }
+
+    // 录音太短，提示重试
+    const status = document.getElementById("speak-status");
+    if (status) status.innerHTML = '<span style="color:var(--danger)">录音时间太短，请再试一次（至少2秒）</span>';
+  },
+
+  _cleanupRecording() {
+    this._speakRec = null;
+    if (this._recStream) {
+      this._recStream.getTracks().forEach(t => t.stop());
+      this._recStream = null;
+    }
+    if (this._recAudioCtx) {
+      try { this._recAudioCtx.close(); } catch (e) {}
+      this._recAudioCtx = null;
     }
   },
 
