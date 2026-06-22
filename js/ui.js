@@ -555,16 +555,23 @@ const UI = {
         </div>`;
     } else if (q.style === "speak") {
       // 口语评测：麦克风发音评分
-      const supported = "webkitSpeechRecognition" in window || "SpeechRecognition" in window;
-      promptHtml = `
-        <div class="flex items-center justify-center gap-2 mb-1">${getNpcSVG(q.speaker || "Peter", 28)}<span class="text-xs opacity-60">${q.speaker || "NPC"} 说：</span></div>
-        <div class="text-lg font-bold">${q.prompt}</div>
-        <div class="text-sm opacity-60 mt-1">${q.promptZh || ""}</div>
-        <div class="mt-2 p-2 rounded-lg" style="background:rgba(56,189,248,0.12)">
-          <div class="text-xs opacity-60">请大声读出回应：</div>
-          <div class="text-xl font-black" style="color:var(--accent)">${q.correct}</div>
-        </div>
-        <div id="speak-status" class="text-sm mt-2 opacity-70">点击麦克风开始录音，发音越标准激光炮越强！</div>`;
+      const isVocab = q.type === "vocab";
+      promptHtml = isVocab
+        ? `<div class="text-xs opacity-60 mb-1">看中文，大声读出英文：</div>
+           <div class="text-xl font-bold">${q.prompt}</div>
+           <div class="mt-2 p-2 rounded-lg" style="background:rgba(56,189,248,0.12)">
+             <div class="text-xs opacity-60">请朗读这个单词：</div>
+             <div class="text-2xl font-black" style="color:var(--accent)">${q.correct}</div>
+           </div>
+           <div id="speak-status" class="text-sm mt-2 opacity-70">点击麦克风开始录音，发音越标准激光炮越强！</div>`
+        : `<div class="flex items-center justify-center gap-2 mb-1">${getNpcSVG(q.speaker || "Peter", 28)}<span class="text-xs opacity-60">${q.speaker || "NPC"} 说：</span></div>
+           <div class="text-lg font-bold">${q.prompt}</div>
+           <div class="text-sm opacity-60 mt-1">${q.promptZh || ""}</div>
+           <div class="mt-2 p-2 rounded-lg" style="background:rgba(56,189,248,0.12)">
+             <div class="text-xs opacity-60">请大声读出回应：</div>
+             <div class="text-xl font-black" style="color:var(--accent)">${q.correct}</div>
+           </div>
+           <div id="speak-status" class="text-sm mt-2 opacity-70">点击麦克风开始录音，发音越标准激光炮越强！</div>`;
       answersHtml = `<div class="grid grid-cols-2 gap-3">
              <button class="btn gold" id="mic-btn" onclick="UI.openRecordOverlay()">🎤 开始朗读</button>
              <button class="btn secondary" onclick="UI.skipSpeak()">跳过朗读</button>
@@ -608,7 +615,7 @@ const UI = {
         <!-- 怪兽信息 + 血条 -->
         <div class="mt-2">
           <div class="flex justify-between text-xs mb-1">
-            <span>${st.monster.name} (形态 ${st.formIndex + 1}/${st.formTotal})</span>
+            <span>${st.monster.name} (${st.formIndex + 1}/${st.formTotal}) <span style="color:${st.monster.color}">· ${st.skillLabel || ""}</span></span>
             <span id="mhp-text">${st.monster.hp}/${st.monster.maxHp}</span>
           </div>
           <div class="hpbar monster-hp"><i id="mhp" style="width:${(st.monster.hp / st.monster.maxHp) * 100}%"></i></div>
@@ -1091,6 +1098,8 @@ const UI = {
 
   _showEvolve(cb) {
     const st = this.battle.status();
+    const form = MONSTER_FORMS[this.battle.formIndex];
+    const skillLabel = form ? form.skillLabel : "";
     const banner = document.createElement("div");
     banner.className = "alert-banner";
     banner.innerHTML = `
@@ -1098,14 +1107,15 @@ const UI = {
         <div style="font-size:72px">${st.monster.emoji}</div>
         <div class="text-2xl font-black" style="color:${st.monster.color}">怪兽进化！</div>
         <div class="opacity-90 mt-1">${st.monster.name} 出现了！</div>
+        ${skillLabel ? `<div class="chip mt-2" style="display:inline-block;background:${st.monster.color}22;color:${st.monster.color}">🎯 技能挑战：${skillLabel}</div>` : ""}
       </div>`;
     document.body.appendChild(banner);
     Sound.alarm();
-    Sound.narrate(`警告！怪兽进化了！${st.monster.name}出现！`, { rate: 1.3, pitch: 1.1 });
+    Sound.narrate(`警告！${st.monster.name}出现！准备接受${skillLabel}挑战！`, { rate: 1.3, pitch: 1.1 });
     setTimeout(() => {
       banner.remove();
       cb();
-    }, 1800);
+    }, 2000);
   },
 
   quitBattle() {

@@ -1,16 +1,17 @@
 /**
  * 核心战斗引擎
- * 玩法：关卡推图 + 多模态答题（武器填装 -> 弹药选择 -> 发射激光炮）
+ * 玩法：4个Boss分别考察听说读写，确保每个单词都经历完整学习流程
  * 机制：Combo 连击暴击、飞船护盾 HP、水晶碎片收集、怪兽进化形态。
  */
 
-const CRYSTAL_GOAL = 30; // GDD 双轨制：水晶碎片上限
+const CRYSTAL_GOAL = 30;
 
-// 怪兽进化形态（Word -> Dialogue -> Reading）
+// 4个Boss分别对应听说读写四项技能
 const MONSTER_FORMS = [
-  { id: "word", name: "词汇吞噬怪", emoji: "👾", hp: 45, color: "#a78bfa" },
-  { id: "dialogue", name: "会话吞噬怪", emoji: "👹", hp: 65, color: "#f472b6" },
-  { id: "reading", name: "语篇吞噬怪 BOSS", emoji: "🐲", hp: 85, color: "#f87171" },
+  { id: "listen", name: "听觉吞噬怪", emoji: "👾", hp: 40, color: "#a78bfa", skill: "listen", skillLabel: "听力" },
+  { id: "read", name: "阅读吞噬怪", emoji: "👹", hp: 45, color: "#38bdf8", skill: "mc", skillLabel: "阅读" },
+  { id: "write", name: "拼写吞噬怪", emoji: "🐙", hp: 50, color: "#f472b6", skill: "spell", skillLabel: "拼写" },
+  { id: "speak", name: "语音吞噬怪 BOSS", emoji: "🐲", hp: 55, color: "#f87171", skill: "speak", skillLabel: "口语" },
 ];
 
 function shuffle(arr) {
@@ -70,17 +71,37 @@ class Battle {
 
   _buildQueue() {
     if (this.mode === "review") {
-      // 复习突袭：仅使用到期条目
       this.questionQueue = this.reviewEntries.map((e) => this._makeQuestionFromEntry(e));
       return;
     }
-    // 推图：词汇题 + 会话题混合，循环出题直到通关
-    // 词汇随机采用「选择 / 听音辨词 / 拼写填空」三种弹药库玩法
-    const vocabStyles = ["mc", "mc", "listen", "spell"];
-    const dialogueStyles = ["mc", "mc", "speak"];
+    // 按当前 boss 的技能类型生成题目，确保每个词/句都练到该技能
+    const form = MONSTER_FORMS[Math.min(this.formIndex, MONSTER_FORMS.length - 1)];
+    const style = form.skill;
     const q = [];
-    this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v, vocabStyles[Math.floor(Math.random() * vocabStyles.length)])));
-    this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, dialogueStyles[Math.floor(Math.random() * dialogueStyles.length)])));
+
+    if (style === "speak") {
+      // 口语boss：词汇和会话都用朗读模式
+      this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v, "speak")));
+      this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "speak")));
+    } else if (style === "spell") {
+      // 拼写boss：词汇用拼写，会话用选择（句子不适合拼写）
+      this.unit.vocab.forEach((v) => {
+        if (/\s/.test(v.en)) {
+          q.push(this._makeVocabQuestion(v, "mc"));
+        } else {
+          q.push(this._makeVocabQuestion(v, "spell"));
+        }
+      });
+      this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "mc")));
+    } else if (style === "listen") {
+      // 听力boss：全部用听音辨词/句
+      this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v, "listen")));
+      this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "listen")));
+    } else {
+      // 阅读boss：全部用选择题
+      this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v, "mc")));
+      this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "mc")));
+    }
     this.questionQueue = shuffle(q);
   }
 
@@ -94,7 +115,7 @@ class Battle {
   }
 
   // ---- 出题生成 ----
-  // style: 'mc' 选择 | 'listen' 听音辨词 | 'spell' 拼写填空
+  // style: 'mc' 选择 | 'listen' 听音辨词 | 'spell' 拼写填空 | 'speak' 口语
   _makeVocabQuestion(v, style = "mc") {
     const distractors = pick(
       allVocab().filter((x) => x.en !== v.en),
@@ -119,7 +140,7 @@ class Battle {
     return q;
   }
 
-  // style: 'mc' 选择 | 'speak' 口语评测
+  // style: 'mc' 选择 | 'listen' 听音辨句 | 'speak' 口语评测
   _makeDialogueQuestion(d, style = "mc") {
     const distractors = pick(
       allDialogueAnswers().filter((x) => x !== d.answer),
@@ -238,6 +259,7 @@ class Battle {
         if (this.formIndex < MONSTER_FORMS.length - 1) {
           this.formIndex += 1;
           this._spawnMonster();
+          this._buildQueue(); // 新boss新题型
           result.formEvolved = true;
         }
       }
@@ -295,6 +317,7 @@ class Battle {
 
   // 进度信息（供 UI 顶部状态栏）
   status() {
+    const form = MONSTER_FORMS[Math.min(this.formIndex, MONSTER_FORMS.length - 1)];
     return {
       hp: this.hp,
       maxHp: this.maxHp,
@@ -304,6 +327,7 @@ class Battle {
       monster: this.monster,
       formIndex: this.formIndex,
       formTotal: MONSTER_FORMS.length,
+      skillLabel: form ? form.skillLabel : "",
     };
   }
 }
