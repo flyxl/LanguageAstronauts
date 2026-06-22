@@ -467,6 +467,7 @@ const UI = {
     const unit = this._findUnit(unitId);
     if (!unit) return;
     this.battle = new Battle(unit, "campaign");
+    Sound.narrate("战斗开始！消灭遗忘怪兽！", { rate: 1.2, pitch: 1.3 });
     this._renderBattle();
   },
 
@@ -494,6 +495,7 @@ const UI = {
   _showAlert(entry, cb) {
     const threat = EBBINGHAUS.threatByLevel[entry.level] || EBBINGHAUS.threatByLevel[1];
     Sound.alarm();
+    Sound.narrate(`红色警报！${threat.label}！怪兽来袭！`, { rate: 1.3, pitch: 1.1 });
     const banner = document.createElement("div");
     banner.className = "alert-banner";
     banner.innerHTML = `
@@ -506,7 +508,7 @@ const UI = {
     setTimeout(() => {
       banner.remove();
       cb();
-    }, 1500);
+    }, 1800);
   },
 
   // ============ 战斗界面 ============
@@ -966,14 +968,22 @@ const UI = {
         if (res.combo >= 5) FX.comboWave(res.combo);
         if (res.crystalGain) FX.crystalBurst(cx, cy + 40, res.crystalGain * 3);
       }
+      // 连击播报
+      if (res.combo === 5) Sound.narrate("五连击！太棒了！", { rate: 1.3, pitch: 1.4 });
+      else if (res.combo === 10) Sound.narrate("十连击！不可思议！", { rate: 1.4, pitch: 1.5 });
       // BOSS 击杀庆祝
       if (res.monsterDead && !res.formEvolved) {
         setTimeout(() => FX.bossKill(), 200);
+        Sound.narrate("Boss击败！太强了！", { rate: 1.2, pitch: 1.3 });
       }
     } else {
       this._shipHit(res);
       FX.shake(10, 400);
       FX.flash("#ef4444", 150);
+      // HP 告急播报
+      if (this.battle.hp > 0 && this.battle.hp <= 30) {
+        Sound.narrate("护盾告急！小心！", { rate: 1.3, pitch: 1.0 });
+      }
     }
     this._updateBars();
     setTimeout(() => {
@@ -1091,10 +1101,11 @@ const UI = {
       </div>`;
     document.body.appendChild(banner);
     Sound.alarm();
+    Sound.narrate(`警告！怪兽进化了！${st.monster.name}出现！`, { rate: 1.3, pitch: 1.1 });
     setTimeout(() => {
       banner.remove();
       cb();
-    }, 1300);
+    }, 1800);
   },
 
   quitBattle() {
@@ -1115,22 +1126,27 @@ const UI = {
       title = "突袭击退！";
       sub = "成功剿灭来袭的遗忘怪兽，记忆又巩固了一层！";
       icon = "✨";
+      Sound.narrate("突袭击退！记忆巩固成功！", { rate: 1.1 });
     } else if (b.win && b.perfectClear) {
       title = "⭐ 完美通关！";
       sub = "三形态 BOSS 全灭 + 水晶集齐 + 遗忘队列清零，星域恢复光明！";
       icon = "🏆";
+      Sound.narrate("完美通关！你太厉害了！星域恢复光明！", { rate: 1.1, pitch: 1.3 });
     } else if (b.win) {
       title = "星域解放！";
       sub = "三形态遗忘吞噬怪全部击败！新星域已解锁！继续复习可达成「完美通关」。";
       icon = "🎉";
+      Sound.narrate("恭喜！星域解放！所有怪兽已被消灭！", { rate: 1.1, pitch: 1.2 });
     } else if (hpZero) {
       title = "飞船进入充能模式";
       sub = "护盾耗尽，飞船自动休眠充能。先去现实世界休息一下吧！";
       icon = "😴";
+      Sound.narrate("飞船护盾耗尽，休息一下再战！", { rate: 1.0, pitch: 0.9 });
     } else {
       title = "本轮突袭结束";
       sub = "成功守住防线，记忆又巩固了一层！";
       icon = "✨";
+      Sound.narrate("防线守住了！好样的！", { rate: 1.1 });
     }
 
     this._render(`

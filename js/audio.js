@@ -107,12 +107,34 @@ const Sound = {
   /** 预加载语音列表（应在首次用户交互时调用） */
   _warmupTTS() {
     if (!("speechSynthesis" in window)) return;
-    // 触发 voices 加载
     window.speechSynthesis.getVoices();
-    // iOS/Safari 需要一次空的 speak 来解锁
     const u = new SpeechSynthesisUtterance("");
     u.volume = 0;
     window.speechSynthesis.speak(u);
+  },
+
+  /** 中文语音播报（游戏事件解说） */
+  narrate(text, opts = {}) {
+    if (!this._enabled()) return;
+    if (!("speechSynthesis" in window)) return;
+    try {
+      const synth = window.speechSynthesis;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = opts.lang || "zh-CN";
+      u.rate = opts.rate || 1.1;
+      u.pitch = opts.pitch || 1.2;
+      u.volume = opts.volume || 1;
+      const voices = synth.getVoices();
+      if (opts.lang === "en-US") {
+        const v = voices.find(v => v.lang.startsWith("en"));
+        if (v) u.voice = v;
+      } else {
+        const v = voices.find(v => v.lang.includes("zh") || v.lang.includes("CN"));
+        if (v) u.voice = v;
+      }
+      synth.speak(u);
+      if (synth.paused) synth.resume();
+    } catch (e) {}
   },
 };
 
