@@ -95,9 +95,9 @@ class Battle {
       });
       this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "mc")));
     } else if (style === "listen") {
-      // 听力boss：听英文 → 选正确选项
-      this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v, "listen")));
-      this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "listen")));
+      // 听力boss：听英文 → 选中文含义(vocab) / 听问句选回答(dialogue)
+      this.unit.vocab.forEach((v) => q.push(this._makeListenQuestion(v)));
+      this.unit.dialogue.forEach((d) => q.push(this._makeDialogueListenQuestion(d)));
     } else if (style === "read") {
       // 阅读boss：看英文 → 选出中文含义（反向选择）
       this.unit.vocab.forEach((v) => q.push(this._makeReadQuestion(v)));
@@ -142,6 +142,44 @@ class Battle {
       else q.letters = shuffle(v.en.toLowerCase().split(""));
     }
     return q;
+  }
+
+  // 听力理解(词汇)：听英文单词 → 选出中文含义
+  _makeListenQuestion(v) {
+    const distractors = pick(
+      allVocab().filter((x) => x.zh !== v.zh),
+      3
+    ).map((x) => x.zh);
+    const options = shuffle([v.zh, ...distractors]);
+    return {
+      type: "vocab",
+      style: "listen",
+      prompt: "仔细听音频，选出对应的中文含义",
+      speak: v.en,
+      options,
+      correct: v.zh,
+      item: v,
+    };
+  }
+
+  // 听力理解(会话)：听英文问句 → 选出正确的英文回应
+  _makeDialogueListenQuestion(d) {
+    const distractors = pick(
+      allDialogueAnswers().filter((x) => x !== d.answer),
+      3
+    );
+    const options = shuffle([d.answer, ...distractors]);
+    return {
+      type: "dialogue",
+      style: "listen",
+      prompt: "听问句，选出正确的回应",
+      promptZh: d.zh || "",
+      speaker: d.speaker,
+      speak: d.prompt,
+      options,
+      correct: d.answer,
+      item: d,
+    };
   }
 
   // 阅读理解题：看英文 → 选中文含义

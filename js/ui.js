@@ -535,10 +535,14 @@ const UI = {
     let promptHtml, answersHtml;
 
     if (q.style === "listen") {
-      // 听音辨词：隐藏文字，只能靠听
+      // 听力理解：听音频选答案
+      const listenHint = q.type === "dialogue"
+        ? "听英文问句，选出正确的回应："
+        : "听英文单词，选出中文含义：";
       promptHtml = `
-        <div class="text-xs opacity-60 mb-2">仔细听，选出听到的单词：</div>
-        <button class="btn" style="margin:0 auto" onclick="Sound.speak('${(q.speak || "").replace(/'/g, "")}')">🔊 再听一次</button>`;
+        <div class="text-xs opacity-60 mb-2">${listenHint}</div>
+        <button class="btn gold" style="margin:0 auto;font-size:18px;padding:12px 24px" onclick="Sound.speak('${(q.speak || "").replace(/'/g, "")}')">🔊 播放音频</button>
+        <div class="text-xs opacity-40 mt-2">点击播放按钮听发音，然后选择答案</div>`;
       answersHtml = q.options.map((o, i) => `<button class="missile" data-i="${i}" onclick="UI.choose(${i}, this)">${o}</button>`).join("");
     } else if (q.style === "spell") {
       // 拼写填空：字母拼块
