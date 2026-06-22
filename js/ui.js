@@ -525,6 +525,7 @@ const UI = {
     const STYLE_LABEL = {
       mc: q.type === "dialogue" ? "🗣️ 角色扮演" : "🎯 弹药选择",
       listen: "🎧 听音辨词",
+      read: "📖 阅读理解",
       spell: "⌨️ 拼写填空",
       speak: "🎤 口语评测",
     };
@@ -584,8 +585,18 @@ const UI = {
         <div class="text-sm opacity-60 mt-1">${q.promptZh || ""}</div>
         <div class="text-xs opacity-50 mt-2">选择最合适的回应，发射激光炮 →</div>`;
       answersHtml = q.options.map((o, i) => `<button class="missile" data-i="${i}" onclick="UI.choose(${i}, this)">${o}</button>`).join("");
+    } else if (q.style === "read") {
+      // 阅读理解：看英文选中文
+      promptHtml = q.type === "dialogue"
+        ? `<div class="flex items-center justify-center gap-2 mb-1">${getNpcSVG(q.speaker || "Peter", 28)}<span class="text-xs opacity-60">阅读这段会话：</span></div>
+           <div class="text-lg font-bold" style="color:var(--accent)">${q.prompt}</div>
+           <div class="text-xs opacity-50 mt-2">选择正确的中文含义 →</div>`
+        : `<div class="text-xs opacity-60 mb-1">阅读英文：</div>
+           <div class="text-2xl font-black" style="color:var(--accent)">${q.prompt}</div>
+           <div class="text-xs opacity-50 mt-2">选择正确的中文含义 →</div>`;
+      answersHtml = q.options.map((o, i) => `<button class="missile" data-i="${i}" onclick="UI.choose(${i}, this)">${o}</button>`).join("");
     } else {
-      // 词汇选择
+      // 词汇选择（看中文选英文）
       promptHtml = `
         <div class="text-xs opacity-60 mb-1">怪兽身上的密码：</div>
         <div class="text-2xl font-black" style="color:var(--gold)">${q.prompt}</div>
@@ -593,7 +604,7 @@ const UI = {
       answersHtml = q.options.map((o, i) => `<button class="missile" data-i="${i}" onclick="UI.choose(${i}, this)">${o}</button>`).join("");
     }
 
-    const useGrid = q.style === "mc" || q.style === "listen";
+    const useGrid = q.style === "mc" || q.style === "listen" || q.style === "read";
 
     this._render(`
       <div class="screen">

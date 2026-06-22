@@ -9,7 +9,7 @@ const CRYSTAL_GOAL = 30;
 // 4个Boss分别对应听说读写四项技能
 const MONSTER_FORMS = [
   { id: "listen", name: "听觉吞噬怪", emoji: "👾", hp: 40, color: "#a78bfa", skill: "listen", skillLabel: "听力" },
-  { id: "read", name: "阅读吞噬怪", emoji: "👹", hp: 45, color: "#38bdf8", skill: "mc", skillLabel: "阅读" },
+  { id: "read", name: "阅读吞噬怪", emoji: "👹", hp: 45, color: "#38bdf8", skill: "read", skillLabel: "阅读" },
   { id: "write", name: "拼写吞噬怪", emoji: "🐙", hp: 50, color: "#f472b6", skill: "spell", skillLabel: "拼写" },
   { id: "speak", name: "语音吞噬怪 BOSS", emoji: "🐲", hp: 55, color: "#f87171", skill: "speak", skillLabel: "口语" },
 ];
@@ -80,11 +80,11 @@ class Battle {
     const q = [];
 
     if (style === "speak") {
-      // 口语boss：词汇和会话都用朗读模式
+      // 口语boss：看单词/句子 → 大声朗读
       this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v, "speak")));
       this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "speak")));
     } else if (style === "spell") {
-      // 拼写boss：词汇用拼写，会话用选择（句子不适合拼写）
+      // 拼写boss：看中文 → 拼写英文
       this.unit.vocab.forEach((v) => {
         if (/\s/.test(v.en)) {
           q.push(this._makeVocabQuestion(v, "mc"));
@@ -94,11 +94,14 @@ class Battle {
       });
       this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "mc")));
     } else if (style === "listen") {
-      // 听力boss：全部用听音辨词/句
+      // 听力boss：听英文 → 选正确选项
       this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v, "listen")));
       this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "listen")));
+    } else if (style === "read") {
+      // 阅读boss：看英文 → 选出中文含义（反向选择）
+      this.unit.vocab.forEach((v) => q.push(this._makeReadQuestion(v)));
+      this.unit.dialogue.forEach((d) => q.push(this._makeDialogueReadQuestion(d)));
     } else {
-      // 阅读boss：全部用选择题
       this.unit.vocab.forEach((v) => q.push(this._makeVocabQuestion(v, "mc")));
       this.unit.dialogue.forEach((d) => q.push(this._makeDialogueQuestion(d, "mc")));
     }
@@ -138,6 +141,45 @@ class Battle {
       else q.letters = shuffle(v.en.toLowerCase().split(""));
     }
     return q;
+  }
+
+  // 阅读理解题：看英文 → 选中文含义
+  _makeReadQuestion(v) {
+    const distractors = pick(
+      allVocab().filter((x) => x.zh !== v.zh),
+      3
+    ).map((x) => x.zh);
+    const options = shuffle([v.zh, ...distractors]);
+    return {
+      type: "vocab",
+      style: "read",
+      prompt: v.en,
+      promptLabel: "阅读英文",
+      speak: v.en,
+      options,
+      correct: v.zh,
+      item: v,
+    };
+  }
+
+  // 会话阅读理解：看英文问句 → 选中文翻译
+  _makeDialogueReadQuestion(d) {
+    const allZh = [];
+    COURSE_DATA.forEach((g) => g.units.forEach((u) => u.dialogue.forEach((x) => { if (x.zh) allZh.push(x.zh); })));
+    const distractors = pick(allZh.filter((x) => x !== d.zh), 3);
+    const options = shuffle([d.zh, ...distractors]);
+    return {
+      type: "dialogue",
+      style: "read",
+      prompt: d.prompt + (d.answer ? " — " + d.answer : ""),
+      promptZh: "",
+      speaker: d.speaker,
+      promptLabel: "阅读会话",
+      speak: d.answer || d.prompt,
+      options,
+      correct: d.zh,
+      item: d,
+    };
   }
 
   // style: 'mc' 选择 | 'listen' 听音辨句 | 'speak' 口语评测
