@@ -7,11 +7,12 @@
 const CRYSTAL_GOAL = 30;
 
 // 4个Boss分别对应听说读写四项技能
+// HP 设计：确保每个boss需要回答10+题才能击败，让学生充分练习每项技能
 const MONSTER_FORMS = [
-  { id: "listen", name: "听觉吞噬怪", emoji: "👾", hp: 40, color: "#a78bfa", skill: "listen", skillLabel: "听力" },
-  { id: "read", name: "阅读吞噬怪", emoji: "👹", hp: 45, color: "#38bdf8", skill: "read", skillLabel: "阅读" },
-  { id: "write", name: "拼写吞噬怪", emoji: "🐙", hp: 50, color: "#f472b6", skill: "spell", skillLabel: "拼写" },
-  { id: "speak", name: "语音吞噬怪 BOSS", emoji: "🐲", hp: 55, color: "#f87171", skill: "speak", skillLabel: "口语" },
+  { id: "listen", name: "听觉吞噬怪", emoji: "👾", hp: 70, color: "#a78bfa", skill: "listen", skillLabel: "听力" },
+  { id: "read", name: "阅读吞噬怪", emoji: "👹", hp: 75, color: "#38bdf8", skill: "read", skillLabel: "阅读" },
+  { id: "write", name: "拼写吞噬怪", emoji: "🐙", hp: 80, color: "#f472b6", skill: "spell", skillLabel: "拼写" },
+  { id: "speak", name: "语音吞噬怪 BOSS", emoji: "🐲", hp: 85, color: "#f87171", skill: "speak", skillLabel: "口语" },
 ];
 
 function shuffle(arr) {
@@ -50,8 +51,8 @@ class Battle {
     this.mode = mode;
     this.reviewEntries = reviewEntries;
 
-    this.maxHp = 120;
-    this.hp = 120;
+    this.maxHp = 160;
+    this.hp = 160;
     this.combo = 0;
     this.bestCombo = 0;
     this.crystals = mode === "campaign" ? Storage.getUnitProgress(unit.id).crystals : 0;
@@ -264,13 +265,13 @@ class Battle {
         result.heal = heal;
       }
 
-      // 连击暴击：Combo>=3 触发双倍伤害
+      // 连击暴击：Combo>=3 触发 1.5x 伤害
       const crit = this.combo >= 3;
       result.crit = crit;
-      const base = q.type === "dialogue" ? 26 : 20;
+      const base = q.type === "dialogue" ? 8 : 6;
       // 拼写填空难度更高，额外加成；口语评测按发音标准度缩放
-      const styleBonus = q.style === "spell" ? 1.4 : 1;
-      let dmg = Math.round((crit ? base * 2 : base) * styleBonus * (q.style === "speak" ? 0.5 + 0.5 * quality : 1));
+      const styleBonus = q.style === "spell" ? 1.3 : 1;
+      let dmg = Math.round((crit ? base * 1.5 : base) * styleBonus * (q.style === "speak" ? 0.5 + 0.5 * quality : 1));
       this.monster.hp = Math.max(0, this.monster.hp - dmg);
       result.damage = dmg;
 
@@ -310,7 +311,7 @@ class Battle {
       this.combo = 0;
       result.combo = 0;
       // 怪兽反击：扣护盾（降低惩罚，鼓励孩子继续尝试）
-      const back = q.type === "dialogue" ? 10 : 7;
+      const back = q.type === "dialogue" ? 6 : 4;
       this.hp = Math.max(0, this.hp - back);
       result.selfDamage = back;
       // 答错惩罚：层级重置回 1，高频重刷
