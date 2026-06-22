@@ -722,7 +722,7 @@ const UI = {
     this._recCancelled = false;
     this._recDone = false;
     this._recStartY = 0;
-    this._recCountdown = 7;
+    this._recCountdown = 60;
 
     // 创建全屏录音弹层
     const overlay = document.createElement("div");
