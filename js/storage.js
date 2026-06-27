@@ -3,7 +3,7 @@
  * 第一期方案：纯本地存储，0 服务器成本。
  */
 
-const STORAGE_KEY = "language_astronauts_save_v2"; // v2: 2024 新版三年级教材迁移，旧存档自动失效
+const STORAGE_KEY = "language_astronauts_save_v3"; // v3: 全年级 2024 教材目录对齐（1B/4A/4B 结构变更）
 
 const DEFAULT_SAVE = {
   player: {
