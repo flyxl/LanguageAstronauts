@@ -28,15 +28,18 @@ function pick(arr, n) {
   return shuffle(arr).slice(0, n);
 }
 
-// 全局词汇池（用于生成干扰项）
+// 当前孩子教材词汇池（用于生成干扰项）
+function _courseData() {
+  return Catalog.getActiveCourseData();
+}
 function allVocab() {
   const pool = [];
-  COURSE_DATA.forEach((g) => g.units.forEach((u) => u.vocab.forEach((v) => pool.push(v))));
+  _courseData().forEach((g) => g.units.forEach((u) => u.vocab.forEach((v) => pool.push(v))));
   return pool;
 }
 function allDialogueAnswers() {
   const pool = [];
-  COURSE_DATA.forEach((g) => g.units.forEach((u) => u.dialogue.forEach((d) => pool.push(d.answer))));
+  _courseData().forEach((g) => g.units.forEach((u) => u.dialogue.forEach((d) => pool.push(d.answer))));
   return pool;
 }
 
@@ -204,7 +207,7 @@ class Battle {
   // 会话阅读理解：看英文问句 → 选中文翻译
   _makeDialogueReadQuestion(d) {
     const allZh = [];
-    COURSE_DATA.forEach((g) => g.units.forEach((u) => u.dialogue.forEach((x) => { if (x.zh) allZh.push(x.zh); })));
+    _courseData().forEach((g) => g.units.forEach((u) => u.dialogue.forEach((x) => { if (x.zh) allZh.push(x.zh); })));
     const distractors = pick(allZh.filter((x) => x !== d.zh), 3);
     const options = shuffle([d.zh, ...distractors]);
     return {

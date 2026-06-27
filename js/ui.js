@@ -310,10 +310,14 @@ const UI = {
   init() {
     this.el = document.getElementById("app");
     this._buildStarfield();
-    const save = Storage.get();
-    if (!save.player.grade) {
-      this.showOnboarding();
+    Storage.load();
+    const children = Storage.listChildren();
+    if (children.length === 0) {
+      this.showCreateChild();
+    } else if (children.length > 1) {
+      this.showChildPicker();
     } else {
+      if (!Storage.getActiveChild()) Storage.switchChild(children[0].id);
       this.showMenu();
     }
   },
@@ -335,37 +339,139 @@ const UI = {
     this.el.innerHTML = html;
   },
 
-  // ============ 首次使用引导 ============
-  showOnboarding() {
-    const grades = COURSE_DATA.map(g => g.id);
-    const gradeLabels = { "1A":"一年级上","1B":"一年级下","2A":"二年级上","2B":"二年级下","3A":"三年级上","3B":"三年级下","4A":"四年级上","4B":"四年级下","5A":"五年级上","5B":"五年级下","6A":"六年级上","6B":"六年级下" };
-    const btns = grades.map(g =>
+  // ============ 孩子账号 ============
+  showChildPicker() {
+    const children = Storage.listChildren();
+    const cards = children.map((c) => {
+      const tb = Catalog.getTextbook(c.textbookId);
+      const grade = Catalog.gradeLabel(c.grade || c.player?.grade || "");
+      return `
+        <button class="panel p-4 text-left w-full" style="cursor:pointer" onclick="UI.pickChild('${c.id}')">
+          <div class="font-bold text-lg">${this._esc(c.name)}</div>
+          <div class="text-xs opacity-60 mt-1">${tb.shortName} · ${grade || "未设置年级"}</div>
+          <div class="text-xs opacity-40 mt-1">🏅 ${c.player?.score || 0} · 💎 ${c.player?.crystals || 0}</div>
+        </button>`;
+    }).join("");
+    this._render(`
+      <div class="screen">
+        <div class="text-center mt-8 mb-6">
+          <h1 class="text-2xl font-black title-glow">👨‍👩‍👧‍👦 选择小航员</h1>
+          <p class="text-sm opacity-70 mt-2">这台设备上有 ${children.length} 位孩子</p>
+        </div>
+        <div class="grid gap-3">${cards}</div>
+        <button class="btn secondary mt-4 w-full" onclick="UI.showCreateChild()">➕ 添加新孩子</button>
+      </div>`);
+  },
+
+  pickChild(childId) {
+    Storage.switchChild(childId);
+    this.showMenu();
+  },
+
+  showCreateChild() {
+    this._createDraft = { name: "", textbookId: "hujiao-oxford-2024", grade: null };
+    this._renderCreateChild();
+  },
+
+  _renderCreateChild() {
+    const d = this._createDraft;
+    const tbBtns = Catalog.listTextbooks().map((t) =>
+      `<button class="panel p-3 text-left ${d.textbookId === t.id ? "ring-2 ring-sky-400" : ""}" style="cursor:pointer" onclick="UI._setCreateTextbook('${t.id}')">
+        <div class="font-bold text-sm">${t.name}</div>
+        <div class="text-xs opacity-50 mt-1">${t.subtitle}</div>
+      </button>`
+    ).join("");
+    const grades = Catalog.gradesFor(d.textbookId);
+    const gradeBtns = grades.map((g) =>
+      `<button class="panel p-2 text-center ${d.grade === g ? "ring-2 ring-sky-400" : ""}" style="cursor:pointer" onclick="UI._setCreateGrade('${g}')">
+        <div class="font-bold text-sm">${Catalog.gradeLabel(g)}</div>
+        <div class="text-xs opacity-50">${g}</div>
+      </button>`
+    ).join("");
+    const canSubmit = d.name.trim() && d.textbookId && d.grade;
+    this._render(`
+      <div class="screen">
+        <div class="text-center mt-6 mb-4">
+          <h1 class="text-2xl font-black title-glow">🚀 创建小航员</h1>
+          <p class="text-sm opacity-70 mt-2">取个名字，选择教材和年级</p>
+        </div>
+        <div class="panel p-4 mb-3">
+          <label class="text-xs opacity-60">我的名字</label>
+          <input id="child-name-input" class="w-full mt-1 p-3 rounded-lg bg-black/30 border border-white/10 text-lg" placeholder="例如：小明" maxlength="12"
+            value="${this._esc(d.name)}" oninput="UI._setCreateName(this.value)" />
+        </div>
+        <p class="text-xs opacity-60 mb-2">选择教材</p>
+        <div class="grid gap-2 mb-4">${tbBtns}</div>
+        <p class="text-xs opacity-60 mb-2">选择年级 / 学期</p>
+        <div class="grid grid-cols-2 gap-2 mb-4">${gradeBtns}</div>
+        <button class="btn w-full ${canSubmit ? "" : "opacity-40"}" ${canSubmit ? "" : "disabled"} onclick="UI.submitCreateChild()">开始探险 ✨</button>
+        ${Storage.listChildren().length ? `<button class="btn secondary mt-3 w-full" onclick="UI.showChildPicker()">返回选择</button>` : ""}
+      </div>`);
+    setTimeout(() => {
+      const inp = document.getElementById("child-name-input");
+      if (inp) inp.focus();
+    }, 50);
+  },
+
+  _setCreateName(v) { this._createDraft.name = v; },
+  _setCreateTextbook(id) {
+    this._createDraft.textbookId = id;
+    this._createDraft.grade = null;
+    this._renderCreateChild();
+  },
+  _setCreateGrade(g) {
+    this._createDraft.grade = g;
+    this._renderCreateChild();
+  },
+
+  submitCreateChild() {
+    const d = this._createDraft;
+    if (!d.name.trim() || !d.textbookId || !d.grade) return;
+    Storage.createChild({ name: d.name.trim(), textbookId: d.textbookId, grade: d.grade });
+    this.showMenu();
+  },
+
+  _esc(s) {
+    return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  },
+
+  // ============ 切换年级（当前孩子） ============
+  showChangeGrade() {
+    const ctx = Storage.getContext();
+    const grades = Catalog.gradesFor(ctx.textbookId);
+    const btns = grades.map((g) =>
       `<button class="panel p-3 text-center" style="cursor:pointer" onclick="UI.selectGrade('${g}')">
-        <div class="font-bold">${gradeLabels[g]}</div>
+        <div class="font-bold">${Catalog.gradeLabel(g)}</div>
         <div class="text-xs opacity-60">${g}</div>
       </button>`
     ).join("");
     this._render(`
       <div class="screen">
-        <div class="text-center mt-8 mb-6">
-          <h1 class="text-2xl font-black title-glow">🚀 欢迎，小航员！</h1>
-          <p class="text-sm opacity-70 mt-2">选择你当前的年级和学期</p>
-          <p class="text-xs opacity-50 mt-1">之后可以随时更改</p>
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-xl font-black title-glow">📍 切换年级</h1>
+          <button class="btn secondary" onclick="UI.showMenu()">返回</button>
         </div>
+        <p class="text-xs opacity-50 mb-3">${Catalog.getTextbook(ctx.textbookId).name}</p>
         <div class="grid grid-cols-2 gap-3">${btns}</div>
       </div>`);
   },
 
   selectGrade(gradeId) {
-    const save = Storage.get();
-    save.player.grade = gradeId;
-    Storage.save();
+    const ctx = Storage.getContext();
+    Storage.updateChild(ctx.childId, { grade: gradeId });
     this.showMenu();
+  },
+
+  // 兼容旧入口
+  showOnboarding() {
+    this.showChangeGrade();
   },
 
   // ============ 顶部资源条 ============
   _topBar() {
-    const p = Storage.get().player;
+    const save = Storage.get();
+    if (!save) return "";
+    const p = save.player;
     const due = ReviewQueue.getDue().length;
     const rank = getPlayerRank(p.score);
     return `
@@ -382,18 +488,22 @@ const UI = {
   // ============ 主菜单 ============
   showMenu() {
     Sound._ensure();
+    const save = Storage.get();
+    if (!save) { this.showCreateChild(); return; }
     const due = ReviewQueue.getDue().length;
-    const p = Storage.get().player;
-    const gradeLabels = { "1A":"一年级上","1B":"一年级下","2A":"二年级上","2B":"二年级下","3A":"三年级上","3B":"三年级下","4A":"四年级上","4B":"四年级下","5A":"五年级上","5B":"五年级下","6A":"六年级上","6B":"六年级下" };
-    const gradeLabel = gradeLabels[p.grade] || p.grade || "";
+    const p = save.player;
+    const ctx = Storage.getContext();
+    const tb = Catalog.getTextbook(ctx.textbookId);
+    const gradeLabel = Catalog.gradeLabel(ctx.grade || p.grade || "");
+    const childCount = Storage.listChildren().length;
     this._render(`
       <div class="screen">
         ${this._topBar()}
         <div class="panel text-center p-6 mt-6">
           <div class="ship-hero" style="position:relative">${getShipSVG("classic", 100)}<div style="position:absolute;bottom:0;right:-10px;width:36px;height:36px">${(WEAPONS[p.suit]||WEAPONS.pulse).svg}</div></div>
-          <h1 class="text-3xl font-black title-glow mt-2">时空语航员</h1>
-          <p class="text-sm opacity-70 mt-1">Language Astronauts · 沪教牛津深圳版</p>
-          ${gradeLabel ? `<p class="text-xs mt-2"><span class="chip" style="cursor:pointer" onclick="UI.showOnboarding()">📍 ${gradeLabel} <span class="opacity-60">切换</span></span></p>` : ""}
+          <h1 class="text-3xl font-black title-glow mt-2">${this._esc(ctx.name || p.name)}</h1>
+          <p class="text-sm opacity-70 mt-1">时空语航员 · ${tb.shortName}</p>
+          ${gradeLabel ? `<p class="text-xs mt-2"><span class="chip" style="cursor:pointer" onclick="UI.showChangeGrade()">📍 ${gradeLabel} <span class="opacity-60">切换</span></span></p>` : ""}
           <div class="grid gap-3 mt-5">
             <button class="btn" onclick="UI.showLevelSelect()">🌌 星图远征</button>
             ${due > 0 ? `<button class="btn gold animate__animated animate__pulse animate__infinite" onclick="UI.startReview()">🚨 红色警报突袭 (${due})</button>` : ""}
@@ -402,6 +512,8 @@ const UI = {
               <button class="btn secondary" onclick="UI.showPets()">🐾 宠物舱</button>
             </div>
             <button class="btn secondary" onclick="UI.showStats()">📊 学情数据</button>
+            ${childCount > 1 ? `<button class="btn secondary" onclick="UI.showChildPicker()">👨‍👩‍👧‍👦 切换孩子</button>` : ""}
+            <button class="btn secondary" onclick="UI.showCreateChild()">➕ 添加孩子</button>
           </div>
         </div>
         <p class="text-center text-xs opacity-30 mt-4">0 广告 · 0 内购 · 体力靠学习获取</p>
@@ -409,12 +521,17 @@ const UI = {
   },
 
   // ============ 关卡选择（星图） ============
-  showLevelSelect() {
-    const currentGrade = Storage.get().player.grade || "3A";
+  showLevelSelect(showAllGrades) {
+    if (showAllGrades === undefined) this._showAllGrades = false;
+    else this._showAllGrades = !!showAllGrades;
+    const ctx = Storage.getContext();
+    const course = Catalog.getActiveCourseData();
+    const currentGrade = ctx.grade || Storage.get().player.grade || "3A";
     let body = "";
-    COURSE_DATA.forEach((grade) => {
+    course.forEach((grade) => {
       const isCurrentGrade = grade.id === currentGrade;
-      const expanded = isCurrentGrade;
+      if (!this._showAllGrades && !isCurrentGrade) return;
+      const expanded = isCurrentGrade || this._showAllGrades;
       body += `
         <div class="mt-3">
           <div class="panel p-2 flex items-center justify-between" style="cursor:pointer;${isCurrentGrade ? 'border-color:var(--accent)' : ''}" onclick="UI._toggleGrade('${grade.id}')">
@@ -441,6 +558,9 @@ const UI = {
       });
       body += `</div></div>`;
     });
+    const moreBtn = this._showAllGrades
+      ? `<button class="btn secondary w-full mt-3" onclick="UI.showLevelSelect(false)">📍 只看当前学期 (${Catalog.gradeLabel(currentGrade)})</button>`
+      : `<button class="btn secondary w-full mt-3" onclick="UI.showLevelSelect(true)">📚 更多学期</button>`;
     this._render(`
       <div class="screen">
         ${this._topBar()}
@@ -448,7 +568,8 @@ const UI = {
           <h1 class="text-2xl font-black title-glow">🌌 星图远征</h1>
           <button class="btn secondary" onclick="UI.showMenu()">返回</button>
         </div>
-        <div class="scrollable">${body}</div>
+        <p class="text-xs opacity-50 mt-1">${Catalog.getTextbook(ctx.textbookId).name}</p>
+        <div class="scrollable">${body}${moreBtn}</div>
         <div class="h-6"></div>
       </div>`);
   },
@@ -478,17 +599,14 @@ const UI = {
       return;
     }
     // 复习突袭：用首个到期条目所属单元作为战场
-    const unit = this._findUnit(due[0].unitId) || COURSE_DATA[0].units[0];
+    const course = Catalog.getActiveCourseData();
+    const unit = this._findUnit(due[0].unitId) || course[0]?.units[0];
     this.battle = new Battle(unit, "review", due.slice(0, 12));
     this._showAlert(due[0], () => this._renderBattle());
   },
 
   _findUnit(unitId) {
-    for (const g of COURSE_DATA) {
-      const u = g.units.find((x) => x.id === unitId);
-      if (u) return u;
-    }
-    return null;
+    return Catalog.findUnitActive(unitId);
   },
 
   // 红色警报突袭横幅
