@@ -53,7 +53,14 @@ const KOUYU_TITLES = {
     "Unit 5 What do you like about farms?",
     "Unit 6 How do people celebrate the Mid-Autumn Festival?",
   ],
-  "2B": null, // 2B 直接使用牛津 2B 前 6 单元（标题与内容一致）
+  "2B": [
+    "Unit 1 What can you see?",
+    "Unit 2 Touch and feel",
+    "Unit 3 Can you hear a train?",
+    "Unit 4 Things I like doing",
+    "Unit 5 Food I like",
+    "Unit 6 Animals I like",
+  ], // 2B 沿用教材单元名（非 Big Question），内容取自牛津 2B 前 6 单元
 };
 
 /** 从自定义内容块构建年级 */
