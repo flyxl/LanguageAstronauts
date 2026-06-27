@@ -425,293 +425,109 @@ const COURSE_DATA_KOUYU = [
     "units": [
       {
         "id": "KY-1B-U1",
-        "name": "Unit 1 You and me",
-        "theme": "星域",
+        "name": "Unit 1 What food do you like?",
+        "theme": "美食星域",
         "npc": "Ms Wu",
         "vocab": [
           {
-            "en": "boy",
-            "zh": "男孩"
-          },
-          {
-            "en": "girl",
-            "zh": "女孩"
-          },
-          {
-            "en": "name",
-            "zh": "名字"
-          },
-          {
-            "en": "my",
-            "zh": "我的"
-          },
-          {
-            "en": "your",
-            "zh": "你的；你们的"
-          },
-          {
-            "en": "nice",
-            "zh": "美好的"
-          },
-          {
-            "en": "meet",
-            "zh": "遇见"
-          },
-          {
-            "en": "hello",
-            "zh": "你好"
-          },
-          {
-            "en": "I",
-            "zh": "我"
-          },
-          {
-            "en": "am",
-            "zh": "是"
-          }
-        ],
-        "dialogue": [
-          {
-            "speaker": "Ms Wu",
-            "prompt": "Hello, I'm Ms Wu.",
-            "zh": "你好，我是吴老师。",
-            "answer": "Hello, Ms Wu."
-          },
-          {
-            "speaker": "Ben",
-            "prompt": "My name is Ben.",
-            "zh": "我的名字是本。",
-            "answer": "Nice to meet you."
-          },
-          {
-            "speaker": "Bob",
-            "prompt": "Are you a boy?",
-            "zh": "你是男孩吗？",
-            "answer": "Yes, I am."
-          }
-        ]
-      },
-      {
-        "id": "KY-1B-U2",
-        "name": "Unit 2 Our looks",
-        "theme": "探索域",
-        "npc": "Ben",
-        "vocab": [
-          {
-            "en": "hair",
-            "zh": "头发"
-          },
-          {
-            "en": "eye",
-            "zh": "眼睛"
-          },
-          {
-            "en": "ear",
-            "zh": "耳朵"
-          },
-          {
-            "en": "nose",
-            "zh": "鼻子"
-          },
-          {
-            "en": "mouth",
-            "zh": "嘴巴"
-          },
-          {
-            "en": "face",
-            "zh": "脸"
-          },
-          {
-            "en": "big",
-            "zh": "大的"
-          },
-          {
-            "en": "small",
-            "zh": "小的"
-          },
-          {
-            "en": "long",
-            "zh": "长的"
-          },
-          {
-            "en": "short",
-            "zh": "短的"
-          }
-        ],
-        "dialogue": [
-          {
-            "speaker": "Ben",
-            "prompt": "You have big eyes.",
-            "zh": "你有大眼睛。",
-            "answer": "Thank you."
-          },
-          {
-            "speaker": "Ms Wu",
-            "prompt": "Your hair is long.",
-            "zh": "你的头发很长。",
-            "answer": "Yes, it is."
-          },
-          {
-            "speaker": "Bob",
-            "prompt": "This is my face.",
-            "zh": "这是我的脸。",
-            "answer": "Your face is nice."
-          }
-        ]
-      },
-      {
-        "id": "KY-1B-U3",
-        "name": "Unit 3 Toys I like",
-        "theme": "交流域",
-        "npc": "Bob",
-        "vocab": [
-          {
-            "en": "toy",
-            "zh": "玩具"
-          },
-          {
-            "en": "ball",
-            "zh": "球"
-          },
-          {
-            "en": "doll",
-            "zh": "玩具娃娃"
-          },
-          {
-            "en": "kite",
-            "zh": "风筝"
-          },
-          {
-            "en": "bicycle",
-            "zh": "自行车"
+            "en": "food",
+            "zh": "食物"
           },
           {
             "en": "like",
             "zh": "喜欢"
           },
           {
-            "en": "shop",
-            "zh": "商店"
+            "en": "rice",
+            "zh": "米饭"
           },
           {
-            "en": "super",
-            "zh": "超级的"
+            "en": "noodles",
+            "zh": "面条"
           },
           {
-            "en": "my",
-            "zh": "我的"
+            "en": "bread",
+            "zh": "面包"
           },
           {
-            "en": "I",
-            "zh": "我"
+            "en": "egg",
+            "zh": "鸡蛋"
+          },
+          {
+            "en": "apple",
+            "zh": "苹果"
+          },
+          {
+            "en": "milk",
+            "zh": "牛奶"
+          },
+          {
+            "en": "yummy",
+            "zh": "好吃的"
+          },
+          {
+            "en": "don't",
+            "zh": "不"
           }
         ],
         "dialogue": [
           {
-            "speaker": "Bob",
-            "prompt": "I like the doll.",
-            "zh": "我喜欢玩具娃娃。",
-            "answer": "I like the ball."
+            "speaker": "Ms Wu",
+            "prompt": "What food do you like?",
+            "zh": "你喜欢什么食物？",
+            "answer": "I like rice."
           },
           {
             "speaker": "Ben",
-            "prompt": "Do you like kites?",
-            "zh": "你喜欢风筝吗？",
+            "prompt": "Do you like noodles?",
+            "zh": "你喜欢面条吗？",
             "answer": "Yes, I do."
           },
           {
-            "speaker": "Ms Wu",
-            "prompt": "This is my toy.",
-            "zh": "这是我的玩具。",
-            "answer": "It is super!"
+            "speaker": "Bob",
+            "prompt": "I don't like eggs.",
+            "zh": "我不喜欢鸡蛋。",
+            "answer": "I like eggs."
           }
         ]
       },
       {
-        "id": "KY-1B-U4",
-        "name": "Unit 4 Sounds",
-        "theme": "发现域",
+        "id": "KY-1B-U2",
+        "name": "Unit 2 What do we do in the classroom?",
+        "theme": "课堂星域",
         "npc": "Ms Wu",
         "vocab": [
+          {
+            "en": "classroom",
+            "zh": "教室"
+          },
+          {
+            "en": "read",
+            "zh": "阅读"
+          },
+          {
+            "en": "write",
+            "zh": "写字"
+          },
+          {
+            "en": "draw",
+            "zh": "画画"
+          },
           {
             "en": "listen",
             "zh": "听"
           },
           {
-            "en": "hear",
-            "zh": "听见"
+            "en": "sing",
+            "zh": "唱歌"
           },
           {
-            "en": "sound",
-            "zh": "声音"
+            "en": "sit",
+            "zh": "坐"
           },
           {
-            "en": "dog",
-            "zh": "狗"
-          },
-          {
-            "en": "cat",
-            "zh": "猫"
-          },
-          {
-            "en": "sheep",
-            "zh": "绵羊"
-          },
-          {
-            "en": "hen",
-            "zh": "母鸡"
-          },
-          {
-            "en": "duck",
-            "zh": "鸭子"
-          },
-          {
-            "en": "pig",
-            "zh": "猪"
-          },
-          {
-            "en": "what",
-            "zh": "什么"
-          }
-        ],
-        "dialogue": [
-          {
-            "speaker": "Ms Wu",
-            "prompt": "Listen and hear.",
-            "zh": "听一听。",
-            "answer": "I hear a dog."
-          },
-          {
-            "speaker": "Ben",
-            "prompt": "What do you hear?",
-            "zh": "你听见了什么？",
-            "answer": "I hear a cat."
-          },
-          {
-            "speaker": "Bob",
-            "prompt": "I hear a sheep.",
-            "zh": "我听见绵羊叫。",
-            "answer": "I hear a hen."
-          }
-        ]
-      },
-      {
-        "id": "KY-1B-U5",
-        "name": "Unit 5 Things around us",
-        "theme": "成长域",
-        "npc": "Ben",
-        "vocab": [
-          {
-            "en": "table",
-            "zh": "桌子"
-          },
-          {
-            "en": "chair",
-            "zh": "椅子"
-          },
-          {
-            "en": "desk",
-            "zh": "书桌"
+            "en": "stand",
+            "zh": "站"
           },
           {
             "en": "book",
@@ -720,113 +536,297 @@ const COURSE_DATA_KOUYU = [
           {
             "en": "pencil",
             "zh": "铅笔"
-          },
-          {
-            "en": "window",
-            "zh": "窗户"
-          },
-          {
-            "en": "door",
-            "zh": "门"
-          },
-          {
-            "en": "flower",
-            "zh": "花"
-          },
-          {
-            "en": "see",
-            "zh": "看见"
-          },
-          {
-            "en": "look",
-            "zh": "看"
           }
         ],
         "dialogue": [
           {
+            "speaker": "Ms Wu",
+            "prompt": "What do we do in the classroom?",
+            "zh": "我们在教室里做什么？",
+            "answer": "We read books."
+          },
+          {
             "speaker": "Ben",
-            "prompt": "Look at the flower.",
-            "zh": "看那朵花。",
-            "answer": "It is nice."
+            "prompt": "We listen to Ms Wu.",
+            "zh": "我们听吴老师讲课。",
+            "answer": "Yes, we do."
           },
           {
             "speaker": "Bob",
-            "prompt": "I see a book on the desk.",
-            "zh": "我看见书在书桌上。",
-            "answer": "I see a pencil."
-          },
-          {
-            "speaker": "Ms Wu",
-            "prompt": "Open the door, please.",
-            "zh": "请开门。",
-            "answer": "OK, Ms Wu."
+            "prompt": "We draw in the classroom.",
+            "zh": "我们在教室里画画。",
+            "answer": "I like drawing."
           }
         ]
       },
       {
-        "id": "KY-1B-U6",
-        "name": "Unit 6 Clever rabbits",
-        "theme": "挑战域",
-        "npc": "Bob",
+        "id": "KY-1B-U3",
+        "name": "Unit 3 How do we play?",
+        "theme": "游戏星域",
+        "npc": "Ben",
         "vocab": [
           {
-            "en": "rabbit",
-            "zh": "兔子"
+            "en": "play",
+            "zh": "玩"
           },
           {
-            "en": "clever",
-            "zh": "聪明的"
-          },
-          {
-            "en": "hop",
-            "zh": "跳跃"
+            "en": "game",
+            "zh": "游戏"
           },
           {
             "en": "run",
             "zh": "跑"
           },
           {
-            "en": "carrot",
-            "zh": "胡萝卜"
+            "en": "jump",
+            "zh": "跳"
           },
           {
-            "en": "garden",
-            "zh": "花园"
+            "en": "ball",
+            "zh": "球"
           },
           {
-            "en": "fast",
-            "zh": "快的"
+            "en": "skip",
+            "zh": "跳绳"
           },
           {
-            "en": "little",
-            "zh": "小的"
+            "en": "fun",
+            "zh": "有趣的"
           },
           {
-            "en": "cute",
-            "zh": "可爱的"
+            "en": "together",
+            "zh": "一起"
           },
           {
-            "en": "eat",
-            "zh": "吃"
+            "en": "outside",
+            "zh": "在外面"
+          },
+          {
+            "en": "friend",
+            "zh": "朋友"
+          }
+        ],
+        "dialogue": [
+          {
+            "speaker": "Ben",
+            "prompt": "How do we play?",
+            "zh": "我们怎么玩？",
+            "answer": "We play ball games."
+          },
+          {
+            "speaker": "Bob",
+            "prompt": "Let's play together.",
+            "zh": "我们一起玩吧。",
+            "answer": "OK."
+          },
+          {
+            "speaker": "Ms Wu",
+            "prompt": "We skip outside.",
+            "zh": "我们在外面跳绳。",
+            "answer": "It is fun."
+          }
+        ]
+      },
+      {
+        "id": "KY-1B-U4",
+        "name": "Unit 4 Which season do you like?",
+        "theme": "四季星域",
+        "npc": "Ms Wu",
+        "vocab": [
+          {
+            "en": "season",
+            "zh": "季节"
+          },
+          {
+            "en": "spring",
+            "zh": "春天"
+          },
+          {
+            "en": "summer",
+            "zh": "夏天"
+          },
+          {
+            "en": "autumn",
+            "zh": "秋天"
+          },
+          {
+            "en": "winter",
+            "zh": "冬天"
+          },
+          {
+            "en": "warm",
+            "zh": "温暖的"
+          },
+          {
+            "en": "hot",
+            "zh": "炎热的"
+          },
+          {
+            "en": "cool",
+            "zh": "凉爽的"
+          },
+          {
+            "en": "cold",
+            "zh": "寒冷的"
+          },
+          {
+            "en": "which",
+            "zh": "哪一个"
+          }
+        ],
+        "dialogue": [
+          {
+            "speaker": "Ms Wu",
+            "prompt": "Which season do you like?",
+            "zh": "你喜欢哪个季节？",
+            "answer": "I like spring."
+          },
+          {
+            "speaker": "Ben",
+            "prompt": "Summer is hot.",
+            "zh": "夏天很热。",
+            "answer": "Yes, it is hot."
+          },
+          {
+            "speaker": "Bob",
+            "prompt": "I like winter.",
+            "zh": "我喜欢冬天。",
+            "answer": "Winter is cold."
+          }
+        ]
+      },
+      {
+        "id": "KY-1B-U5",
+        "name": "Unit 5 What do you know about fruit?",
+        "theme": "水果星域",
+        "npc": "Bob",
+        "vocab": [
+          {
+            "en": "fruit",
+            "zh": "水果"
+          },
+          {
+            "en": "apple",
+            "zh": "苹果"
+          },
+          {
+            "en": "banana",
+            "zh": "香蕉"
+          },
+          {
+            "en": "orange",
+            "zh": "橙子"
+          },
+          {
+            "en": "grape",
+            "zh": "葡萄"
+          },
+          {
+            "en": "pear",
+            "zh": "梨"
+          },
+          {
+            "en": "sweet",
+            "zh": "甜的"
+          },
+          {
+            "en": "know",
+            "zh": "知道"
+          },
+          {
+            "en": "about",
+            "zh": "关于"
+          },
+          {
+            "en": "like",
+            "zh": "喜欢"
           }
         ],
         "dialogue": [
           {
             "speaker": "Bob",
-            "prompt": "The rabbit is clever.",
-            "zh": "兔子很聪明。",
-            "answer": "Yes, it is."
+            "prompt": "What do you know about fruit?",
+            "zh": "关于水果你知道什么？",
+            "answer": "Apples are sweet."
           },
           {
             "speaker": "Ben",
-            "prompt": "The rabbit can hop.",
-            "zh": "兔子会跳。",
-            "answer": "It can run fast."
+            "prompt": "I like bananas.",
+            "zh": "我喜欢香蕉。",
+            "answer": "Bananas are yummy."
           },
           {
             "speaker": "Ms Wu",
-            "prompt": "Rabbits like carrots.",
-            "zh": "兔子喜欢胡萝卜。",
+            "prompt": "Oranges are fruit.",
+            "zh": "橙子是水果。",
+            "answer": "Yes, they are."
+          }
+        ]
+      },
+      {
+        "id": "KY-1B-U6",
+        "name": "Unit 6 How do animals grow?",
+        "theme": "成长星域",
+        "npc": "Ms Wu",
+        "vocab": [
+          {
+            "en": "animal",
+            "zh": "动物"
+          },
+          {
+            "en": "grow",
+            "zh": "生长"
+          },
+          {
+            "en": "small",
+            "zh": "小的"
+          },
+          {
+            "en": "big",
+            "zh": "大的"
+          },
+          {
+            "en": "baby",
+            "zh": "幼小的"
+          },
+          {
+            "en": "cat",
+            "zh": "猫"
+          },
+          {
+            "en": "dog",
+            "zh": "狗"
+          },
+          {
+            "en": "rabbit",
+            "zh": "兔子"
+          },
+          {
+            "en": "duck",
+            "zh": "鸭子"
+          },
+          {
+            "en": "hen",
+            "zh": "母鸡"
+          }
+        ],
+        "dialogue": [
+          {
+            "speaker": "Ms Wu",
+            "prompt": "How do animals grow?",
+            "zh": "动物怎么长大？",
+            "answer": "They grow big."
+          },
+          {
+            "speaker": "Ben",
+            "prompt": "The baby duck grows.",
+            "zh": "小鸭子在长大。",
+            "answer": "It is small now."
+          },
+          {
+            "speaker": "Bob",
+            "prompt": "Rabbits grow fast.",
+            "zh": "兔子长得很快。",
             "answer": "Yes, they do."
           }
         ]
@@ -840,352 +840,28 @@ const COURSE_DATA_KOUYU = [
       {
         "id": "KY-2A-U1",
         "name": "Unit 1 What can you do with your five senses?",
-        "theme": "星域",
-        "npc": "Miss Fang",
+        "theme": "感官星域",
+        "npc": "Ms Wu",
         "vocab": [
           {
-            "en": "good",
-            "zh": "好的"
+            "en": "see",
+            "zh": "看见"
           },
           {
-            "en": "morning",
-            "zh": "早晨"
+            "en": "hear",
+            "zh": "听见"
           },
           {
-            "en": "evening",
-            "zh": "傍晚"
+            "en": "smell",
+            "zh": "闻"
           },
           {
-            "en": "night",
-            "zh": "夜晚"
+            "en": "taste",
+            "zh": "尝"
           },
           {
-            "en": "day",
-            "zh": "天；日"
-          },
-          {
-            "en": "mum",
-            "zh": "妈妈"
-          },
-          {
-            "en": "today",
-            "zh": "今天"
-          },
-          {
-            "en": "very well",
-            "zh": "很好"
-          },
-          {
-            "en": "ant",
-            "zh": "蚂蚁"
-          },
-          {
-            "en": "bear",
-            "zh": "熊"
-          }
-        ],
-        "dialogue": [
-          {
-            "speaker": "Miss Fang",
-            "prompt": "Good morning, class.",
-            "zh": "同学们早上好。",
-            "answer": "Good morning, Miss Fang."
-          },
-          {
-            "speaker": "Peter",
-            "prompt": "Good evening, Mum.",
-            "zh": "妈妈，晚上好。",
-            "answer": "Good evening."
-          },
-          {
-            "speaker": "Alice",
-            "prompt": "How are you today?",
-            "zh": "你今天好吗？",
-            "answer": "I'm very well."
-          }
-        ]
-      },
-      {
-        "id": "KY-2A-U2",
-        "name": "Unit 2 What do you like about your family?",
-        "theme": "探索域",
-        "npc": "Danny",
-        "vocab": [
-          {
-            "en": "tall",
-            "zh": "高的"
-          },
-          {
-            "en": "short",
-            "zh": "矮的"
-          },
-          {
-            "en": "boy",
-            "zh": "男孩"
-          },
-          {
-            "en": "girl",
-            "zh": "女孩"
-          },
-          {
-            "en": "name",
-            "zh": "名字"
-          },
-          {
-            "en": "fast",
-            "zh": "快的"
-          },
-          {
-            "en": "yes",
-            "zh": "是；对"
-          },
-          {
-            "en": "no",
-            "zh": "不；不是"
-          }
-        ],
-        "dialogue": [
-          {
-            "speaker": "Danny",
-            "prompt": "I'm Danny.",
-            "zh": "我是丹尼。",
-            "answer": "Nice to meet you, Danny."
-          },
-          {
-            "speaker": "Kitty",
-            "prompt": "What's your name?",
-            "zh": "你叫什么名字？",
-            "answer": "My name is Peter."
-          },
-          {
-            "speaker": "Ben",
-            "prompt": "Are you a boy?",
-            "zh": "你是男孩吗？",
-            "answer": "Yes, I am."
-          }
-        ]
-      },
-      {
-        "id": "KY-2A-U3",
-        "name": "Unit 3 What is your favourite toy?",
-        "theme": "交流域",
-        "npc": "Alice",
-        "vocab": [
-          {
-            "en": "one",
-            "zh": "一"
-          },
-          {
-            "en": "two",
-            "zh": "二"
-          },
-          {
-            "en": "three",
-            "zh": "三"
-          },
-          {
-            "en": "four",
-            "zh": "四"
-          },
-          {
-            "en": "five",
-            "zh": "五"
-          },
-          {
-            "en": "six",
-            "zh": "六"
-          },
-          {
-            "en": "seven",
-            "zh": "七"
-          },
-          {
-            "en": "eight",
-            "zh": "八"
-          },
-          {
-            "en": "nine",
-            "zh": "九"
-          },
-          {
-            "en": "ten",
-            "zh": "十"
-          },
-          {
-            "en": "new",
-            "zh": "新的"
-          }
-        ],
-        "dialogue": [
-          {
-            "speaker": "Alice",
-            "prompt": "Are you Kitty?",
-            "zh": "你是凯蒂吗？",
-            "answer": "No, I'm Alice."
-          },
-          {
-            "speaker": "Joe",
-            "prompt": "Are you a new student?",
-            "zh": "你是新同学吗？",
-            "answer": "Yes, I am."
-          },
-          {
-            "speaker": "Peter",
-            "prompt": "I'm number three.",
-            "zh": "我是三号。",
-            "answer": "I'm number five."
-          }
-        ]
-      },
-      {
-        "id": "KY-2A-U4",
-        "name": "Unit 4 What is around your home?",
-        "theme": "发现域",
-        "npc": "Ben",
-        "vocab": [
-          {
-            "en": "run",
-            "zh": "跑"
-          },
-          {
-            "en": "write",
-            "zh": "写字"
-          },
-          {
-            "en": "swim",
-            "zh": "游泳"
-          },
-          {
-            "en": "fly",
-            "zh": "飞"
-          },
-          {
-            "en": "can",
-            "zh": "能；会"
-          },
-          {
-            "en": "friend",
-            "zh": "朋友"
-          },
-          {
-            "en": "family",
-            "zh": "家庭"
-          },
-          {
-            "en": "bicycle",
-            "zh": "自行车"
-          },
-          {
-            "en": "skip",
-            "zh": "跳绳"
-          }
-        ],
-        "dialogue": [
-          {
-            "speaker": "Ben",
-            "prompt": "Can you swim?",
-            "zh": "你会游泳吗？",
-            "answer": "Yes, I can."
-          },
-          {
-            "speaker": "Kitty",
-            "prompt": "Can you fly?",
-            "zh": "你会飞吗？",
-            "answer": "No, I can't."
-          },
-          {
-            "speaker": "Peter",
-            "prompt": "Can you skip?",
-            "zh": "你会跳绳吗？",
-            "answer": "Yes, I can skip."
-          }
-        ]
-      },
-      {
-        "id": "KY-2A-U5",
-        "name": "Unit 5 What do you like about farms?",
-        "theme": "成长域",
-        "npc": "Joe",
-        "vocab": [
-          {
-            "en": "young",
-            "zh": "年轻的"
-          },
-          {
-            "en": "old",
-            "zh": "年老的"
-          },
-          {
-            "en": "sister",
-            "zh": "姐姐；妹妹"
-          },
-          {
-            "en": "brother",
-            "zh": "哥哥；弟弟"
-          },
-          {
-            "en": "mummy",
-            "zh": "妈妈"
-          },
-          {
-            "en": "daddy",
-            "zh": "爸爸"
-          },
-          {
-            "en": "grandmother",
-            "zh": "奶奶；外婆"
-          },
-          {
-            "en": "grandfather",
-            "zh": "爷爷；外公"
-          }
-        ],
-        "dialogue": [
-          {
-            "speaker": "Joe",
-            "prompt": "That's my family.",
-            "zh": "那是我的家人。",
-            "answer": "Your family is nice."
-          },
-          {
-            "speaker": "Sally",
-            "prompt": "She is my sister.",
-            "zh": "她是我的姐姐。",
-            "answer": "She is young."
-          },
-          {
-            "speaker": "Eddie",
-            "prompt": "He is my grandfather.",
-            "zh": "他是我的爷爷。",
-            "answer": "He is old."
-          }
-        ]
-      },
-      {
-        "id": "KY-2A-U6",
-        "name": "Unit 6 How do people celebrate the Mid-Autumn Festival?",
-        "theme": "挑战域",
-        "npc": "Sally",
-        "vocab": [
-          {
-            "en": "hair",
-            "zh": "头发"
-          },
-          {
-            "en": "head",
-            "zh": "头"
-          },
-          {
-            "en": "face",
-            "zh": "脸"
-          },
-          {
-            "en": "long",
-            "zh": "长的"
-          },
-          {
-            "en": "short",
-            "zh": "短的"
+            "en": "touch",
+            "zh": "触摸"
           },
           {
             "en": "eye",
@@ -1200,28 +876,372 @@ const COURSE_DATA_KOUYU = [
             "zh": "鼻子"
           },
           {
-            "en": "mouth",
-            "zh": "嘴巴"
+            "en": "hand",
+            "zh": "手"
+          },
+          {
+            "en": "sense",
+            "zh": "感官"
           }
         ],
         "dialogue": [
           {
-            "speaker": "Sally",
-            "prompt": "My hair is short.",
-            "zh": "我的头发很短。",
-            "answer": "Your hair is nice."
-          },
-          {
-            "speaker": "Alice",
-            "prompt": "Her hair is long.",
-            "zh": "她的头发很长。",
-            "answer": "Yes, it is long."
+            "speaker": "Ms Wu",
+            "prompt": "What can you do with your eyes?",
+            "zh": "你能用眼睛做什么？",
+            "answer": "I can see."
           },
           {
             "speaker": "Ben",
-            "prompt": "Look at my face.",
-            "zh": "看我的脸。",
-            "answer": "Your eyes are big."
+            "prompt": "I can hear with my ears.",
+            "zh": "我能用耳朵听。",
+            "answer": "Me too."
+          },
+          {
+            "speaker": "Bob",
+            "prompt": "I can smell flowers.",
+            "zh": "我能闻花香。",
+            "answer": "Flowers smell nice."
+          }
+        ]
+      },
+      {
+        "id": "KY-2A-U2",
+        "name": "Unit 2 What do you like about your family?",
+        "theme": "家庭星域",
+        "npc": "Ben",
+        "vocab": [
+          {
+            "en": "family",
+            "zh": "家庭"
+          },
+          {
+            "en": "mother",
+            "zh": "妈妈"
+          },
+          {
+            "en": "father",
+            "zh": "爸爸"
+          },
+          {
+            "en": "sister",
+            "zh": "姐妹"
+          },
+          {
+            "en": "brother",
+            "zh": "兄弟"
+          },
+          {
+            "en": "love",
+            "zh": "爱"
+          },
+          {
+            "en": "kind",
+            "zh": "友善的"
+          },
+          {
+            "en": "help",
+            "zh": "帮助"
+          },
+          {
+            "en": "like",
+            "zh": "喜欢"
+          },
+          {
+            "en": "about",
+            "zh": "关于"
+          }
+        ],
+        "dialogue": [
+          {
+            "speaker": "Ben",
+            "prompt": "I like my family.",
+            "zh": "我喜欢我的家人。",
+            "answer": "My family is kind."
+          },
+          {
+            "speaker": "Ms Wu",
+            "prompt": "What do you like about your mother?",
+            "zh": "你喜欢妈妈什么？",
+            "answer": "She is kind."
+          },
+          {
+            "speaker": "Bob",
+            "prompt": "My father helps me.",
+            "zh": "爸爸帮助我。",
+            "answer": "That is nice."
+          }
+        ]
+      },
+      {
+        "id": "KY-2A-U3",
+        "name": "Unit 3 What is your favourite toy?",
+        "theme": "玩具星域",
+        "npc": "Bob",
+        "vocab": [
+          {
+            "en": "toy",
+            "zh": "玩具"
+          },
+          {
+            "en": "doll",
+            "zh": "玩具娃娃"
+          },
+          {
+            "en": "ball",
+            "zh": "球"
+          },
+          {
+            "en": "kite",
+            "zh": "风筝"
+          },
+          {
+            "en": "robot",
+            "zh": "机器人"
+          },
+          {
+            "en": "favourite",
+            "zh": "最喜欢的"
+          },
+          {
+            "en": "like",
+            "zh": "喜欢"
+          },
+          {
+            "en": "play",
+            "zh": "玩"
+          },
+          {
+            "en": "fun",
+            "zh": "有趣的"
+          },
+          {
+            "en": "super",
+            "zh": "超级的"
+          }
+        ],
+        "dialogue": [
+          {
+            "speaker": "Bob",
+            "prompt": "What is your favourite toy?",
+            "zh": "你最喜欢的玩具是什么？",
+            "answer": "My favourite toy is a doll."
+          },
+          {
+            "speaker": "Ben",
+            "prompt": "I like robots.",
+            "zh": "我喜欢机器人。",
+            "answer": "Robots are fun."
+          },
+          {
+            "speaker": "Ms Wu",
+            "prompt": "Do you like kites?",
+            "zh": "你喜欢风筝吗？",
+            "answer": "Yes, I do."
+          }
+        ]
+      },
+      {
+        "id": "KY-2A-U4",
+        "name": "Unit 4 What is around your home?",
+        "theme": "家园星域",
+        "npc": "Ms Wu",
+        "vocab": [
+          {
+            "en": "home",
+            "zh": "家"
+          },
+          {
+            "en": "around",
+            "zh": "在……周围"
+          },
+          {
+            "en": "door",
+            "zh": "门"
+          },
+          {
+            "en": "window",
+            "zh": "窗户"
+          },
+          {
+            "en": "garden",
+            "zh": "花园"
+          },
+          {
+            "en": "tree",
+            "zh": "树"
+          },
+          {
+            "en": "flower",
+            "zh": "花"
+          },
+          {
+            "en": "park",
+            "zh": "公园"
+          },
+          {
+            "en": "near",
+            "zh": "在……附近"
+          },
+          {
+            "en": "see",
+            "zh": "看见"
+          }
+        ],
+        "dialogue": [
+          {
+            "speaker": "Ms Wu",
+            "prompt": "What is around your home?",
+            "zh": "你家周围有什么？",
+            "answer": "There is a garden."
+          },
+          {
+            "speaker": "Ben",
+            "prompt": "I can see a tree.",
+            "zh": "我能看见一棵树。",
+            "answer": "It is big."
+          },
+          {
+            "speaker": "Bob",
+            "prompt": "There is a park near my home.",
+            "zh": "我家附近有一个公园。",
+            "answer": "That's nice."
+          }
+        ]
+      },
+      {
+        "id": "KY-2A-U5",
+        "name": "Unit 5 What do you like about farms?",
+        "theme": "农场星域",
+        "npc": "Ben",
+        "vocab": [
+          {
+            "en": "farm",
+            "zh": "农场"
+          },
+          {
+            "en": "cow",
+            "zh": "奶牛"
+          },
+          {
+            "en": "pig",
+            "zh": "猪"
+          },
+          {
+            "en": "chicken",
+            "zh": "鸡"
+          },
+          {
+            "en": "duck",
+            "zh": "鸭子"
+          },
+          {
+            "en": "grass",
+            "zh": "草"
+          },
+          {
+            "en": "like",
+            "zh": "喜欢"
+          },
+          {
+            "en": "cute",
+            "zh": "可爱的"
+          },
+          {
+            "en": "big",
+            "zh": "大的"
+          },
+          {
+            "en": "about",
+            "zh": "关于"
+          }
+        ],
+        "dialogue": [
+          {
+            "speaker": "Ben",
+            "prompt": "What do you like about farms?",
+            "zh": "你喜欢农场什么？",
+            "answer": "I like cows."
+          },
+          {
+            "speaker": "Bob",
+            "prompt": "Ducks are cute.",
+            "zh": "鸭子很可爱。",
+            "answer": "Yes, they are."
+          },
+          {
+            "speaker": "Ms Wu",
+            "prompt": "I like chickens on the farm.",
+            "zh": "我喜欢农场上的鸡。",
+            "answer": "Me too."
+          }
+        ]
+      },
+      {
+        "id": "KY-2A-U6",
+        "name": "Unit 6 How do people celebrate the Mid-Autumn Festival?",
+        "theme": "中秋星域",
+        "npc": "Ms Wu",
+        "vocab": [
+          {
+            "en": "Mid-Autumn Festival",
+            "zh": "中秋节"
+          },
+          {
+            "en": "moon",
+            "zh": "月亮"
+          },
+          {
+            "en": "mooncake",
+            "zh": "月饼"
+          },
+          {
+            "en": "celebrate",
+            "zh": "庆祝"
+          },
+          {
+            "en": "family",
+            "zh": "家人"
+          },
+          {
+            "en": "together",
+            "zh": "一起"
+          },
+          {
+            "en": "happy",
+            "zh": "快乐的"
+          },
+          {
+            "en": "eat",
+            "zh": "吃"
+          },
+          {
+            "en": "look",
+            "zh": "看"
+          },
+          {
+            "en": "night",
+            "zh": "夜晚"
+          }
+        ],
+        "dialogue": [
+          {
+            "speaker": "Ms Wu",
+            "prompt": "How do people celebrate the Mid-Autumn Festival?",
+            "zh": "人们怎么庆祝中秋节？",
+            "answer": "They eat mooncakes."
+          },
+          {
+            "speaker": "Ben",
+            "prompt": "We look at the moon.",
+            "zh": "我们看月亮。",
+            "answer": "The moon is bright."
+          },
+          {
+            "speaker": "Bob",
+            "prompt": "My family is together.",
+            "zh": "我们一家人在一起。",
+            "answer": "That is happy."
           }
         ]
       }
@@ -1233,7 +1253,7 @@ const COURSE_DATA_KOUYU = [
     "units": [
       {
         "id": "KY-2B-U1",
-        "name": "Unit 1 What jobs do people do?",
+        "name": "Unit 1 What can you see?",
         "theme": "星域",
         "npc": "Joe",
         "vocab": [
@@ -1293,7 +1313,7 @@ const COURSE_DATA_KOUYU = [
       },
       {
         "id": "KY-2B-U2",
-        "name": "Unit 2 What do you like to eat?",
+        "name": "Unit 2 Touch and feel",
         "theme": "探索域",
         "npc": "Sally",
         "vocab": [
@@ -1353,7 +1373,7 @@ const COURSE_DATA_KOUYU = [
       },
       {
         "id": "KY-2B-U3",
-        "name": "Unit 3 What can you see in the park?",
+        "name": "Unit 3 Can you hear a train?",
         "theme": "交流域",
         "npc": "Eddie",
         "vocab": [
@@ -1413,7 +1433,7 @@ const COURSE_DATA_KOUYU = [
       },
       {
         "id": "KY-2B-U4",
-        "name": "Unit 4 What do you do in different seasons?",
+        "name": "Unit 4 Things I like doing",
         "theme": "发现域",
         "npc": "Miss Fang",
         "vocab": [
@@ -1473,7 +1493,7 @@ const COURSE_DATA_KOUYU = [
       },
       {
         "id": "KY-2B-U5",
-        "name": "Unit 5 What places do you visit?",
+        "name": "Unit 5 Food I like",
         "theme": "成长域",
         "npc": "Mr Li",
         "vocab": [
@@ -1533,7 +1553,7 @@ const COURSE_DATA_KOUYU = [
       },
       {
         "id": "KY-2B-U6",
-        "name": "Unit 6 How do we keep safe?",
+        "name": "Unit 6 Animals I like",
         "theme": "动物星云",
         "npc": "Danny",
         "vocab": [
