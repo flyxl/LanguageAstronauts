@@ -598,7 +598,7 @@ const UI = {
     if (!unit) return;
     Combat.ensureDeployedPets();
     this.battle = new Battle(unit, "campaign");
-    Sound.narrate("战斗开始！消灭遗忘怪兽！", { rate: 1.2, pitch: 1.3 });
+    this._announceBattleReady();
     this._renderBattle();
   },
 
@@ -614,7 +614,21 @@ const UI = {
     const course = Catalog.getActiveCourseData();
     const unit = this._findUnit(due[0].unitId) || course[0]?.units[0];
     this.battle = new Battle(unit, "review", due);
-    this._showAlert(due[0], () => this._renderBattle());
+    this._showAlert(due[0], () => {
+      this._announceBattleReady();
+      this._renderBattle();
+    });
+  },
+
+  /** 战斗开始前语音：军衔 + 孩子名字 */
+  _announceBattleReady() {
+    if (!this.battle || this.battle._announcedReady) return;
+    this.battle._announcedReady = true;
+    const ctx = Storage.getContext();
+    const p = Storage.get()?.player;
+    const rank = getPlayerRank(p?.score || 0);
+    const name = (ctx.name || p?.name || "小航员").trim();
+    Sound.narrate(`${rank.name}${name}，准备好干掉 Boss 了吗？`, { rate: 1.15, pitch: 1.25 });
   },
 
   _findUnit(unitId) {
