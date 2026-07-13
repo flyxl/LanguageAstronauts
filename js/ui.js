@@ -283,6 +283,15 @@ function getPlayerRank(score) {
   return rank;
 }
 
+function getPetStageEmoji(def, level) {
+  if (!def?.stages?.length) return def?.emoji || "🐾";
+  return def.stages[Math.min(Math.max(1, level) - 1, def.stages.length - 1)];
+}
+
+function getPetVisualScale(level) {
+  return 0.82 + Math.min(5, level || 1) * 0.06;
+}
+
 // 成就徽章系统
 const ACHIEVEMENTS = [
   { id: "first_win", name: "初次解放", desc: "首次通关一个星域", icon: "🎯", check: (s) => Object.values(s.progress).some((p) => p.completed) },
@@ -740,6 +749,7 @@ const UI = {
         <div class="panel battle-stage" id="stage">
           <div class="combo-pop" id="combo" style="${st.combo >= 2 ? "" : "display:none"}">Combo x${st.combo}</div>
           <div class="monster" id="monster">${getMonsterSVG(st.monster.id, 90)}</div>
+          ${this._battlePetsHtml()}
           <div class="player-ship" id="ship">
             ${getShipSVG("classic", 56)}
             <div style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:28px;height:28px">${(WEAPONS[Storage.get().player.suit] || WEAPONS.pulse).svg}</div>
@@ -1072,6 +1082,7 @@ const UI = {
     if (res.correct) {
       this._fireLaser(res.crit);
       this._hitMonster(res);
+      if (res.petDamage) this._petAttackFx();
       // 连击分级视觉
       const comboEl = document.getElementById("combo");
       if (comboEl) {
@@ -1109,8 +1120,8 @@ const UI = {
       // 连击播报
       if (res.combo === 5) Sound.narrate("五连击！太棒了！", { rate: 1.3, pitch: 1.4 });
       else if (res.combo === 10) Sound.narrate("十连击！不可思议！", { rate: 1.4, pitch: 1.5 });
-      // BOSS 击杀庆祝
-      if (res.monsterDead && !res.formEvolved) {
+      // BOSS 击杀庆祝（仅推图最终 BOSS 且战斗已结束）
+      if (res.monsterDead && !res.formEvolved && b.finished && b.win) {
         setTimeout(() => FX.bossKill(), 200);
         Sound.narrate("Boss击败！太强了！", { rate: 1.2, pitch: 1.3 });
       }
@@ -1135,6 +1146,32 @@ const UI = {
         this._renderBattle();
       }
     }, res.correct ? 900 : 1100);
+  },
+
+  _battlePetsHtml() {
+    const pets = Storage.get()?.pets || [];
+    if (!pets.length) return "";
+    return `<div class="battle-pets">${pets
+      .map((pp, i) => {
+        const def = PETS.find((d) => d.id === pp.species);
+        if (!def) return "";
+        const stage = getPetStageEmoji(def, pp.level);
+        const scale = getPetVisualScale(pp.level);
+        return `<div class="battle-pet" id="pet-${pp.species}" style="--pet-color:${def.color};--pet-scale:${scale};--i:${i}" title="${def.name} Lv.${pp.level}">
+          <span class="battle-pet-emoji">${stage}</span>
+          <span class="battle-pet-lv">Lv.${pp.level}</span>
+        </div>`;
+      })
+      .join("")}</div>`;
+  },
+
+  _petAttackFx() {
+    document.querySelectorAll(".battle-pet").forEach((el) => {
+      el.classList.remove("pet-attack");
+      void el.offsetWidth;
+      el.classList.add("pet-attack");
+      setTimeout(() => el.classList.remove("pet-attack"), 450);
+    });
   },
 
   _fireLaser(crit) {
@@ -1176,6 +1213,17 @@ const UI = {
       fn.textContent = (res.crit ? "暴击 -" : "-") + res.damage;
       stage.appendChild(fn);
       setTimeout(() => fn.remove(), 900);
+      if (res.petDamage) {
+        const pfn = document.createElement("div");
+        pfn.className = "float-num";
+        pfn.style.left = "38%";
+        pfn.style.top = "78px";
+        pfn.style.color = "#a78bfa";
+        pfn.style.fontSize = "13px";
+        pfn.textContent = `宠物 -${res.petDamage}`;
+        stage.appendChild(pfn);
+        setTimeout(() => pfn.remove(), 900);
+      }
     }
     // combo 显示
     const combo = document.getElementById("combo");
@@ -1265,9 +1313,9 @@ const UI = {
     let title, sub, icon;
     if (b.win && b.mode === "review") {
       title = "突袭击退！";
-      sub = "成功剿灭来袭的遗忘怪兽，记忆又巩固了一层！";
+      sub = "红色警报已解除！下次复习之前不会再有怪兽突袭。";
       icon = "✨";
-      Sound.narrate("突袭击退！记忆巩固成功！", { rate: 1.1 });
+      Sound.narrate("突袭击退！红色警报解除！", { rate: 1.1 });
     } else if (b.win && b.perfectClear) {
       title = "⭐ 完美通关！";
       sub = "三形态 BOSS 全灭 + 水晶集齐 + 遗忘队列清零，星域恢复光明！";
@@ -1323,6 +1371,7 @@ const UI = {
           <div class="font-bold mt-1" style="color:${w.color}">${w.name}</div>
           <div class="text-xs opacity-60">${w.desc}</div>
           ${w.ability ? `<div class="text-xs mt-1" style="color:var(--gold)">⚡ ${w.ability}</div>` : ""}
+          <div class="text-xs opacity-50">${Combat.weaponDamageLabel(id)}</div>
           <div class="text-xs opacity-60 mb-2">${owned ? "已拥有" : "🏅 " + w.price}</div>
           ${equipped
             ? `<button class="btn gold" style="width:100%" disabled>装备中</button>`
@@ -1411,10 +1460,11 @@ const UI = {
         const pct = Math.min(100, Math.round((pp.exp / expNeeded) * 100));
         return `
           <div class="panel p-4 text-center">
-            <div class="flex justify-center"><div style="width:64px;height:64px">${def.svg}</div></div>
+            <div class="text-3xl">${getPetStageEmoji(def, pp.level)}</div>
+            <div class="flex justify-center mt-1"><div style="width:${Math.round(48 * getPetVisualScale(pp.level))}px;height:${Math.round(48 * getPetVisualScale(pp.level))}px;transition:transform 0.3s">${def.svg}</div></div>
             <div class="font-bold mt-1" style="color:${def.color}">${def.name}</div>
             <div class="text-xs" style="color:var(--gold)">Lv.${pp.level}${maxed ? " MAX" : ""}</div>
-            <div class="text-xs opacity-60 mt-1">⚡ ${def.ability}</div>
+            <div class="text-xs opacity-80 mt-1" style="color:${def.color}">⚡ ${Combat.describePet(pp)}</div>
             <div class="hpbar mt-2"><i style="width:${pct}%;background:linear-gradient(90deg,${def.color},var(--gold))"></i></div>
             <div class="text-xs opacity-50 mt-1">EXP ${pp.exp}/${expNeeded}</div>
             ${maxed ? `<div class="text-xs mt-2" style="color:var(--gold)">🌟 满级！能力全开</div>` :
@@ -1452,6 +1502,7 @@ const UI = {
       pp.level += 1;
       pp.exp = 0;
       Sound.win();
+      Sound.narrate(`${def.name}升级到 ${pp.level} 级！${getPetStageEmoji(def, pp.level)}`, { rate: 1.2, pitch: 1.3 });
       FX.explode(window.innerWidth / 2, window.innerHeight / 3, 24, [def.color, "#fbbf24", "#fff"]);
     } else {
       Sound.correct();

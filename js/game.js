@@ -7,12 +7,11 @@
 const CRYSTAL_GOAL = 30;
 
 // 4个Boss分别对应听说读写四项技能
-// HP 设计：确保每个boss需要回答10+题才能击败，让学生充分练习每项技能
 const MONSTER_FORMS = [
-  { id: "listen", name: "听觉吞噬怪", emoji: "👾", hp: 70, color: "#a78bfa", skill: "listen", skillLabel: "听力" },
-  { id: "read", name: "阅读吞噬怪", emoji: "👹", hp: 75, color: "#38bdf8", skill: "read", skillLabel: "阅读" },
-  { id: "write", name: "拼写吞噬怪", emoji: "🐙", hp: 80, color: "#f472b6", skill: "spell", skillLabel: "拼写" },
-  { id: "speak", name: "语音吞噬怪 BOSS", emoji: "🐲", hp: 85, color: "#f87171", skill: "speak", skillLabel: "口语" },
+  { id: "listen", name: "听觉吞噬怪", emoji: "👾", color: "#a78bfa", skill: "listen", skillLabel: "听力" },
+  { id: "read", name: "阅读吞噬怪", emoji: "👹", color: "#38bdf8", skill: "read", skillLabel: "阅读" },
+  { id: "write", name: "拼写吞噬怪", emoji: "🐙", color: "#f472b6", skill: "spell", skillLabel: "拼写" },
+  { id: "speak", name: "语音吞噬怪 BOSS", emoji: "🐲", color: "#f87171", skill: "speak", skillLabel: "口语" },
 ];
 
 function shuffle(arr) {
@@ -53,6 +52,7 @@ class Battle {
     this.unit = unit;
     this.mode = mode;
     this.reviewEntries = reviewEntries;
+    this.sessionDueKeys = reviewEntries.map((e) => e.key);
 
     this.maxHp = 160;
     this.hp = 160;
@@ -114,11 +114,33 @@ class Battle {
 
   _spawnMonster() {
     const form = MONSTER_FORMS[Math.min(this.formIndex, MONSTER_FORMS.length - 1)];
+    const hp = this._calcMonsterHp(this.questionQueue);
     this.monster = {
       ...form,
-      maxHp: form.hp,
-      hp: form.hp,
+      maxHp: hp,
+      hp,
     };
+  }
+
+  /** 战斗加成上下文（武器 + 宠物） */
+  _combatCtx() {
+    const save = Storage.get();
+    return {
+      weaponId: Combat.normalizeWeaponId(save?.player?.suit),
+      pets: save?.pets || [],
+    };
+  }
+
+  /** 估算单题伤害（与 Combat.calcDamage 对齐，用于计算 BOSS 血量） */
+  _estimateDamage(q) {
+    return Combat.estimateHit(q, this._combatCtx());
+  }
+
+  /** BOSS 血量 = 本题库预估伤害之和 × 余量（随武器/宠物缩放，避免提前击杀） */
+  _calcMonsterHp(questions) {
+    if (!questions?.length) return 30;
+    const total = questions.reduce((s, q) => s + this._estimateDamage(q), 0);
+    return Math.max(24, Math.round(total * 1.2));
   }
 
   // ---- 出题生成 ----
@@ -283,7 +305,12 @@ class Battle {
         this._end(true);
         return null;
       }
-      this._buildQueue(); // 推图循环
+      this._buildQueue();
+      if (this.monster) {
+        const hp = this._calcMonsterHp(this.questionQueue);
+        this.monster.maxHp = hp;
+        this.monster.hp = hp;
+      }
     }
     this.current = this.questionQueue.shift();
     return this.current;
@@ -305,6 +332,7 @@ class Battle {
       question: q,
       crit: false,
       damage: 0,
+      petDamage: 0,
       monsterDead: false,
       formEvolved: false,
       crystalGain: 0,
@@ -318,6 +346,9 @@ class Battle {
       this.bestCombo = Math.max(this.bestCombo, this.combo);
       result.combo = this.combo;
 
+      const ctx = this._combatCtx();
+      const petB = Combat.getPetBonuses(ctx.pets);
+
       // 连击回血：每达到 3 的倍数连击时恢复 HP（鼓励连续答对）
       if (this.combo > 0 && this.combo % 3 === 0) {
         const heal = 8;
@@ -325,18 +356,35 @@ class Battle {
         result.heal = heal;
       }
 
-      // 连击暴击：Combo>=3 触发 1.5x 伤害
-      const crit = this.combo >= 3;
+      // 宠物：星尘狐答对回血 / 水晶龙周期回血
+      if (petB.healOnCorrect) {
+        this.hp = Math.min(this.maxHp, this.hp + petB.healOnCorrect);
+        result.petHeal = (result.petHeal || 0) + petB.healOnCorrect;
+      }
+      if (petB.healEveryN && this.combo > 0 && this.combo % petB.healEveryN === 0 && petB.healEveryAmount) {
+        this.hp = Math.min(this.maxHp, this.hp + petB.healEveryAmount);
+        result.petHeal = (result.petHeal || 0) + petB.healEveryAmount;
+      }
+
+      const critThreshold = Combat.getCritThreshold(ctx.weaponId, ctx.pets);
+      const crit = this.combo >= critThreshold;
       result.crit = crit;
-      const base = q.type === "dialogue" ? 8 : 6;
-      // 拼写填空难度更高，额外加成；口语评测按发音标准度缩放
-      const styleBonus = q.style === "spell" ? 1.3 : 1;
-      let dmg = Math.round((crit ? base * 1.5 : base) * styleBonus * (q.style === "speak" ? 0.5 + 0.5 * quality : 1));
+
+      const petDamage = petB.petDamage;
+      result.petDamage = petDamage;
+      let dmg = Combat.calcDamage(q, {
+        weaponId: ctx.weaponId,
+        combo: this.combo,
+        quality,
+        crit,
+        petDamage,
+      });
       this.monster.hp = Math.max(0, this.monster.hp - dmg);
       result.damage = dmg;
 
-      // 水晶碎片奖励（连击越高越多）
-      const gain = 1 + Math.floor(this.combo / 3);
+      // 水晶碎片奖励（连击越高越多；冰霜武器加成）
+      let gain = 1 + Math.floor(this.combo / 3);
+      gain = Math.max(1, Math.round(gain * Combat.crystalGainMultiplier(ctx.weaponId)));
       result.crystalGain = gain;
       this.crystalsGained += gain;
       if (this.mode === "campaign") {
@@ -356,14 +404,17 @@ class Battle {
         ReviewQueue.register(this.unit.id, q.type, q.item);
       }
 
-      // 怪兽死亡 -> 进化
-      if (this.monster.hp <= 0) {
+      // 怪兽死亡 -> 进化（仅推图模式；复习模式不因 HP 归零提前结束）
+      if (this.mode !== "review" && this.monster.hp <= 0) {
         result.monsterDead = true;
         if (this.formIndex < MONSTER_FORMS.length - 1) {
           this.formIndex += 1;
+          this._buildQueue();
           this._spawnMonster();
-          this._buildQueue(); // 新boss新题型
           result.formEvolved = true;
+        } else {
+          // 最终 BOSS 击杀：清空剩余题目，防止结算前继续出题
+          this.questionQueue = [];
         }
       }
     } else {
@@ -407,6 +458,15 @@ class Battle {
     if (this.finished) return;
     this.finished = true;
     this.win = win;
+
+    if (this.mode === "review" && win) {
+      ReviewQueue.completeSession(this.reviewEntries);
+      ReviewQueue.consolidate();
+    }
+    if (this.mode === "campaign" && win) {
+      ReviewQueue.deferUnitDue(this.unit.id);
+      ReviewQueue.consolidate();
+    }
 
     // 结算战功与水晶到存档
     Storage.addScore(this.scoreGained);

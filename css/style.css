@@ -243,6 +243,48 @@ body {
   70% { transform: translateX(-45%) rotate(3deg); }
 }
 
+.battle-pets {
+  position: absolute;
+  bottom: 18px;
+  left: 12px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  z-index: 4;
+  pointer-events: none;
+}
+.battle-pet {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid color-mix(in srgb, var(--pet-color) 55%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pet-color) 40%, transparent);
+  transform: scale(var(--pet-scale, 1));
+  transform-origin: left center;
+  transition: transform 0.25s ease;
+}
+.battle-pet-emoji {
+  font-size: calc(22px * var(--pet-scale, 1));
+  line-height: 1;
+  filter: drop-shadow(0 0 6px var(--pet-color));
+}
+.battle-pet-lv {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--pet-color);
+}
+.battle-pet.pet-attack {
+  animation: pet-strike 0.45s ease-out;
+}
+@keyframes pet-strike {
+  0% { transform: scale(var(--pet-scale, 1)) translateY(0); }
+  40% { transform: scale(calc(var(--pet-scale, 1) * 1.15)) translateY(-28px) translateX(8px); filter: brightness(1.4); }
+  100% { transform: scale(var(--pet-scale, 1)) translateY(0); }
+}
+
 /* 激光束 */
 .laser-beam {
   position: absolute;

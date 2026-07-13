@@ -74,16 +74,19 @@ const ReviewQueue = {
     const idx = save.reviewQueue.findIndex((e) => e.key === key);
     if (idx >= 0) save.reviewQueue[idx] = entry;
     else save.reviewQueue.push(entry);
+    return entry;
   },
 
   /** 复习成功：升级并重排队（满级后移出队列 = 真正掌握） */
   succeed(entry) {
     const save = Storage.get();
-    const m = save.mastery[entry.key] || { level: entry.level, correct: 0, wrong: 0 };
+    const queued = save.reviewQueue.find((e) => e.key === entry.key);
+    const curLevel = queued?.level ?? entry.level ?? 1;
+    const m = save.mastery[entry.key] || { level: curLevel, correct: 0, wrong: 0 };
     m.correct += 1;
-    m.level = Math.min(EBBINGHAUS.maxLevel, entry.level + 1);
+    m.level = Math.min(EBBINGHAUS.maxLevel, curLevel + 1);
 
-    if (m.level >= EBBINGHAUS.maxLevel && entry.level >= EBBINGHAUS.maxLevel) {
+    if (m.level >= EBBINGHAUS.maxLevel && curLevel >= EBBINGHAUS.maxLevel) {
       this._remove(entry.key);
     } else {
       this._upsertQueue(entry.key, entry.unitId, entry.type, entry.item, m.level);
@@ -97,7 +100,7 @@ const ReviewQueue = {
     save.reviewQueue = save.reviewQueue.filter((e) => e.key !== key);
   },
 
-  /** 合并复习队列：同一知识点只保留一条（取最高层级） */
+  /** 合并复习队列：同一知识点只保留一条（最高层级 + 最早到期） */
   consolidate() {
     const save = Storage.get();
     if (!save?.reviewQueue?.length) return 0;
@@ -108,15 +111,13 @@ const ReviewQueue = {
         byKey.set(e.key, e);
         continue;
       }
-      const keep =
-        e.level > prev.level
-          ? e
-          : e.level < prev.level
-          ? prev
-          : e.dueAt <= prev.dueAt
-          ? e
-          : prev;
-      byKey.set(e.key, keep);
+      byKey.set(e.key, {
+        ...prev,
+        ...e,
+        level: Math.max(prev.level, e.level),
+        dueAt: Math.min(prev.dueAt, e.dueAt),
+        item: prev.item || e.item,
+      });
     }
     const before = save.reviewQueue.length;
     save.reviewQueue = Array.from(byKey.values());
@@ -136,9 +137,57 @@ const ReviewQueue = {
     Storage.save();
   },
 
+  /** 将仍到期的条目推迟到下一复习周期 */
+  _deferEntry(entry, now = Date.now()) {
+    const save = Storage.get();
+    const m = save.mastery[entry.key] || { level: entry.level, correct: 0, wrong: 0 };
+    const level = Math.max(entry.level || 1, m.level || 1);
+    const cd = EBBINGHAUS.cooldowns[level] || EBBINGHAUS.cooldowns[1];
+    const idx = save.reviewQueue.findIndex((e) => e.key === entry.key);
+    const next = { ...entry, level, dueAt: now + cd };
+    if (idx >= 0) save.reviewQueue[idx] = next;
+    else save.reviewQueue.push(next);
+    return next;
+  },
+
+  /**
+   * 复习突袭胜利后：确保本次会话内所有条目不再处于「已到期」状态
+   * 防止答完回到基地仍显示红色警报
+   */
+  completeSession(sessionEntries, now = Date.now()) {
+    if (!sessionEntries?.length) return 0;
+    const save = Storage.get();
+    const keys = new Set(sessionEntries.map((e) => e.key));
+    let fixed = 0;
+    for (const e of save.reviewQueue) {
+      if (keys.has(e.key) && e.dueAt <= now) {
+        this._deferEntry(e, now);
+        fixed += 1;
+      }
+    }
+    if (fixed) Storage.save();
+    return fixed;
+  },
+
+  /** 推图通关后：推迟本单元所有到期复习（刚完整练过该单元） */
+  deferUnitDue(unitId, now = Date.now()) {
+    const save = Storage.get();
+    if (!save?.reviewQueue?.length) return 0;
+    let fixed = 0;
+    for (const e of save.reviewQueue) {
+      if (e.unitId === unitId && e.dueAt <= now) {
+        this._deferEntry(e, now);
+        fixed += 1;
+      }
+    }
+    if (fixed) Storage.save();
+    return fixed;
+  },
+
   /** 返回当前已到期、待复习的条目（按紧急程度排序，BOSS 优先） */
   getDue(now = Date.now()) {
     const save = Storage.get();
+    if (!save?.reviewQueue?.length) return [];
     return save.reviewQueue
       .filter((e) => e.dueAt <= now)
       .sort((a, b) => b.level - a.level || a.dueAt - b.dueAt);
@@ -146,9 +195,9 @@ const ReviewQueue = {
 
   /**
    * 本次复习突袭应清剿的全部到期条目（合并所有过期时间点，一次清完）
-   * 长时间未学习导致的多条过期记录，在 consolidate 后每知识点仅一条
    */
   getDueSession(now = Date.now()) {
+    this.consolidate();
     return this.getDue(now);
   },
 
