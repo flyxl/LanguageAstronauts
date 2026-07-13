@@ -379,7 +379,13 @@ class Battle {
         crit,
         petDamage,
       });
-      this.monster.hp = Math.max(0, this.monster.hp - dmg);
+      const questionsRemaining = this.questionQueue.length;
+      // 推图：本题库未答完前 Boss 不会倒下（高暴击/高伤时血量保底 1）
+      if (this.mode !== "review" && questionsRemaining > 0) {
+        this.monster.hp = Math.max(1, this.monster.hp - dmg);
+      } else {
+        this.monster.hp = Math.max(0, this.monster.hp - dmg);
+      }
       result.damage = dmg;
 
       // 水晶碎片奖励（连击越高越多；冰霜武器加成）
@@ -404,8 +410,8 @@ class Battle {
         ReviewQueue.register(this.unit.id, q.type, q.item);
       }
 
-      // 怪兽死亡 -> 进化（仅推图模式；复习模式不因 HP 归零提前结束）
-      if (this.mode !== "review" && this.monster.hp <= 0) {
+      // 怪兽死亡 -> 进化（仅推图且本题库已答完；复习模式不因 HP 归零提前结束）
+      if (this.mode !== "review" && this.monster.hp <= 0 && questionsRemaining === 0) {
         result.monsterDead = true;
         if (this.formIndex < MONSTER_FORMS.length - 1) {
           this.formIndex += 1;
