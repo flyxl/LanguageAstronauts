@@ -598,8 +598,7 @@ const UI = {
     if (!unit) return;
     Combat.ensureDeployedPets();
     this.battle = new Battle(unit, "campaign");
-    this._announceBattleReady();
-    this._renderBattle();
+    this._announceBattleReady().then(() => this._renderBattle());
   },
 
   startReview() {
@@ -615,20 +614,19 @@ const UI = {
     const unit = this._findUnit(due[0].unitId) || course[0]?.units[0];
     this.battle = new Battle(unit, "review", due);
     this._showAlert(due[0], () => {
-      this._announceBattleReady();
-      this._renderBattle();
+      this._announceBattleReady().then(() => this._renderBattle());
     });
   },
 
   /** 战斗开始前语音：军衔 + 孩子名字 */
   _announceBattleReady() {
-    if (!this.battle || this.battle._announcedReady) return;
+    if (!this.battle || this.battle._announcedReady) return Promise.resolve();
     this.battle._announcedReady = true;
     const ctx = Storage.getContext();
     const p = Storage.get()?.player;
     const rank = getPlayerRank(p?.score || 0);
     const name = (ctx.name || p?.name || "小航员").trim();
-    Sound.narrate(`${rank.name}${name}，准备好干掉 Boss 了吗？`, { rate: 1.15, pitch: 1.25 });
+    return Sound.narrate(`${rank.name}${name}，准备好干掉 Boss 了吗？`, { rate: 1.05, pitch: 1.2 });
   },
 
   _findUnit(unitId) {
@@ -639,7 +637,6 @@ const UI = {
   _showAlert(entry, cb) {
     const threat = EBBINGHAUS.threatByLevel[entry.level] || EBBINGHAUS.threatByLevel[1];
     Sound.alarm();
-    Sound.narrate(`红色警报！${threat.label}！怪兽来袭！`, { rate: 1.3, pitch: 1.1 });
     const banner = document.createElement("div");
     banner.className = "alert-banner";
     banner.innerHTML = `
@@ -649,10 +646,10 @@ const UI = {
         <div class="opacity-90 mt-1">${threat.desc}</div>
       </div>`;
     document.body.appendChild(banner);
-    setTimeout(() => {
+    Sound.narrate(`红色警报！${threat.label}！怪兽来袭！`, { rate: 1.15, pitch: 1.1 }).then(() => {
       banner.remove();
       cb();
-    }, 1800);
+    });
   },
 
   // ============ 战斗界面 ============
@@ -1306,11 +1303,10 @@ const UI = {
       </div>`;
     document.body.appendChild(banner);
     Sound.alarm();
-    Sound.narrate(`警告！${st.monster.name}出现！准备接受${skillLabel}挑战！`, { rate: 1.3, pitch: 1.1 });
-    setTimeout(() => {
+    Sound.narrate(`警告！${st.monster.name}出现！准备接受${skillLabel}挑战！`, { rate: 1.1, pitch: 1.1 }).then(() => {
       banner.remove();
       cb();
-    }, 2000);
+    });
   },
 
   quitBattle() {

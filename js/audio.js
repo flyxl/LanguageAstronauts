@@ -6,6 +6,8 @@
 
 const Sound = {
   ctx: null,
+  _narrateQueue: [],
+  _narrating: false,
 
   _ensure() {
     if (!this.ctx) {
@@ -80,24 +82,91 @@ const Sound = {
     [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this._beep(f, 0.18, "triangle"), i * 130));
   },
 
-  /** 朗读英文（教学发音） */
+  _pickVoice(lang) {
+    if (!("speechSynthesis" in window)) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if (lang === "en-US") {
+      return voices.find((v) => v.lang.startsWith("en")) || null;
+    }
+    return voices.find((v) => v.lang.includes("zh") || v.lang.includes("CN")) || null;
+  },
+
+  _drainNarrateQueue() {
+    if (this._narrating || !this._narrateQueue.length) return;
+    if (!this._enabled() || !("speechSynthesis" in window)) {
+      this._narrateQueue.forEach((item) => item.resolve());
+      this._narrateQueue = [];
+      return;
+    }
+
+    const { text, opts, resolve } = this._narrateQueue.shift();
+    this._narrating = true;
+    const synth = window.speechSynthesis;
+    const u = new SpeechSynthesisUtterance(text);
+    const lang = opts.lang || "zh-CN";
+    u.lang = lang;
+    u.rate = opts.rate || 1.1;
+    u.pitch = opts.pitch || 1.2;
+    u.volume = opts.volume ?? 1;
+    const voice = this._pickVoice(lang);
+    if (voice) u.voice = voice;
+
+    let resumeTimer = null;
+    const finish = () => {
+      if (resumeTimer) clearInterval(resumeTimer);
+      this._narrating = false;
+      resolve();
+      this._drainNarrateQueue();
+    };
+
+    u.onend = finish;
+    u.onerror = finish;
+    u.onstart = () => {
+      resumeTimer = setInterval(() => {
+        if (synth.speaking || synth.pending) synth.resume();
+      }, 4000);
+    };
+
+    synth.speak(u);
+    if (synth.paused) synth.resume();
+  },
+
+  /** 中文语音播报（游戏事件解说）；多条自动排队，避免互相打断 */
+  narrate(text, opts = {}) {
+    if (!this._enabled() || !("speechSynthesis" in window)) {
+      return Promise.resolve();
+    }
+    const raw = String(text || "").trim();
+    if (!raw) return Promise.resolve();
+    return new Promise((resolve) => {
+      this._narrateQueue.push({ text: raw, opts, resolve });
+      this._drainNarrateQueue();
+    });
+  },
+
+  /** 清空待播报到队列（不影响正在播放的一句） */
+  clearNarrateQueue() {
+    this._narrateQueue = [];
+  },
+
+  /** 朗读英文（教学发音）；会中断游戏解说队列 */
   speak(text) {
     if (!this._enabled()) return;
     if (!("speechSynthesis" in window)) return;
+    const raw = String(text || "").trim();
+    if (!raw) return;
     try {
+      this.clearNarrateQueue();
+      this._narrating = false;
       const synth = window.speechSynthesis;
       synth.cancel();
-      const u = new SpeechSynthesisUtterance(text);
+      const u = new SpeechSynthesisUtterance(raw);
       u.lang = "en-US";
       u.rate = 0.85;
       u.pitch = 1;
-      // 优先选择英文语音
-      const voices = synth.getVoices();
-      const enVoice = voices.find(v => v.lang.startsWith("en") && !v.localService === false)
-        || voices.find(v => v.lang.startsWith("en"));
+      const enVoice = this._pickVoice("en-US");
       if (enVoice) u.voice = enVoice;
       synth.speak(u);
-      // iOS workaround: speechSynthesis 会在后台暂停，需要恢复
       if (synth.paused) synth.resume();
     } catch (e) {
       /* 忽略 */
@@ -111,30 +180,6 @@ const Sound = {
     const u = new SpeechSynthesisUtterance("");
     u.volume = 0;
     window.speechSynthesis.speak(u);
-  },
-
-  /** 中文语音播报（游戏事件解说） */
-  narrate(text, opts = {}) {
-    if (!this._enabled()) return;
-    if (!("speechSynthesis" in window)) return;
-    try {
-      const synth = window.speechSynthesis;
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = opts.lang || "zh-CN";
-      u.rate = opts.rate || 1.1;
-      u.pitch = opts.pitch || 1.2;
-      u.volume = opts.volume || 1;
-      const voices = synth.getVoices();
-      if (opts.lang === "en-US") {
-        const v = voices.find(v => v.lang.startsWith("en"));
-        if (v) u.voice = v;
-      } else {
-        const v = voices.find(v => v.lang.includes("zh") || v.lang.includes("CN"));
-        if (v) u.voice = v;
-      }
-      synth.speak(u);
-      if (synth.paused) synth.resume();
-    } catch (e) {}
   },
 };
 
