@@ -6,6 +6,7 @@
 
 (function bootstrap() {
   Storage.load();
+  ReviewQueue.consolidate();
 
   document.addEventListener("DOMContentLoaded", () => {
     UI.init();
@@ -13,7 +14,7 @@
     // 隐形算法：后台每 5 秒检查复习队列，到期时若停留在主菜单则刷新提示
     let lastDue = 0;
     setInterval(() => {
-      const due = ReviewQueue.getDue().length;
+      const due = ReviewQueue.dueCount();
       // 仅当处于战斗外（无 finished=false 的进行中战斗）且数量变化时刷新菜单红点
       const inBattle = UI.battle && !UI.battle.finished;
       if (inBattle) return;

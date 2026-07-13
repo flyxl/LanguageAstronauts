@@ -97,12 +97,64 @@ const ReviewQueue = {
     save.reviewQueue = save.reviewQueue.filter((e) => e.key !== key);
   },
 
+  /** 合并复习队列：同一知识点只保留一条（取最高层级） */
+  consolidate() {
+    const save = Storage.get();
+    if (!save?.reviewQueue?.length) return 0;
+    const byKey = new Map();
+    for (const e of save.reviewQueue) {
+      const prev = byKey.get(e.key);
+      if (!prev) {
+        byKey.set(e.key, e);
+        continue;
+      }
+      const keep =
+        e.level > prev.level
+          ? e
+          : e.level < prev.level
+          ? prev
+          : e.dueAt <= prev.dueAt
+          ? e
+          : prev;
+      byKey.set(e.key, keep);
+    }
+    const before = save.reviewQueue.length;
+    save.reviewQueue = Array.from(byKey.values());
+    if (save.reviewQueue.length !== before) Storage.save();
+    return before - save.reviewQueue.length;
+  },
+
+  /** 答错惩罚（复习条目专用，避免跨单元错绑 key） */
+  penalizeEntry(entry) {
+    const save = Storage.get();
+    save.mastery[entry.key] = save.mastery[entry.key] || { level: 0, correct: 0, wrong: 0 };
+    const m = save.mastery[entry.key];
+    m.level = 1;
+    m.wrong += 1;
+    save.mastery[entry.key] = m;
+    this._upsertQueue(entry.key, entry.unitId, entry.type, entry.item, 1);
+    Storage.save();
+  },
+
   /** 返回当前已到期、待复习的条目（按紧急程度排序，BOSS 优先） */
   getDue(now = Date.now()) {
     const save = Storage.get();
     return save.reviewQueue
       .filter((e) => e.dueAt <= now)
       .sort((a, b) => b.level - a.level || a.dueAt - b.dueAt);
+  },
+
+  /**
+   * 本次复习突袭应清剿的全部到期条目（合并所有过期时间点，一次清完）
+   * 长时间未学习导致的多条过期记录，在 consolidate 后每知识点仅一条
+   */
+  getDueSession(now = Date.now()) {
+    return this.getDue(now);
+  },
+
+  /** 队列中已到期条目数（用于警报角标） */
+  dueCount(now = Date.now()) {
+    return this.getDue(now).length;
   },
 
   /** 队列剩余总数（用于双轨制通关判定） */

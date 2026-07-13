@@ -472,7 +472,7 @@ const UI = {
     const save = Storage.get();
     if (!save) return "";
     const p = save.player;
-    const due = ReviewQueue.getDue().length;
+    const due = ReviewQueue.dueCount();
     const rank = getPlayerRank(p.score);
     return `
       <div class="flex items-center justify-between gap-2 mb-3">
@@ -490,7 +490,7 @@ const UI = {
     Sound._ensure();
     const save = Storage.get();
     if (!save) { this.showCreateChild(); return; }
-    const due = ReviewQueue.getDue().length;
+    const due = ReviewQueue.dueCount();
     const p = save.player;
     const ctx = Storage.getContext();
     const tb = Catalog.getTextbook(ctx.textbookId);
@@ -593,15 +593,16 @@ const UI = {
   },
 
   startReview() {
-    const due = ReviewQueue.getDue();
+    ReviewQueue.consolidate();
+    const due = ReviewQueue.getDueSession();
     if (!due.length) {
       this.showMenu();
       return;
     }
-    // 复习突袭：用首个到期条目所属单元作为战场
+    // 复习突袭：合并所有到期条目，一次清剿完毕
     const course = Catalog.getActiveCourseData();
     const unit = this._findUnit(due[0].unitId) || course[0]?.units[0];
-    this.battle = new Battle(unit, "review", due.slice(0, 12));
+    this.battle = new Battle(unit, "review", due);
     this._showAlert(due[0], () => this._renderBattle());
   },
 
@@ -1471,6 +1472,7 @@ const UI = {
     const totalWrong = keys.reduce((s, k) => s + (mastery[k].wrong || 0), 0);
     const acc = totalCorrect + totalWrong > 0 ? Math.round((totalCorrect / (totalCorrect + totalWrong)) * 100) : 0;
     const pending = ReviewQueue.pendingCount();
+    const dueNow = ReviewQueue.dueCount();
     const completedUnits = Object.values(save.progress).filter((p) => p.completed).length;
 
     // 易错词 Top
@@ -1497,12 +1499,13 @@ const UI = {
             其中 <b style="color:var(--ok)">${mastered}</b> 个已牢固掌握；
             答题正确率 <b style="color:var(--gold)">${acc}%</b>，
             完美通关 <b style="color:var(--crystal)">${completedUnits}</b> 个星域。
-            ${pending > 0 ? `当前还有 <b style="color:var(--danger)">${pending}</b> 个遗忘怪兽潜伏，建议尽快出击！` : "暂无待清剿的遗忘怪兽，状态极佳！"}
+            ${dueNow > 0 ? `当前有 <b style="color:var(--danger)">${dueNow}</b> 个遗忘怪兽正在突袭，完成一次复习突袭即可全部清剿！` : pending > 0 ? `复习队列共 <b>${pending}</b> 项，下次到期前暂无警报。` : "暂无待清剿的遗忘怪兽，状态极佳！"}
           </p>
         </div>
         <div class="grid grid-cols-2 gap-3 mt-3">
           <div class="panel p-4 text-center"><div class="text-xs opacity-60">累计答对</div><div class="text-2xl font-black" style="color:var(--ok)">${totalCorrect}</div></div>
-          <div class="panel p-4 text-center"><div class="text-xs opacity-60">复习队列</div><div class="text-2xl font-black" style="color:var(--danger)">${pending}</div></div>
+          <div class="panel p-4 text-center"><div class="text-xs opacity-60">待复习（已到期）</div><div class="text-2xl font-black" style="color:var(--danger)">${dueNow}</div></div>
+          <div class="panel p-4 text-center"><div class="text-xs opacity-60">复习队列总数</div><div class="text-2xl font-black" style="color:var(--accent)">${pending}</div></div>
         </div>
         <h2 class="text-lg font-bold mt-4 mb-2">⚠️ 高频易错单词</h2>
         <div class="flex flex-wrap gap-2">${wrongList || '<span class="opacity-50 text-sm">暂无易错记录，棒极了！</span>'}</div>
@@ -1513,7 +1516,9 @@ const UI = {
         <h2 class="text-lg font-bold mt-5 mb-2">🎖️ 段位晋升</h2>
         ${this._renderRankProgress()}
 
-        <div class="mt-6">
+        <div class="mt-6 grid gap-3">
+          <button class="btn secondary" style="width:100%" onclick="UI.exportSave()">📤 导出学习存档</button>
+          <button class="btn secondary" style="width:100%" onclick="UI.importSave()">📥 导入学习存档</button>
           <button class="btn secondary" style="width:100%" onclick="UI.confirmReset()">🗑️ 重置所有存档</button>
         </div>
         <div class="h-6"></div>
@@ -1558,6 +1563,47 @@ const UI = {
       Storage.reset();
       this.showMenu();
     }
+  },
+
+  exportSave() {
+    try {
+      const json = Storage.exportJSON();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const ctx = Storage.getContext();
+      const name = (ctx.name || "save").replace(/[^\w\u4e00-\u9fa5-]+/g, "");
+      a.href = url;
+      a.download = `language-astronauts-${name}-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      alert("存档已导出！请妥善保存 JSON 文件。");
+    } catch (e) {
+      alert("导出失败：" + e.message);
+    }
+  },
+
+  importSave() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      if (!confirm("导入将覆盖当前设备上的全部学习进度，确定继续吗？")) return;
+      try {
+        const text = await file.text();
+        Storage.importJSON(text);
+        ReviewQueue.consolidate();
+        alert("导入成功！学习进度已恢复。");
+        this.showMenu();
+      } catch (e) {
+        alert("导入失败：" + e.message);
+      }
+    };
+    input.click();
   },
 };
 

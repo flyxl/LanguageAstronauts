@@ -75,7 +75,7 @@ class Battle {
 
   _buildQueue() {
     if (this.mode === "review") {
-      this.questionQueue = this.reviewEntries.map((e) => this._makeQuestionFromEntry(e));
+      this.questionQueue = shuffle(this.reviewEntries.map((e) => this._makeQuestionFromEntry(e)));
       return;
     }
     // 按当前 boss 的技能类型生成题目，确保每个词/句都练到该技能
@@ -245,13 +245,32 @@ class Battle {
     };
   }
 
-  _makeQuestionFromEntry(entry) {
-    if (entry.type === "vocab") {
-      const q = this._makeVocabQuestion(entry.item, "mc");
-      q.reviewEntry = entry;
-      return q;
+  /** 复习题型：按记忆层级轮换听说读写，避免只会选择题 */
+  _reviewStyleForEntry(entry) {
+    const vocabStyles = ["mc", "listen", "read", "spell", "speak"];
+    const dialogueStyles = ["mc", "listen", "read", "speak"];
+    const pool = entry.type === "vocab" ? vocabStyles : dialogueStyles;
+    let style = pool[(Math.max(1, entry.level) - 1) % pool.length];
+    if (entry.type === "vocab" && style === "spell" && /\s/.test(entry.item?.en || "")) {
+      style = "read";
     }
-    const q = this._makeDialogueQuestion(entry.item, "mc");
+    return style;
+  }
+
+  _makeQuestionFromEntry(entry) {
+    const style = this._reviewStyleForEntry(entry);
+    let q;
+    if (entry.type === "vocab") {
+      if (style === "listen") q = this._makeListenQuestion(entry.item);
+      else if (style === "read") q = this._makeReadQuestion(entry.item);
+      else q = this._makeVocabQuestion(entry.item, style);
+    } else if (style === "listen") {
+      q = this._makeDialogueListenQuestion(entry.item);
+    } else if (style === "read") {
+      q = this._makeDialogueReadQuestion(entry.item);
+    } else {
+      q = this._makeDialogueQuestion(entry.item, style);
+    }
     q.reviewEntry = entry;
     return q;
   }
@@ -356,7 +375,11 @@ class Battle {
       this.hp = Math.max(0, this.hp - back);
       result.selfDamage = back;
       // 答错惩罚：层级重置回 1，高频重刷
-      ReviewQueue.penalize(this.unit.id, q.type, q.item);
+      if (q.reviewEntry) {
+        ReviewQueue.penalizeEntry(q.reviewEntry);
+      } else {
+        ReviewQueue.penalize(this.unit.id, q.type, q.item);
+      }
     }
 
     this._checkEnd();

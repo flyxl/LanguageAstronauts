@@ -216,6 +216,35 @@ const Storage = {
     }
     return prog[unitId];
   },
+
+  /** 导出完整存档为 JSON 字符串 */
+  exportJSON() {
+    const root = this.getRoot();
+    return JSON.stringify(
+      {
+        format: "language-astronauts-save",
+        version: root.version || 4,
+        exportedAt: new Date().toISOString(),
+        data: root,
+      },
+      null,
+      2
+    );
+  },
+
+  /** 从 JSON 字符串导入存档（覆盖当前本地存档） */
+  importJSON(raw) {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const data = parsed.data || parsed;
+    if (!data || typeof data !== "object") throw new Error("文件格式无效");
+    if (!data.children || typeof data.children !== "object") throw new Error("缺少孩子存档数据");
+    const version = data.version || parsed.version;
+    if (version !== 4) throw new Error("不支持的存档版本");
+    this.root = structuredClone(data);
+    if (!this.root.settings) this.root.settings = { sound: true };
+    this.save();
+    return this.root;
+  },
 };
 
 if (typeof window !== "undefined") {
