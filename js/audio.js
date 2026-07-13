@@ -112,7 +112,10 @@ const Sound = {
     if (voice) u.voice = voice;
 
     let resumeTimer = null;
+    let done = false;
     const finish = () => {
+      if (done) return;
+      done = true;
       if (resumeTimer) clearInterval(resumeTimer);
       this._narrating = false;
       resolve();

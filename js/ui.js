@@ -315,6 +315,8 @@ const PLANT_SEEDS = {
 
 const UI = {
   el: null,
+  _startingBattle: false,
+  _battleStartToken: 0,
 
   init() {
     this.el = document.getElementById("app");
@@ -596,25 +598,50 @@ const UI = {
   startCampaign(unitId) {
     const unit = this._findUnit(unitId);
     if (!unit) return;
+    if (this._startingBattle) return;
+    if (this.battle && !this.battle.finished && this.battle.mode === "campaign" && this.battle.unit?.id === unitId) {
+      return;
+    }
+    this._startingBattle = true;
+    const token = ++this._battleStartToken;
     Combat.ensureDeployedPets();
     this.battle = new Battle(unit, "campaign");
-    this._announceBattleReady().then(() => this._renderBattle());
+    this._announceBattleReady().then(() => {
+      if (this._battleStartToken !== token) return;
+      if (!this.battle || this.battle.finished) return;
+      this._renderBattle();
+    }).finally(() => {
+      if (this._battleStartToken === token) this._startingBattle = false;
+    });
   },
 
   startReview() {
+    if (this._startingBattle) return;
     ReviewQueue.consolidate();
     const due = ReviewQueue.getDueSession();
     if (!due.length) {
       this.showMenu();
       return;
     }
+    this._startingBattle = true;
+    const token = ++this._battleStartToken;
     Combat.ensureDeployedPets();
     // 复习突袭：合并所有到期条目，一次清剿完毕
     const course = Catalog.getActiveCourseData();
     const unit = this._findUnit(due[0].unitId) || course[0]?.units[0];
     this.battle = new Battle(unit, "review", due);
     this._showAlert(due[0], () => {
-      this._announceBattleReady().then(() => this._renderBattle());
+      if (this._battleStartToken !== token) {
+        this._startingBattle = false;
+        return;
+      }
+      this._announceBattleReady().then(() => {
+        if (this._battleStartToken !== token) return;
+        if (!this.battle || this.battle.finished) return;
+        this._renderBattle();
+      }).finally(() => {
+        if (this._battleStartToken === token) this._startingBattle = false;
+      });
     });
   },
 
@@ -1311,6 +1338,8 @@ const UI = {
 
   quitBattle() {
     if (confirm("确定撤退吗？本次战斗的进度将保留已收集的水晶。")) {
+      this._battleStartToken += 1;
+      this._startingBattle = false;
       this.battle._end(false);
       this.showMenu();
     }
