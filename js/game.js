@@ -127,7 +127,7 @@ class Battle {
     const save = Storage.get();
     return {
       weaponId: Combat.normalizeWeaponId(save?.player?.suit),
-      pets: save?.pets || [],
+      pets: Combat.getDeployedPets(),
     };
   }
 

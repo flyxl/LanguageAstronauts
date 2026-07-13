@@ -33,6 +33,8 @@ const PET_SPECIES = {
 };
 
 const Combat = {
+  MAX_BATTLE_PETS: 2,
+
   normalizeWeaponId(id) {
     if (!id || id === "classic" || !WEAPON_COMBAT[id]) return "pulse";
     return id;
@@ -45,6 +47,48 @@ const Combat = {
   weaponDamageLabel(weaponId) {
     const s = this.getWeaponStats(weaponId);
     return `杀伤力 ×${s.damageMul.toFixed(2)}（${s.label}）`;
+  },
+
+  /** 当前出战宠物 ID 列表（最多 2 只） */
+  getDeployedPetIds() {
+    const child = Storage.getActiveChild();
+    const pets = Storage.get()?.pets || [];
+    if (!child || !pets.length) return [];
+    if (!Array.isArray(child.deployedPets)) {
+      child.deployedPets = pets.slice(0, this.MAX_BATTLE_PETS).map((p) => p.species);
+      Storage.save();
+    }
+    const valid = child.deployedPets.filter((id) => pets.some((p) => p.species === id));
+    if (valid.length !== child.deployedPets.length) {
+      child.deployedPets = valid;
+      Storage.save();
+    }
+    return valid.slice(0, this.MAX_BATTLE_PETS);
+  },
+
+  /** 当前出战宠物实例 */
+  getDeployedPets() {
+    const ids = new Set(this.getDeployedPetIds());
+    return (Storage.get()?.pets || []).filter((p) => ids.has(p.species));
+  },
+
+  setDeployedPets(speciesIds) {
+    const child = Storage.getActiveChild();
+    if (!child) return false;
+    const pets = Storage.get()?.pets || [];
+    child.deployedPets = (speciesIds || [])
+      .filter((id) => pets.some((p) => p.species === id))
+      .slice(0, this.MAX_BATTLE_PETS);
+    Storage.save();
+    return true;
+  },
+
+  /** 开战前确保至少有一只出战宠物（若有宠物但未选） */
+  ensureDeployedPets() {
+    const pets = Storage.get()?.pets || [];
+    if (!pets.length) return;
+    if (this.getDeployedPets().length) return;
+    this.setDeployedPets([pets[0].species]);
   },
 
   getPetBonuses(pets) {

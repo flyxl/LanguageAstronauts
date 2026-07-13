@@ -24,6 +24,7 @@ function _newChildDefaults(name, textbookId, grade) {
     mastery: {},
     garden: [],
     pets: [],
+    deployedPets: [],
     createdAt: Date.now(),
   };
 }

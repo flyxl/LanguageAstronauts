@@ -596,6 +596,7 @@ const UI = {
   startCampaign(unitId) {
     const unit = this._findUnit(unitId);
     if (!unit) return;
+    Combat.ensureDeployedPets();
     this.battle = new Battle(unit, "campaign");
     Sound.narrate("战斗开始！消灭遗忘怪兽！", { rate: 1.2, pitch: 1.3 });
     this._renderBattle();
@@ -608,6 +609,7 @@ const UI = {
       this.showMenu();
       return;
     }
+    Combat.ensureDeployedPets();
     // 复习突袭：合并所有到期条目，一次清剿完毕
     const course = Catalog.getActiveCourseData();
     const unit = this._findUnit(due[0].unitId) || course[0]?.units[0];
@@ -1149,7 +1151,7 @@ const UI = {
   },
 
   _battlePetsHtml() {
-    const pets = Storage.get()?.pets || [];
+    const pets = Combat.getDeployedPets();
     if (!pets.length) return "";
     return `<div class="battle-pets">${pets
       .map((pp, i) => {
@@ -1438,6 +1440,13 @@ const UI = {
     p.crystals -= pet.price;
     if (!Storage.get().pets) Storage.get().pets = [];
     Storage.get().pets.push({ species: speciesId, level: 1, exp: 0, fedAt: Date.now() });
+    const child = Storage.getActiveChild();
+    if (child) {
+      if (!Array.isArray(child.deployedPets)) child.deployedPets = [];
+      if (child.deployedPets.length < Combat.MAX_BATTLE_PETS && !child.deployedPets.includes(speciesId)) {
+        child.deployedPets.push(speciesId);
+      }
+    }
     Storage.save();
     Sound.win();
     FX.crystalBurst(window.innerWidth / 2, window.innerHeight / 2, 12);
@@ -1448,6 +1457,8 @@ const UI = {
   showPets() {
     const pets = Storage.get().pets || [];
     const p = Storage.get().player;
+    const deployedIds = Combat.getDeployedPetIds();
+    const slotsFull = deployedIds.length >= Combat.MAX_BATTLE_PETS;
     let content;
     if (!pets.length) {
       content = `<div class="panel p-6 text-center opacity-70">还没有宠物。<br/>去武器库用💎领养一只吧！</div>`;
@@ -1458,8 +1469,9 @@ const UI = {
         const feedCost = pp.level * 8;
         const expNeeded = pp.level * 20;
         const pct = Math.min(100, Math.round((pp.exp / expNeeded) * 100));
+        const deployed = deployedIds.includes(pp.species);
         return `
-          <div class="panel p-4 text-center">
+          <div class="panel p-4 text-center" style="${deployed ? "border-color:" + def.color : ""}">
             <div class="text-3xl">${getPetStageEmoji(def, pp.level)}</div>
             <div class="flex justify-center mt-1"><div style="width:${Math.round(48 * getPetVisualScale(pp.level))}px;height:${Math.round(48 * getPetVisualScale(pp.level))}px;transition:transform 0.3s">${def.svg}</div></div>
             <div class="font-bold mt-1" style="color:${def.color}">${def.name}</div>
@@ -1467,6 +1479,10 @@ const UI = {
             <div class="text-xs opacity-80 mt-1" style="color:${def.color}">⚡ ${Combat.describePet(pp)}</div>
             <div class="hpbar mt-2"><i style="width:${pct}%;background:linear-gradient(90deg,${def.color},var(--gold))"></i></div>
             <div class="text-xs opacity-50 mt-1">EXP ${pp.exp}/${expNeeded}</div>
+            ${deployed
+              ? `<button class="btn gold" style="width:100%;margin-top:8px" onclick="UI.toggleDeployPet('${pp.species}')">⚔️ 出战中（点击换下）</button>`
+              : `<button class="btn secondary" style="width:100%;margin-top:8px" ${slotsFull ? "disabled" : ""} onclick="UI.toggleDeployPet('${pp.species}')">${slotsFull ? "出战位已满" : "⚔️ 设为出战"}</button>`
+            }
             ${maxed ? `<div class="text-xs mt-2" style="color:var(--gold)">🌟 满级！能力全开</div>` :
               `<button class="btn" style="width:100%;margin-top:8px" ${p.crystals < feedCost ? "disabled" : ""} onclick="UI.feedPet('${pp.species}')">🍖 喂养 (${feedCost}💎)</button>`
             }
@@ -1481,10 +1497,26 @@ const UI = {
           <h1 class="text-2xl font-black title-glow">🐾 宠物舱</h1>
           <button class="btn secondary" onclick="UI.showMenu()">返回</button>
         </div>
-        <p class="text-xs opacity-60 mt-2">喂养宠物提升等级，解锁更强的战斗加成！</p>
+        <p class="text-xs opacity-60 mt-2">选择最多 <b>${Combat.MAX_BATTLE_PETS}</b> 只宠物出战，它们会跟你一起上战场！当前出战：${deployedIds.length ? deployedIds.map((id) => PETS.find((d) => d.id === id)?.name || id).join("、") : "无"}</p>
         <div class="grid grid-cols-2 gap-3 mt-4">${content}</div>
         <div class="h-6"></div>
       </div>`);
+  },
+
+  toggleDeployPet(speciesId) {
+    const child = Storage.getActiveChild();
+    const pets = Storage.get()?.pets || [];
+    if (!child || !pets.some((p) => p.species === speciesId)) return;
+    if (!Array.isArray(child.deployedPets)) child.deployedPets = [];
+    const idx = child.deployedPets.indexOf(speciesId);
+    if (idx >= 0) {
+      child.deployedPets.splice(idx, 1);
+    } else {
+      if (child.deployedPets.length >= Combat.MAX_BATTLE_PETS) return;
+      child.deployedPets.push(speciesId);
+    }
+    Storage.save();
+    this.showPets();
   },
 
   feedPet(speciesId) {
