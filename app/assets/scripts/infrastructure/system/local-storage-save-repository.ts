@@ -17,7 +17,7 @@ function parse(raw: string | null): SaveV5 | null {
 
 /** Browser / Capacitor localStorage adapter (Cocos 编辑器内可再换为 sys.localStorage). */
 export class LocalStorageSaveRepository implements SaveRepository {
-  constructor(private readonly storage: Storage = globalThis.localStorage) {}
+  constructor(private readonly storage: Storage = window.localStorage) {}
 
   async load(): Promise<SaveV5 | null> {
     return parse(this.storage.getItem(MAIN_KEY)) ?? parse(this.storage.getItem(BACKUP_KEY));
