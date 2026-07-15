@@ -118,7 +118,7 @@ export class BootProfileScreen {
     subtitle.node.setPosition(0, -24, 0);
 
     const panelW = 420;
-    const panelH = 380;
+    const panelH = 460;
     const panelRoot = new Node("ProfilePanel");
     screen.addChild(panelRoot);
     panelRoot.setPosition(280, 0, 0);
@@ -150,7 +150,7 @@ export class BootProfileScreen {
     nameChip.setPosition(0, 24, 0);
     this.nameChipLabel = nameChip.getChildByName("Label")!.getComponent(Label)!;
 
-    fieldCaption(fields, "TextbookCaption", "教材", -36);
+    fieldCaption(fields, "TextbookCaption", "教材", -24);
     makeChip(
       fields,
       "TextbookChip",
@@ -159,9 +159,9 @@ export class BootProfileScreen {
       40,
       UiTheme.colors.bgDeep,
       UiTheme.colors.accentInfo
-    ).setPosition(0, -72, 0);
+    ).setPosition(0, -60, 0);
 
-    fieldCaption(fields, "GradeCaption", "年级", -132);
+    fieldCaption(fields, "GradeCaption", "年级", -86);
     makeChip(
       fields,
       "GradeChip",
@@ -170,16 +170,22 @@ export class BootProfileScreen {
       40,
       UiTheme.colors.bgDeep,
       UiTheme.colors.accentInfo
-    ).setPosition(-90, -168, 0);
+    ).setPosition(0, -108, 0);
 
+    const ctaH = 56;
+    const ctaBottomMargin = 36;
     makeCtaButton(
       panelRoot,
       "CreateBtn",
       "创建并出航",
       panelW - 48,
-      56,
+      ctaH,
       () => opts.onCreate(NAME_OPTIONS[this.nameIndex])
-    ).setPosition(0, -panelH / 2 + 48, 0);
+    ).setPosition(0, -panelH / 2 + ctaBottomMargin + ctaH / 2, 0);
+  }
+
+  getScreenRoot(): Node | null {
+    return this.screenRoot;
   }
 
   destroy(): void {

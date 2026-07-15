@@ -225,14 +225,35 @@ export class StarMapScreen {
     });
 
     if (model.selectedUnitId) {
+      const idx = model.units.findIndex((u) => u.id === model.selectedUnitId);
+      const unit = idx >= 0 ? model.units[idx] : null;
+      const contextText = unit
+        ? truncateTitle(unit.title, 22)
+        : `Unit ${idx + 1}`;
+
+      const bottomBar = new Node("BottomBar");
+      screen.addChild(bottomBar);
+      const bottomY = -this.height / 2 + 56;
+      bottomBar.setPosition(this.width / 2 - 200, bottomY, 0);
+
+      const ctx = makeLabel(bottomBar, "SelectedCtx", {
+        string: contextText,
+        fontSize: UiTheme.font.body,
+        color: UiTheme.colors.textSecondary,
+        width: 220,
+        height: 32,
+      });
+      ctx.horizontalAlign = Label.HorizontalAlign.RIGHT;
+      ctx.node.setPosition(-90, 0, 0);
+
       makeCtaButton(
-        screen,
+        bottomBar,
         "SortieBtn",
         "出击",
         160,
         52,
         () => model.onSortie()
-      ).setPosition(this.width / 2 - 120, -this.height / 2 + 56, 0);
+      ).setPosition(80, 0, 0);
     }
   }
 

@@ -6,6 +6,7 @@ import {
   view,
   resources,
   JsonAsset,
+  profiler,
 } from "cc";
 import { ProfileService } from "../domain/profile/profile-service";
 import { calculateLevel } from "../domain/progression/xp";
@@ -47,8 +48,10 @@ export class BootApp extends Component {
   private sortieScreen!: SortieScreen;
 
   private prepNode: Node | null = null;
+  private profileErrorNode: Node | null = null;
 
   async onLoad() {
+    profiler.hideStats();
     this.profiles = new ProfileService(
       new LocalStorageSaveRepository(),
       new SystemClock(),
@@ -109,6 +112,7 @@ export class BootApp extends Component {
 
   private renderCurrent() {
     this.clearPrepLabel();
+    this.clearProfileError();
     this.profileScreen.destroy();
     this.starMapScreen.destroy();
     this.sortieScreen.destroy();
@@ -215,15 +219,45 @@ export class BootApp extends Component {
   }
 
   private async onCreateProfile(name: string) {
-    await this.profiles.createChild({
-      name,
-      textbookId: "hujiao_oxford_2024",
-      grade: "3A",
-    });
-    this.nav.afterCreateChild();
-    if (this.units.length > 0) {
-      this.nav.selectUnit(this.units[0].id);
+    try {
+      await this.profiles.createChild({
+        name,
+        textbookId: "hujiao_oxford_2024",
+        grade: "3A",
+      });
+      this.clearProfileError();
+      this.nav.afterCreateChild();
+      if (this.units.length > 0) {
+        this.nav.selectUnit(this.units[0].id);
+      }
+      this.renderCurrent();
+    } catch {
+      this.showProfileError();
     }
-    this.renderCurrent();
+  }
+
+  private showProfileError() {
+    this.clearProfileError();
+    const host = this.profileScreen.getScreenRoot() ?? this.screenHost;
+    const err = new Node("ProfileError");
+    host.addChild(err);
+    this.profileErrorNode = err;
+
+    const lbl = makeLabel(err, "ErrorLabel", {
+      string: "建档失败，请重试",
+      fontSize: UiTheme.font.body,
+      color: UiTheme.colors.accentCta,
+      width: 320,
+      height: 32,
+    });
+    lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
+    err.setPosition(280, -100, 0);
+  }
+
+  private clearProfileError() {
+    if (this.profileErrorNode) {
+      this.profileErrorNode.destroy();
+      this.profileErrorNode = null;
+    }
   }
 }
