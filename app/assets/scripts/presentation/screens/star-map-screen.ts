@@ -30,9 +30,11 @@ export type StarMapModel = {
   child: { name: string; level: number; alloy: number; starCrystals: number };
   units: StarMapUnit[];
   selectedUnitId: string | null;
+  dueReviewAvailable: boolean;
   onSelectUnit: (id: string) => void;
   onSortie: () => void;
   onBase: () => void;
+  onDueReview: () => void;
 };
 
 const MAX_CARDS = 8;
@@ -204,6 +206,26 @@ export class StarMapScreen {
       0,
       0
     );
+
+    const dueBar = new Node("DueReviewBar");
+    screen.addChild(dueBar);
+    dueBar.setPosition(-this.width / 2 + 120, this.height / 2 - 52, 0);
+
+    if (model.dueReviewAvailable) {
+      makeCtaButton(dueBar, "DueReviewBtn", "到期复习", 120, 36, () =>
+        model.onDueReview()
+      );
+    } else {
+      makeChip(
+        dueBar,
+        "DueReviewIdle",
+        "暂无到期",
+        120,
+        36,
+        UiTheme.colors.bgDeep,
+        UiTheme.colors.strokePanel
+      );
+    }
 
     const grid = new Node("UnitGrid");
     screen.addChild(grid);

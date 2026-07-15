@@ -75,13 +75,21 @@ export class BattleSession {
     private readonly mode: "campaign" | "review" = "campaign"
   ) {
     this.battleId = `battle_${clock.now()}`;
+    if (this.mode === "review") {
+      this.armor = new KnowledgeArmor(Math.max(1, this.items.length), 1);
+    }
     this.rebuildQueue();
   }
 
   private rebuildQueue(resetArmor = true) {
     const skill = SKILLS[Math.min(this.formIndex, SKILLS.length - 1)]!;
     this.queue = buildQuestions(this.items, skill, this.random);
-    if (resetArmor) this.armor = new KnowledgeArmor(3);
+    if (resetArmor) {
+      this.armor =
+        this.mode === "review"
+          ? new KnowledgeArmor(Math.max(1, this.items.length), 1)
+          : new KnowledgeArmor(3);
+    }
   }
 
   hud(): BattleHud {

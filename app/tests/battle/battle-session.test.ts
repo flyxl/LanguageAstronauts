@@ -36,4 +36,42 @@ describe("BattleSession", () => {
     expect(session.win).toBe(true);
     expect(answers).toBeGreaterThanOrEqual(12); // 4 forms * 3 nodes minimum
   });
+
+  it("finishes review mode after one phase sized to due item count", () => {
+    const clock = new FakeClock(1);
+    const save = createDefaultSave(1);
+    save.activeChildId = "c1";
+    save.children.c1 = {
+      id: "c1",
+      name: "测",
+      textbookId: "hujiao-oxford-2024",
+      grade: "3A",
+      createdAt: 1,
+    };
+    const unit = (catalog as ContentCatalog).units[0]!;
+    const items = unit.items.slice(0, 4);
+    const random = new MathRandomSource();
+    const session = new BattleSession(
+      "review",
+      items,
+      save,
+      "c1",
+      clock,
+      random,
+      new EventBus<AppEvents>(),
+      "review"
+    );
+    expect(session.hud().formTotal).toBe(4);
+    expect(session.hud().nodesTotal).toBe(4);
+    let answers = 0;
+    while (!session.finished && answers < 10) {
+      const q = session.nextQuestion();
+      if (!q) break;
+      session.answer(q.correct, { quality: 1 });
+      answers += 1;
+    }
+    expect(session.finished).toBe(true);
+    expect(session.win).toBe(true);
+    expect(answers).toBe(4);
+  });
 });

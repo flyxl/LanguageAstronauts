@@ -1,6 +1,7 @@
 import type { AnswerOutcome } from "../../core/app-events";
 import type { Clock } from "../../core/clock";
-import type { LearningRecord } from "../save/save-v5";
+import type { ContentItem } from "../content/content-types";
+import type { LearningRecord, SaveV5 } from "../save/save-v5";
 
 const STABILITY = [0.014, 0.083, 1, 3, 7];
 
@@ -58,4 +59,26 @@ export function dueContentIds(
   return Object.entries(learning)
     .filter(([k, v]) => k.startsWith(prefix) && v.dueAt > 0 && v.dueAt <= now)
     .map(([k]) => k.slice(prefix.length));
+}
+
+export function listDueContentIds(save: SaveV5, childId: string, nowMs: number): string[] {
+  return dueContentIds(save.learning, childId, nowMs);
+}
+
+export function resolveDueContentItems(
+  units: { items: ContentItem[] }[],
+  contentIds: string[]
+): ContentItem[] {
+  const byId = new Map<string, ContentItem>();
+  for (const unit of units) {
+    for (const item of unit.items) {
+      byId.set(item.contentId, item);
+    }
+  }
+  const out: ContentItem[] = [];
+  for (const id of contentIds) {
+    const item = byId.get(id);
+    if (item) out.push(item);
+  }
+  return out;
 }

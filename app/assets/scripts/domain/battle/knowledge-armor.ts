@@ -15,11 +15,13 @@ export class KnowledgeArmor {
   readonly nodesPerPhase: number;
   phaseIndex = 0;
   nodesRemaining: number;
-  readonly phases: ArmorPhase[] = ["shield", "armor", "core"];
+  readonly phases: ArmorPhase[];
 
-  constructor(nodesPerPhase = 3) {
+  constructor(nodesPerPhase = 3, phaseCount = 3) {
     this.nodesPerPhase = nodesPerPhase;
     this.nodesRemaining = nodesPerPhase;
+    const all: ArmorPhase[] = ["shield", "armor", "core"];
+    this.phases = all.slice(0, Math.max(1, Math.min(phaseCount, all.length)));
   }
 
   snapshot(): PhaseSnapshot {

@@ -16,6 +16,7 @@ import type { ContentItem } from "../domain/content/content-types";
 import { ProfileService } from "../domain/profile/profile-service";
 import { calculateLevel } from "../domain/progression/xp";
 import { PETS, type PetId } from "../domain/progression/pets";
+import { collectDueContentItems, hasDueReviews } from "../domain/learning/collect-due-items";
 import { ensureChildProgression } from "../domain/save/create-default-save";
 import type { WeaponId } from "../domain/weapons/weapons";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
@@ -248,10 +249,16 @@ export class BootApp extends Component {
   }
 
   private renderStarMap() {
+    const child = this.activeChild();
+    const save = this.profiles.currentSave();
+    const dueAvailable =
+      child != null && hasDueReviews(save.learning, child.id, this.clock.now(), this.units);
+
     this.starMapScreen.render({
       child: this.childSummary(),
       units: this.unitsWithStars(),
       selectedUnitId: this.nav.selectedUnitId,
+      dueReviewAvailable: dueAvailable,
       onSelectUnit: (id) => {
         this.nav.selectUnit(id);
         this.renderCurrent();
@@ -265,6 +272,7 @@ export class BootApp extends Component {
         this.nav.goBase();
         this.renderCurrent();
       },
+      onDueReview: () => this.onDueReviewStart(),
     });
   }
 
@@ -464,6 +472,35 @@ export class BootApp extends Component {
       this.random,
       this.bus,
       "campaign"
+    );
+    this.currentQ = this.session.nextQuestion();
+    this.spellBuffer = "";
+    this.nav.goBattle();
+    this.renderCurrent();
+  }
+
+  private onDueReviewStart() {
+    const child = this.activeChild();
+    if (!child) return;
+
+    const items = collectDueContentItems(
+      this.profiles.currentSave().learning,
+      child.id,
+      this.clock.now(),
+      this.units,
+      this.random
+    );
+    if (items.length === 0) return;
+
+    this.session = new BattleSession(
+      "review",
+      items,
+      this.profiles.currentSave(),
+      child.id,
+      this.clock,
+      this.random,
+      this.bus,
+      "review"
     );
     this.currentQ = this.session.nextQuestion();
     this.spellBuffer = "";
