@@ -3,19 +3,22 @@ import {
   Component,
   Node,
   Label,
-  Color,
-  UITransform,
   view,
-  Graphics,
-  sys,
-  EventTouch,
   resources,
   JsonAsset,
 } from "cc";
 import { ProfileService } from "../domain/profile/profile-service";
+import { calculateLevel } from "../domain/progression/xp";
+import { ensureChildProgression } from "../domain/save/create-default-save";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
 import { SystemClock } from "../infrastructure/system/system-clock";
 import { MathRandomSource } from "../infrastructure/system/math-random-source";
+import { MainPathNav } from "./main-path/main-path-nav";
+import { BootProfileScreen } from "./screens/boot-profile-screen";
+import { StarMapScreen } from "./screens/star-map-screen";
+import { SortieScreen } from "./screens/sortie-screen";
+import { makeLabel } from "./ui/ui-factory";
+import { UiTheme } from "./ui/theme";
 
 const { ccclass } = _decorator;
 
@@ -25,18 +28,25 @@ interface CatalogUnit {
   items?: unknown[];
 }
 
+const PREP_MS = 1200;
+
 /**
- * Cocos Native 启动层：档案 → 星图单元列表（最小可用闭环）。
+ * Cocos Native 主链路组合根：Profile → StarMap → Sortie。
  * 禁止 WebView / Capacitor。
  */
 @ccclass("BootApp")
 export class BootApp extends Component {
-  private title!: Label;
-  private body!: Label;
-  private btnLabel!: Label;
   private profiles!: ProfileService;
   private units: CatalogUnit[] = [];
-  private mode: "boot" | "map" = "boot";
+  private nav!: MainPathNav;
+  private screenHost!: Node;
+  private viewport = { width: 1280, height: 720 };
+
+  private profileScreen!: BootProfileScreen;
+  private starMapScreen!: StarMapScreen;
+  private sortieScreen!: SortieScreen;
+
+  private prepNode: Node | null = null;
 
   async onLoad() {
     this.profiles = new ProfileService(
@@ -46,17 +56,18 @@ export class BootApp extends Component {
     );
     await this.profiles.start();
     await this.loadCatalog();
-    this.buildUi();
+
     const kids = this.profiles.listChildren();
-    if (kids.length > 0) {
-      this.showStarMap(kids[0].name);
-    } else {
-      this.refreshSplash();
+    this.nav = new MainPathNav(kids.length > 0);
+    if (kids.length > 0 && this.units.length > 0) {
+      this.nav.selectUnit(this.units[0].id);
     }
+
+    this.buildShell();
+    this.renderCurrent();
   }
 
   private async loadCatalog() {
-    // build 时 content 会进 resources 或 main bundle；优先 resources
     try {
       const asset = await new Promise<JsonAsset | null>((resolve) => {
         resources.load("content/catalog", JsonAsset, (err, data) => {
@@ -72,7 +83,6 @@ export class BootApp extends Component {
     } catch {
       // fall through
     }
-    // 兜底：硬编码 3A 单元标题（与 catalog 一致即可玩冒烟）
     this.units = [
       { id: "u1", title: "Unit 1 How do we feel?", items: new Array(13) },
       { id: "u2", title: "Unit 2 What's interesting about families?", items: new Array(13) },
@@ -85,100 +95,135 @@ export class BootApp extends Component {
     ];
   }
 
-  private buildUi() {
-    const canvas = this.node;
+  private buildShell() {
     const size = view.getVisibleSize();
+    this.viewport = { width: size.width, height: size.height };
 
-    const bg = new Node("Bg");
-    canvas.addChild(bg);
-    bg.setSiblingIndex(0);
-    const g = bg.addComponent(Graphics);
-    g.fillColor = new Color(7, 20, 40, 255);
-    g.rect(-size.width / 2, -size.height / 2, size.width, size.height);
-    g.fill();
-    bg.addComponent(UITransform).setContentSize(size.width, size.height);
+    this.screenHost = new Node("ScreenHost");
+    this.node.addChild(this.screenHost);
 
-    const titleNode = new Node("Title");
-    canvas.addChild(titleNode);
-    titleNode.setPosition(0, size.height * 0.36, 0);
-    this.title = titleNode.addComponent(Label);
-    this.title.string = "时空语航员";
-    this.title.fontSize = 42;
-    this.title.color = new Color(230, 244, 255, 255);
-    titleNode.addComponent(UITransform).setContentSize(640, 64);
-
-    const bodyNode = new Node("Body");
-    canvas.addChild(bodyNode);
-    bodyNode.setPosition(0, 20, 0);
-    this.body = bodyNode.addComponent(Label);
-    this.body.fontSize = 20;
-    this.body.lineHeight = 30;
-    this.body.color = new Color(180, 210, 235, 255);
-    this.body.overflow = Label.Overflow.RESIZE_HEIGHT;
-    this.body.horizontalAlign = Label.HorizontalAlign.CENTER;
-    bodyNode.addComponent(UITransform).setContentSize(640, 520);
-
-    const btn = new Node("StartBtn");
-    canvas.addChild(btn);
-    btn.setPosition(0, -size.height * 0.34, 0);
-    const btnBg = btn.addComponent(Graphics);
-    btnBg.fillColor = new Color(37, 99, 235, 255);
-    btnBg.roundRect(-160, -40, 320, 80, 14);
-    btnBg.fill();
-    const btnLabelNode = new Node("BtnLabel");
-    btn.addChild(btnLabelNode);
-    this.btnLabel = btnLabelNode.addComponent(Label);
-    this.btnLabel.string = "创建档案并出发";
-    this.btnLabel.fontSize = 26;
-    this.btnLabel.color = Color.WHITE;
-    btnLabelNode.addComponent(UITransform).setContentSize(300, 40);
-    btn.addComponent(UITransform).setContentSize(320, 80);
-    btn.on(Node.EventType.TOUCH_END, this.onPrimary, this);
+    this.profileScreen = new BootProfileScreen(this.screenHost, this.viewport);
+    this.starMapScreen = new StarMapScreen(this.screenHost, this.viewport);
+    this.sortieScreen = new SortieScreen(this.screenHost, this.viewport);
   }
 
-  private refreshSplash() {
-    this.mode = "boot";
-    const runtime = sys.isNative ? `Cocos Native · ${sys.platform}` : `预览 · ${sys.platform}`;
-    this.title.string = "时空语航员";
-    this.btnLabel.string = "创建档案并出发";
-    this.body.string =
-      `运行时：${runtime}\n` +
-      `引擎：Cocos Creator Native（非 WebView）\n` +
-      `教材：沪教牛津 2024 · 3A\n` +
-      `点击下方创建「小航员」档案并进入星图。`;
-  }
+  private renderCurrent() {
+    this.clearPrepLabel();
+    this.profileScreen.destroy();
+    this.starMapScreen.destroy();
+    this.sortieScreen.destroy();
 
-  private showStarMap(childName: string) {
-    this.mode = "map";
-    this.title.string = childName;
-    this.btnLabel.string = "出击 Unit 1";
-    const lines = this.units.map((u, i) => {
-      const n = u.items?.length ?? 13;
-      return `${i + 1}. ${u.title}\n    ${n} 语言点 · 出击`;
-    });
-    this.body.string =
-      `星图远征 · 3A\n四关 Boss（听/读/拼/说）· 知识装甲\n\n` +
-      lines.join("\n\n") +
-      `\n\n运行时：${sys.isNative ? "Cocos Native" : "预览"}`;
-  }
-
-  private async onPrimary(_e?: EventTouch) {
-    if (this.mode === "boot") {
-      const child = await this.profiles.createChild({
-        name: "小航员",
-        textbookId: "hujiao_oxford_2024",
-        grade: "3A",
-      });
-      this.showStarMap(child.name);
-      return;
+    switch (this.nav.screen) {
+      case "profile":
+        this.profileScreen.render({
+          onCreate: (name) => void this.onCreateProfile(name),
+        });
+        break;
+      case "starmap":
+        this.renderStarMap();
+        break;
+      case "sortie":
+        this.renderSortie();
+        break;
     }
-    // map mode：最小“开战”反馈
-    const u = this.units[0];
-    this.body.string =
-      `出击准备：${u?.title ?? "Unit 1"}\n` +
-      `Boss 形态：听 → 读 → 拼 → 说\n` +
-      `领域层 BattleSession 已接入仓库；\n下一包完成完整战斗场景绑定。\n\n` +
-      `运行时：${sys.isNative ? "Cocos Native ✓" : "预览"}`;
-    this.btnLabel.string = "已锁定出击";
+  }
+
+  private activeChild() {
+    return this.profiles.listChildren()[0] ?? null;
+  }
+
+  private childSummary() {
+    const child = this.activeChild();
+    if (!child) throw new Error("no active child");
+    const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
+    return {
+      name: child.name,
+      level: calculateLevel(prog.totalXp),
+      alloy: prog.alloy,
+      starCrystals: prog.starCrystals,
+    };
+  }
+
+  private unitsWithStars() {
+    const child = this.activeChild();
+    if (!child) return this.units;
+    const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
+    return this.units.map((u) => ({
+      ...u,
+      stars: prog.unitStars[u.id] ?? 0,
+    }));
+  }
+
+  private renderStarMap() {
+    this.starMapScreen.render({
+      child: this.childSummary(),
+      units: this.unitsWithStars(),
+      selectedUnitId: this.nav.selectedUnitId,
+      onSelectUnit: (id) => {
+        this.nav.selectUnit(id);
+        this.renderCurrent();
+      },
+      onSortie: () => {
+        this.nav.goSortie();
+        this.renderCurrent();
+      },
+    });
+  }
+
+  private renderSortie() {
+    const unit = this.units.find((u) => u.id === this.nav.selectedUnitId);
+    this.sortieScreen.render({
+      unitTitle: unit?.title ?? "Unit",
+      onBack: () => {
+        this.nav.backToStarMap();
+        this.renderCurrent();
+      },
+      onStart: () => this.onSortieStart(),
+    });
+  }
+
+  private onSortieStart() {
+    if (this.prepNode) return;
+    const host = this.sortieScreen.getScreenRoot() ?? this.screenHost;
+    const prep = new Node("PrepFeedback");
+    host.addChild(prep);
+    this.prepNode = prep;
+
+    const lbl = makeLabel(prep, "PrepLabel", {
+      string: "战斗舱整备中",
+      fontSize: UiTheme.font.screenTitle,
+      color: UiTheme.colors.accentInfo,
+      width: 320,
+      height: 48,
+    });
+    lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
+    prep.setPosition(0, -this.viewport.height / 2 + 140, 0);
+
+    this.scheduleOnce(this.onPrepDone, PREP_MS / 1000);
+  }
+
+  private onPrepDone = (): void => {
+    this.clearPrepLabel();
+  };
+
+  private clearPrepLabel() {
+    this.unschedule(this.onPrepDone);
+    if (this.prepNode) {
+      this.prepNode.destroy();
+      this.prepNode = null;
+    }
+  }
+
+  private async onCreateProfile(name: string) {
+    await this.profiles.createChild({
+      name,
+      textbookId: "hujiao_oxford_2024",
+      grade: "3A",
+    });
+    this.nav.afterCreateChild();
+    if (this.units.length > 0) {
+      this.nav.selectUnit(this.units[0].id);
+    }
+    this.renderCurrent();
   }
 }

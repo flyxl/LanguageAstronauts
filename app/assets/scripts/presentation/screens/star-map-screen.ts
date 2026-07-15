@@ -11,7 +11,6 @@ import {
   colorOf,
   makeCtaButton,
   makeLabel,
-  makePanel,
 } from "../ui/ui-factory";
 import { assertPlayerSafeCopy, UiTheme, type Rgba } from "../ui/theme";
 import { formatStars } from "../ui/format-stars";
