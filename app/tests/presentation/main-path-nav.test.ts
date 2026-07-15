@@ -26,4 +26,16 @@ describe("MainPathNav", () => {
     nav.backToStarMap();
     expect(nav.screen).toBe("starmap");
   });
+
+  it("sortie → battle → settlement → starmap", () => {
+    const nav = new MainPathNav(true);
+    nav.selectUnit("3A-U1");
+    nav.goSortie();
+    nav.goBattle();
+    expect(nav.screen).toBe("battle");
+    nav.goSettlement();
+    expect(nav.screen).toBe("settlement");
+    nav.backToStarMap();
+    expect(nav.screen).toBe("starmap");
+  });
 });

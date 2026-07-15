@@ -1,4 +1,4 @@
-export type MainPathScreen = "profile" | "starmap" | "sortie";
+export type MainPathScreen = "profile" | "starmap" | "sortie" | "battle" | "settlement";
 
 export class MainPathNav {
   screen: MainPathScreen;
@@ -19,6 +19,14 @@ export class MainPathNav {
   goSortie(): void {
     if (!this.selectedUnitId) throw new Error("no unit selected");
     this.screen = "sortie";
+  }
+
+  goBattle(): void {
+    this.screen = "battle";
+  }
+
+  goSettlement(): void {
+    this.screen = "settlement";
   }
 
   backToStarMap(): void {
