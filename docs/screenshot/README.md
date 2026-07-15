@@ -9,5 +9,6 @@
 | `09-native-sortie.png` | Sortie：出击确认 |
 | `10-native-battle.png` | Battle：听力作答（Boss 形态 1/4） |
 | `11-native-base.png` | Base：武器库 / 宠物舱 / 设置 |
+| `12-native-report.png` | Report：学情简报 |
 
 采集：`adb install -r releases/language-astronauts-debug.apk` 后横屏操作，`adb exec-out screencap -p`。
