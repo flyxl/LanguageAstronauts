@@ -14,9 +14,9 @@
       ],
       "useDebugKeystore": true,
       "orientation": {
-        "portrait": true,
-        "landscapeLeft": false,
-        "landscapeRight": false,
+        "portrait": false,
+        "landscapeLeft": true,
+        "landscapeRight": true,
         "upsideDown": false
       },
       "sdkPath": "/Users/flyxl/Library/Android/sdk",
