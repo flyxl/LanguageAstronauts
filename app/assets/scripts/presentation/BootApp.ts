@@ -16,7 +16,7 @@ import type { ContentItem } from "../domain/content/content-types";
 import { ProfileService } from "../domain/profile/profile-service";
 import { calculateLevel } from "../domain/progression/xp";
 import { PETS, type PetId } from "../domain/progression/pets";
-import { collectDueContentItems, hasDueReviews } from "../domain/learning/collect-due-items";
+import { collectDueContentItems, countDueReviews } from "../domain/learning/collect-due-items";
 import { ensureChildProgression } from "../domain/save/create-default-save";
 import type { WeaponId } from "../domain/weapons/weapons";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
@@ -122,7 +122,9 @@ export class BootApp extends Component {
 
   private prepNode: Node | null = null;
   private profileErrorNode: Node | null = null;
+  private reviewHintNode: Node | null = null;
   private deployCapHint = false;
+  private pendingBattleMode: "campaign" | "review" = "campaign";
 
   async onLoad() {
     profiler.hideStats();
@@ -251,14 +253,14 @@ export class BootApp extends Component {
   private renderStarMap() {
     const child = this.activeChild();
     const save = this.profiles.currentSave();
-    const dueAvailable =
-      child != null && hasDueReviews(save.learning, child.id, this.clock.now(), this.units);
+    const dueCount =
+      child != null ? countDueReviews(save.learning, child.id, this.clock.now(), this.units) : 0;
 
     this.starMapScreen.render({
       child: this.childSummary(),
       units: this.unitsWithStars(),
       selectedUnitId: this.nav.selectedUnitId,
-      dueReviewAvailable: dueAvailable,
+      dueCount,
       onSelectUnit: (id) => {
         this.nav.selectUnit(id);
         this.renderCurrent();
@@ -434,8 +436,17 @@ export class BootApp extends Component {
   }
 
   private onSortieStart() {
+    this.pendingBattleMode = "campaign";
+    this.showBattlePrep(this.sortieScreen.getScreenRoot() ?? this.screenHost);
+  }
+
+  private onDueReviewStart() {
+    this.pendingBattleMode = "review";
+    this.showBattlePrep(this.starMapScreen.getScreenRoot() ?? this.screenHost);
+  }
+
+  private showBattlePrep(host: Node) {
     if (this.prepNode) return;
-    const host = this.sortieScreen.getScreenRoot() ?? this.screenHost;
     const prep = new Node("PrepFeedback");
     host.addChild(prep);
     this.prepNode = prep;
@@ -455,52 +466,45 @@ export class BootApp extends Component {
 
   private onPrepDone = (): void => {
     this.clearPrepLabel();
-    this.startBattle();
+    this.startBattle({ mode: this.pendingBattleMode });
   };
 
-  private startBattle() {
-    const child = this.activeChild();
-    const unit = this.units.find((u) => u.id === this.nav.selectedUnitId);
-    if (!child || !unit || unit.items.length === 0) return;
-
-    this.session = new BattleSession(
-      unit.id,
-      unit.items,
-      this.profiles.currentSave(),
-      child.id,
-      this.clock,
-      this.random,
-      this.bus,
-      "campaign"
-    );
-    this.currentQ = this.session.nextQuestion();
-    this.spellBuffer = "";
-    this.nav.goBattle();
-    this.renderCurrent();
-  }
-
-  private onDueReviewStart() {
+  private startBattle(opts: { mode: "campaign" | "review" }) {
     const child = this.activeChild();
     if (!child) return;
 
-    const items = collectDueContentItems(
-      this.profiles.currentSave().learning,
-      child.id,
-      this.clock.now(),
-      this.units,
-      this.random
-    );
-    if (items.length === 0) return;
+    let unitId: string;
+    let items: ContentItem[];
+
+    if (opts.mode === "campaign") {
+      const unit = this.units.find((u) => u.id === this.nav.selectedUnitId);
+      if (!unit || unit.items.length === 0) return;
+      unitId = unit.id;
+      items = unit.items;
+    } else {
+      items = collectDueContentItems(
+        this.profiles.currentSave().learning,
+        child.id,
+        this.clock.now(),
+        this.units,
+        this.random
+      );
+      if (items.length === 0) {
+        this.showReviewEmptyHint();
+        return;
+      }
+      unitId = "review";
+    }
 
     this.session = new BattleSession(
-      "review",
+      unitId,
       items,
       this.profiles.currentSave(),
       child.id,
       this.clock,
       this.random,
       this.bus,
-      "review"
+      opts.mode
     );
     this.currentQ = this.session.nextQuestion();
     this.spellBuffer = "";
@@ -588,4 +592,32 @@ export class BootApp extends Component {
       this.profileErrorNode = null;
     }
   }
+
+  private showReviewEmptyHint() {
+    this.clearReviewHint();
+    const host = this.starMapScreen.getScreenRoot() ?? this.screenHost;
+    const hint = new Node("ReviewEmptyHint");
+    host.addChild(hint);
+    this.reviewHintNode = hint;
+
+    const lbl = makeLabel(hint, "HintLabel", {
+      string: "暂无到期任务",
+      fontSize: UiTheme.font.body,
+      color: UiTheme.colors.accentInfo,
+      width: 320,
+      height: 32,
+    });
+    lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
+    hint.setPosition(0, -this.viewport.height / 2 + 140, 0);
+
+    this.scheduleOnce(this.clearReviewHint, 2);
+  }
+
+  private clearReviewHint = (): void => {
+    this.unschedule(this.clearReviewHint);
+    if (this.reviewHintNode) {
+      this.reviewHintNode.destroy();
+      this.reviewHintNode = null;
+    }
+  };
 }

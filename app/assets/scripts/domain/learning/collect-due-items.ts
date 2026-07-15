@@ -37,12 +37,21 @@ export function collectDueContentItems(
   return shuffled.slice(0, count);
 }
 
+export function countDueReviews(
+  learning: Record<string, LearningRecord>,
+  childId: string,
+  now: number,
+  catalogUnits: CatalogUnitLike[]
+): number {
+  const ids = dueContentIds(learning, childId, now);
+  return resolveDueContentItems(catalogUnits, ids).length;
+}
+
 export function hasDueReviews(
   learning: Record<string, LearningRecord>,
   childId: string,
   now: number,
   catalogUnits: CatalogUnitLike[]
 ): boolean {
-  const ids = dueContentIds(learning, childId, now);
-  return resolveDueContentItems(catalogUnits, ids).length > 0;
+  return countDueReviews(learning, childId, now, catalogUnits) > 0;
 }

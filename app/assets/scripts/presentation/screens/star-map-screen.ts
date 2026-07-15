@@ -30,7 +30,7 @@ export type StarMapModel = {
   child: { name: string; level: number; alloy: number; starCrystals: number };
   units: StarMapUnit[];
   selectedUnitId: string | null;
-  dueReviewAvailable: boolean;
+  dueCount: number;
   onSelectUnit: (id: string) => void;
   onSortie: () => void;
   onBase: () => void;
@@ -207,24 +207,17 @@ export class StarMapScreen {
       0
     );
 
-    const dueBar = new Node("DueReviewBar");
-    screen.addChild(dueBar);
-    dueBar.setPosition(-this.width / 2 + 120, this.height / 2 - 52, 0);
-
-    if (model.dueReviewAvailable) {
-      makeCtaButton(dueBar, "DueReviewBtn", "到期复习", 120, 36, () =>
-        model.onDueReview()
-      );
-    } else {
+    if (model.dueCount > 0) {
       makeChip(
-        dueBar,
-        "DueReviewIdle",
-        "暂无到期",
-        120,
-        36,
-        UiTheme.colors.bgDeep,
-        UiTheme.colors.strokePanel
-      );
+        screen,
+        "DueReviewChip",
+        `到期复习 ${model.dueCount}`,
+        148,
+        40,
+        UiTheme.colors.bgPanel,
+        UiTheme.colors.accentCta,
+        () => model.onDueReview()
+      ).setPosition(0, this.height / 2 - 96, 0);
     }
 
     const grid = new Node("UnitGrid");
@@ -291,5 +284,9 @@ export class StarMapScreen {
       this.screenRoot.destroy();
       this.screenRoot = null;
     }
+  }
+
+  getScreenRoot(): Node | null {
+    return this.screenRoot;
   }
 }

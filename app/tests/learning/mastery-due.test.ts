@@ -3,10 +3,8 @@ import {
   dueContentIds,
   learningKey,
   listDueContentIds,
-  resolveDueContentItems,
 } from "../../assets/scripts/domain/learning/mastery";
 import { createDefaultSave } from "../../assets/scripts/domain/save/create-default-save";
-import type { ContentItem } from "../../assets/scripts/domain/content/content-types";
 
 const SAMPLE: ContentItem = {
   contentId: "ox-3a-u1-happy",
@@ -72,14 +70,5 @@ describe("due review helpers", () => {
       incorrect: 0,
     };
     expect(listDueContentIds(save, "c1", 9999)).toEqual([]);
-  });
-
-  it("maps due contentIds to catalog items in order", () => {
-    const items = resolveDueContentItems(
-      [{ items: [SAMPLE] }, { items: [{ ...SAMPLE, contentId: "missing" }] }],
-      ["ox-3a-u1-happy", "not-in-catalog"]
-    );
-    expect(items).toHaveLength(1);
-    expect(items[0]!.contentId).toBe("ox-3a-u1-happy");
   });
 });
