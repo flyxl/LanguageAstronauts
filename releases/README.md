@@ -56,4 +56,6 @@ adb shell am start -n com.languageastronauts.app/com.cocos.game.AppActivity
 - [x] APK 含 `lib/arm64-v8a/libcocos.so`，无 Capacitor 业务链
 - [x] `aapt dump badging`：包名与 `com.cocos.game.AppActivity` 正确
 - [x] AVD `la_api28_arm` 安装成功并冷启动（pid 存活）
-- [ ] Boot UI（`BootApp`）完整挂接与玩法冒烟（下一迭代）
+- [x] Boot UI（创建档案）可见
+- [x] 星图单元列表 +「出击 Unit 1」可用反馈
+- [x] 运行时文案确认 Cocos Native（非 WebView）
