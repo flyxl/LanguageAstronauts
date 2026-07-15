@@ -1,19 +1,12 @@
 # 界面截图
 
-本目录由 E2E / 冒烟采集，对应文档场景（见 `docs/architecture/cocos-app.md`）。
+本目录为 Cocos Native 冒烟截图，对应主链路场景（见 `docs/architecture/cocos-app.md`、`docs/product/GDD-v2-cocos.md`）。
 
 | 文件 | 场景 / 说明 |
 |------|-------------|
-| `01-profile.png` | Profile：创建孩子档案 |
-| `02-base-starmap.png` | Base + StarMap |
-| `03-weapons.png` | 武器库 |
-| `04-pets.png` | 宠物舱 |
-| `05-battle.png` | Battle |
-| `06-settlement.png` | Settlement |
-| `07-native-boot.png` | Cocos Native Boot / Profile |
-| `08-native-starmap.png` | Cocos Native 星图 |
-| `09-native-sortie.png` | Cocos Native 出击反馈 |
+| `07-native-boot.png` | Profile：建档出航 |
+| `08-native-starmap.png` | StarMap：单元选择 |
+| `09-native-sortie.png` | Sortie：出击确认 |
+| `10-native-battle.png` | Battle：听力作答（Boss 形态 1/4） |
 
-Web 截图：`cd play && npm run test:e2e`（Playwright 写入本目录）。
-
-Native 主链路：`adb install -r releases/language-astronauts-debug.apk` 后冷启动，横屏 `adb exec-out screencap -p` 采集 `07–09`（见 `.superpowers/sdd/task-8-brief.md`）。
+采集：`adb install -r releases/language-astronauts-debug.apk` 后横屏操作，`adb exec-out screencap -p`。
