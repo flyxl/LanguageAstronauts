@@ -3,3 +3,10 @@
 node_modules/
 .vercel
 .superpowers/
+app/library/
+app/local/
+app/temp/
+app/build/
+app/node_modules/
+play/node_modules/
+play/dist/

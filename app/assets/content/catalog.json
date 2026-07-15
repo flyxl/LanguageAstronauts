@@ -1,0 +1,1796 @@
+{
+  "units": [
+    {
+      "id": "3A-U1",
+      "title": "Unit 1 How do we feel?",
+      "items": [
+        {
+          "contentId": "ox-3a-u1-happy",
+          "kind": "vocab",
+          "en": "happy",
+          "zh": "开心的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u1-sad",
+          "kind": "vocab",
+          "en": "sad",
+          "zh": "伤心的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u1-angry",
+          "kind": "vocab",
+          "en": "angry",
+          "zh": "生气的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u1-tired",
+          "kind": "vocab",
+          "en": "tired",
+          "zh": "疲倦的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u1-cold",
+          "kind": "vocab",
+          "en": "cold",
+          "zh": "冷的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u1-boy",
+          "kind": "vocab",
+          "en": "boy",
+          "zh": "男孩",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u1-girl",
+          "kind": "vocab",
+          "en": "girl",
+          "zh": "女孩",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u1-find",
+          "kind": "vocab",
+          "en": "find",
+          "zh": "找到",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u1-pencil",
+          "kind": "vocab",
+          "en": "pencil",
+          "zh": "铅笔",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u1-well",
+          "kind": "vocab",
+          "en": "well",
+          "zh": "好；好啦",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U1-d1",
+          "kind": "dialogue",
+          "en": "How are you?",
+          "zh": "你好吗？",
+          "prompt": "How are you?",
+          "answer": "I'm fine. Thank you.",
+          "speaker": "Ms Wu",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U1-d2",
+          "kind": "dialogue",
+          "en": "Are you cold?",
+          "zh": "你冷吗？",
+          "prompt": "Are you cold?",
+          "answer": "Yes, I am.",
+          "speaker": "Ben",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U1-d3",
+          "kind": "dialogue",
+          "en": "I can't find my pencil.",
+          "zh": "我找不到铅笔了。",
+          "prompt": "I can't find my pencil.",
+          "answer": "Here's a pencil.",
+          "speaker": "Bob",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3A-U2",
+      "title": "Unit 2 What's interesting about families?",
+      "items": [
+        {
+          "contentId": "ox-3a-u2-family",
+          "kind": "vocab",
+          "en": "family",
+          "zh": "家庭",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u2-father",
+          "kind": "vocab",
+          "en": "father",
+          "zh": "爸爸",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u2-mother",
+          "kind": "vocab",
+          "en": "mother",
+          "zh": "妈妈",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u2-brother",
+          "kind": "vocab",
+          "en": "brother",
+          "zh": "哥哥；弟弟",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u2-sister",
+          "kind": "vocab",
+          "en": "sister",
+          "zh": "姐姐；妹妹",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u2-grandfather",
+          "kind": "vocab",
+          "en": "grandfather",
+          "zh": "爷爷；外公",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u2-grandmother",
+          "kind": "vocab",
+          "en": "grandmother",
+          "zh": "奶奶；外婆",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u2-who",
+          "kind": "vocab",
+          "en": "who",
+          "zh": "谁",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u2-twin",
+          "kind": "vocab",
+          "en": "twin",
+          "zh": "双胞胎之一",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u2-big",
+          "kind": "vocab",
+          "en": "big",
+          "zh": "大的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U2-d1",
+          "kind": "dialogue",
+          "en": "Who is he?",
+          "zh": "他是谁？",
+          "prompt": "Who is he?",
+          "answer": "He is my father.",
+          "speaker": "Ben",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U2-d2",
+          "kind": "dialogue",
+          "en": "This is my family.",
+          "zh": "这是我的家庭。",
+          "prompt": "This is my family.",
+          "answer": "Your family is big.",
+          "speaker": "Ms Wu",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U2-d3",
+          "kind": "dialogue",
+          "en": "Who is she?",
+          "zh": "她是谁？",
+          "prompt": "Who is she?",
+          "answer": "She is my sister.",
+          "speaker": "Bob",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3A-U3",
+      "title": "Unit 3 What do we look like?",
+      "items": [
+        {
+          "contentId": "ox-3a-u3-head",
+          "kind": "vocab",
+          "en": "head",
+          "zh": "头",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u3-eye",
+          "kind": "vocab",
+          "en": "eye",
+          "zh": "眼睛",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u3-ear",
+          "kind": "vocab",
+          "en": "ear",
+          "zh": "耳朵",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u3-mouth",
+          "kind": "vocab",
+          "en": "mouth",
+          "zh": "嘴巴",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u3-nose",
+          "kind": "vocab",
+          "en": "nose",
+          "zh": "鼻子",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u3-hair",
+          "kind": "vocab",
+          "en": "hair",
+          "zh": "头发",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u3-face",
+          "kind": "vocab",
+          "en": "face",
+          "zh": "脸",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u3-long",
+          "kind": "vocab",
+          "en": "long",
+          "zh": "长的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u3-short",
+          "kind": "vocab",
+          "en": "short",
+          "zh": "短的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u3-haircut",
+          "kind": "vocab",
+          "en": "haircut",
+          "zh": "理发；发型",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U3-d1",
+          "kind": "dialogue",
+          "en": "You have long hair.",
+          "zh": "你有长头发。",
+          "prompt": "You have long hair.",
+          "answer": "Thank you.",
+          "speaker": "Bob",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U3-d2",
+          "kind": "dialogue",
+          "en": "You look great!",
+          "zh": "你看起来很棒！",
+          "prompt": "You look great!",
+          "answer": "Thank you, Ms Wu.",
+          "speaker": "Ms Wu",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U3-d3",
+          "kind": "dialogue",
+          "en": "I like your haircut.",
+          "zh": "我喜欢你的发型。",
+          "prompt": "I like your haircut.",
+          "answer": "Thank you.",
+          "speaker": "Ben",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3A-U4",
+      "title": "Unit 4 How do we have fun?",
+      "items": [
+        {
+          "contentId": "ox-3a-u4-skip",
+          "kind": "vocab",
+          "en": "skip",
+          "zh": "跳绳",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u4-run",
+          "kind": "vocab",
+          "en": "run",
+          "zh": "跑",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u4-jump",
+          "kind": "vocab",
+          "en": "jump",
+          "zh": "跳",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u4-park",
+          "kind": "vocab",
+          "en": "park",
+          "zh": "公园",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u4-ride-a-bike",
+          "kind": "vocab",
+          "en": "ride a bike",
+          "zh": "骑自行车",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u4-fly-a-kite",
+          "kind": "vocab",
+          "en": "fly a kite",
+          "zh": "放风筝",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u4-together",
+          "kind": "vocab",
+          "en": "together",
+          "zh": "一起",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u4-fun",
+          "kind": "vocab",
+          "en": "fun",
+          "zh": "乐趣",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u4-can",
+          "kind": "vocab",
+          "en": "can",
+          "zh": "能够",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u4-help",
+          "kind": "vocab",
+          "en": "help",
+          "zh": "帮助",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U4-d1",
+          "kind": "dialogue",
+          "en": "Can you skip?",
+          "zh": "你会跳绳吗？",
+          "prompt": "Can you skip?",
+          "answer": "Yes, I can.",
+          "speaker": "Ben",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U4-d2",
+          "kind": "dialogue",
+          "en": "Let's play together.",
+          "zh": "我们一起玩吧。",
+          "prompt": "Let's play together.",
+          "answer": "OK.",
+          "speaker": "Bob",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U4-d3",
+          "kind": "dialogue",
+          "en": "We have fun in the park.",
+          "zh": "我们在公园里玩得很开心。",
+          "prompt": "We have fun in the park.",
+          "answer": "That's great!",
+          "speaker": "Ms Wu",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3A-U5",
+      "title": "Unit 5 What do we eat?",
+      "items": [
+        {
+          "contentId": "ox-3a-u5-food",
+          "kind": "vocab",
+          "en": "food",
+          "zh": "食物",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u5-fruit",
+          "kind": "vocab",
+          "en": "fruit",
+          "zh": "水果",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u5-vegetable",
+          "kind": "vocab",
+          "en": "vegetable",
+          "zh": "蔬菜",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u5-apple",
+          "kind": "vocab",
+          "en": "apple",
+          "zh": "苹果",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u5-banana",
+          "kind": "vocab",
+          "en": "banana",
+          "zh": "香蕉",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u5-tomato",
+          "kind": "vocab",
+          "en": "tomato",
+          "zh": "西红柿",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u5-carrot",
+          "kind": "vocab",
+          "en": "carrot",
+          "zh": "胡萝卜",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u5-meat",
+          "kind": "vocab",
+          "en": "meat",
+          "zh": "肉",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u5-fish",
+          "kind": "vocab",
+          "en": "fish",
+          "zh": "鱼",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u5-soup",
+          "kind": "vocab",
+          "en": "soup",
+          "zh": "汤",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U5-d1",
+          "kind": "dialogue",
+          "en": "What do we eat?",
+          "zh": "我们吃什么？",
+          "prompt": "What do we eat?",
+          "answer": "We eat fruit and vegetables.",
+          "speaker": "Ms Wu",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U5-d2",
+          "kind": "dialogue",
+          "en": "I like apples.",
+          "zh": "我喜欢苹果。",
+          "prompt": "I like apples.",
+          "answer": "Me too.",
+          "speaker": "Ben",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U5-d3",
+          "kind": "dialogue",
+          "en": "Do you like fish?",
+          "zh": "你喜欢鱼吗？",
+          "prompt": "Do you like fish?",
+          "answer": "Yes, I do.",
+          "speaker": "Bob",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3A-U6",
+      "title": "Unit 6 What do we like about small animals?",
+      "items": [
+        {
+          "contentId": "ox-3a-u6-animal",
+          "kind": "vocab",
+          "en": "animal",
+          "zh": "动物",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u6-rabbit",
+          "kind": "vocab",
+          "en": "rabbit",
+          "zh": "兔子",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u6-cat",
+          "kind": "vocab",
+          "en": "cat",
+          "zh": "猫",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u6-dog",
+          "kind": "vocab",
+          "en": "dog",
+          "zh": "狗",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u6-mouse",
+          "kind": "vocab",
+          "en": "mouse",
+          "zh": "老鼠",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u6-frog",
+          "kind": "vocab",
+          "en": "frog",
+          "zh": "青蛙",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u6-tail",
+          "kind": "vocab",
+          "en": "tail",
+          "zh": "尾巴",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u6-cute",
+          "kind": "vocab",
+          "en": "cute",
+          "zh": "可爱的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u6-small",
+          "kind": "vocab",
+          "en": "small",
+          "zh": "小的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u6-squirrel",
+          "kind": "vocab",
+          "en": "squirrel",
+          "zh": "松鼠",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U6-d1",
+          "kind": "dialogue",
+          "en": "It has a long tail.",
+          "zh": "它有长尾巴。",
+          "prompt": "It has a long tail.",
+          "answer": "It's cute.",
+          "speaker": "Ben",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U6-d2",
+          "kind": "dialogue",
+          "en": "What is it?",
+          "zh": "它是什么？",
+          "prompt": "What is it?",
+          "answer": "It is a rabbit.",
+          "speaker": "Bob",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U6-d3",
+          "kind": "dialogue",
+          "en": "They are small animals.",
+          "zh": "它们是小动物。",
+          "prompt": "They are small animals.",
+          "answer": "I like them.",
+          "speaker": "Ms Wu",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3A-U7",
+      "title": "Unit 7 What do we know about weather?",
+      "items": [
+        {
+          "contentId": "ox-3a-u7-weather",
+          "kind": "vocab",
+          "en": "weather",
+          "zh": "天气",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u7-sunny",
+          "kind": "vocab",
+          "en": "sunny",
+          "zh": "晴朗的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u7-rainy",
+          "kind": "vocab",
+          "en": "rainy",
+          "zh": "下雨的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u7-windy",
+          "kind": "vocab",
+          "en": "windy",
+          "zh": "刮风的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u7-cloudy",
+          "kind": "vocab",
+          "en": "cloudy",
+          "zh": "多云的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u7-hot",
+          "kind": "vocab",
+          "en": "hot",
+          "zh": "热的",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u7-today",
+          "kind": "vocab",
+          "en": "today",
+          "zh": "今天",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u7-sun",
+          "kind": "vocab",
+          "en": "sun",
+          "zh": "太阳",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u7-rain",
+          "kind": "vocab",
+          "en": "rain",
+          "zh": "雨",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u7-wind",
+          "kind": "vocab",
+          "en": "wind",
+          "zh": "风",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U7-d1",
+          "kind": "dialogue",
+          "en": "How is the weather today?",
+          "zh": "今天天气怎么样？",
+          "prompt": "How is the weather today?",
+          "answer": "It's sunny and hot.",
+          "speaker": "Ms Wu",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U7-d2",
+          "kind": "dialogue",
+          "en": "It's windy today.",
+          "zh": "今天有风。",
+          "prompt": "It's windy today.",
+          "answer": "Put on your hat.",
+          "speaker": "Ben",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U7-d3",
+          "kind": "dialogue",
+          "en": "Let's go to the park.",
+          "zh": "我们去公园吧。",
+          "prompt": "Let's go to the park.",
+          "answer": "OK.",
+          "speaker": "Bob",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3A-U8",
+      "title": "Unit 8 Why do we like birthdays?",
+      "items": [
+        {
+          "contentId": "ox-3a-u8-birthday",
+          "kind": "vocab",
+          "en": "birthday",
+          "zh": "生日",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u8-cake",
+          "kind": "vocab",
+          "en": "cake",
+          "zh": "蛋糕",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u8-candle",
+          "kind": "vocab",
+          "en": "candle",
+          "zh": "蜡烛",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u8-gift",
+          "kind": "vocab",
+          "en": "gift",
+          "zh": "礼物",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u8-card",
+          "kind": "vocab",
+          "en": "card",
+          "zh": "卡片",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u8-love",
+          "kind": "vocab",
+          "en": "love",
+          "zh": "爱",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u8-share",
+          "kind": "vocab",
+          "en": "share",
+          "zh": "分享",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u8-doll",
+          "kind": "vocab",
+          "en": "doll",
+          "zh": "洋娃娃",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u8-noodles",
+          "kind": "vocab",
+          "en": "noodles",
+          "zh": "面条",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3a-u8-afternoon",
+          "kind": "vocab",
+          "en": "afternoon",
+          "zh": "下午",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "spelling",
+            "speaking"
+          ],
+          "distractorTags": [
+            "vocab"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U8-d1",
+          "kind": "dialogue",
+          "en": "Happy birthday!",
+          "zh": "生日快乐！",
+          "prompt": "Happy birthday!",
+          "answer": "Thank you.",
+          "speaker": "Ben",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U8-d2",
+          "kind": "dialogue",
+          "en": "Here is a gift for you.",
+          "zh": "这是给你的礼物。",
+          "prompt": "Here is a gift for you.",
+          "answer": "Thank you very much.",
+          "speaker": "Bob",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        },
+        {
+          "contentId": "ox-3A-U8-d3",
+          "kind": "dialogue",
+          "en": "Let's share the cake.",
+          "zh": "我们一起分享蛋糕吧。",
+          "prompt": "Let's share the cake.",
+          "answer": "OK.",
+          "speaker": "Ms Wu",
+          "ttsFallback": true,
+          "questionTypes": [
+            "choice",
+            "listening",
+            "reading",
+            "speaking"
+          ]
+        }
+      ]
+    }
+  ]
+}
