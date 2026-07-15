@@ -35,6 +35,14 @@ describe("MainPathNav", () => {
     expect(nav.screen).toBe("starmap");
   });
 
+  it("starmap → report → starmap", () => {
+    const nav = new MainPathNav(true);
+    nav.goReport();
+    expect(nav.screen).toBe("report");
+    nav.backToStarMap();
+    expect(nav.screen).toBe("starmap");
+  });
+
   it("sortie → battle → settlement → starmap", () => {
     const nav = new MainPathNav(true);
     nav.selectUnit("3A-U1");

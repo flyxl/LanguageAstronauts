@@ -34,6 +34,7 @@ export type StarMapModel = {
   onSelectUnit: (id: string) => void;
   onSortie: () => void;
   onBase: () => void;
+  onReport: () => void;
   onDueReview: () => void;
 };
 
@@ -188,8 +189,9 @@ export class StarMapScreen {
 
     const chipGap = 12;
     const baseBtnW = 88;
+    const reportBtnW = 72;
     const chipsWidth = chips.reduce((sum, c) => sum + c.w, 0) + chipGap * (chips.length - 1);
-    const rowWidth = chipsWidth + chipGap + baseBtnW;
+    const rowWidth = chipsWidth + chipGap + reportBtnW + chipGap + baseBtnW;
     let x = -rowWidth / 2;
     for (const chip of chips) {
       const node = makeChip(
@@ -204,6 +206,18 @@ export class StarMapScreen {
       node.setPosition(x + chip.w / 2, 0, 0);
       x += chip.w + chipGap;
     }
+
+    makeChip(
+      topBar,
+      "ReportBtn",
+      "学情",
+      reportBtnW,
+      36,
+      UiTheme.colors.bgPanel,
+      UiTheme.colors.accentCta,
+      () => model.onReport()
+    ).setPosition(x + reportBtnW / 2, 0, 0);
+    x += reportBtnW + chipGap;
 
     // Keep 「整备」 in the same top row (not at screen edge — that clipped off-canvas).
     makeCtaButton(topBar, "BaseBtn", "整备", baseBtnW, 36, () => model.onBase()).setPosition(

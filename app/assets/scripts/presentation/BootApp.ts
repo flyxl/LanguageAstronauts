@@ -17,6 +17,8 @@ import { ProfileService } from "../domain/profile/profile-service";
 import { calculateLevel } from "../domain/progression/xp";
 import { PETS, type PetId } from "../domain/progression/pets";
 import { collectDueContentItems, countDueReviews } from "../domain/learning/collect-due-items";
+import { listDueContentIds } from "../domain/learning/mastery";
+import type { SaveV5 } from "../domain/save/save-v5";
 import { ensureChildProgression } from "../domain/save/create-default-save";
 import type { WeaponId } from "../domain/weapons/weapons";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
@@ -29,6 +31,7 @@ import { StarMapScreen } from "./screens/star-map-screen";
 import { SortieScreen } from "./screens/sortie-screen";
 import { BattleScreen } from "./screens/battle-screen";
 import { SettlementScreen } from "./screens/settlement-screen";
+import { ReportScreen } from "./screens/report-screen";
 import { makeLabel } from "./ui/ui-factory";
 import { UiTheme } from "./ui/theme";
 
@@ -93,6 +96,29 @@ const WEAPON_ALLOY_PRICES: Record<WeaponId, number> = {
   thunder: 220,
 };
 
+function textbookLabel(textbookId: string): string {
+  if (textbookId.includes("kouyu")) return "沪教口语交际";
+  return "沪教牛津 2024";
+}
+
+function learningSummary(save: SaveV5, childId: string, nowMs: number) {
+  const prefix = `${childId}::`;
+  let seenCount = 0;
+  let masteredCount = 0;
+  for (const [key, rec] of Object.entries(save.learning)) {
+    if (!key.startsWith(prefix)) continue;
+    const touched =
+      rec.firstCorrect + rec.corrected + rec.incorrect + rec.skipped + rec.deviceFailures > 0;
+    if (touched) seenCount++;
+    if (rec.firstCorrect > 0) masteredCount++;
+  }
+  return {
+    dueCount: listDueContentIds(save, childId, nowMs).length,
+    seenCount,
+    masteredCount,
+  };
+}
+
 /**
  * Cocos Native 主链路组合根：Profile → StarMap → Sortie → Battle → Settlement。
  * 禁止 WebView / Capacitor。
@@ -115,6 +141,7 @@ export class BootApp extends Component {
   private sortieScreen!: SortieScreen;
   private battleScreen!: BattleScreen;
   private settlementScreen!: SettlementScreen;
+  private reportScreen!: ReportScreen;
 
   private session: BattleSession | null = null;
   private currentQ: BattleQuestion | null = null;
@@ -188,6 +215,7 @@ export class BootApp extends Component {
     this.sortieScreen = new SortieScreen(this.screenHost, this.viewport);
     this.battleScreen = new BattleScreen(this.screenHost, this.viewport);
     this.settlementScreen = new SettlementScreen(this.screenHost, this.viewport);
+    this.reportScreen = new ReportScreen(this.screenHost, this.viewport);
   }
 
   private renderCurrent() {
@@ -199,6 +227,7 @@ export class BootApp extends Component {
     this.sortieScreen.destroy();
     this.battleScreen.destroy();
     this.settlementScreen.destroy();
+    this.reportScreen.destroy();
 
     switch (this.nav.screen) {
       case "profile":
@@ -211,6 +240,9 @@ export class BootApp extends Component {
         break;
       case "base":
         this.renderBase();
+        break;
+      case "report":
+        this.renderReport();
         break;
       case "sortie":
         this.renderSortie();
@@ -274,6 +306,10 @@ export class BootApp extends Component {
         this.nav.goBase();
         this.renderCurrent();
       },
+      onReport: () => {
+        this.nav.goReport();
+        this.renderCurrent();
+      },
       onDueReview: () => this.onDueReviewStart(),
     });
   }
@@ -312,6 +348,39 @@ export class BootApp extends Component {
       onBuyPet: (id) => void this.onBuyPet(id),
       onTogglePetDeploy: (id) => void this.onTogglePetDeploy(id),
       onToggleSetting: (key) => void this.onToggleSetting(key),
+    });
+  }
+
+  private renderReport() {
+    const child = this.activeChild();
+    if (!child) {
+      this.nav.backToStarMap();
+      this.renderCurrent();
+      return;
+    }
+    const save = this.profiles.currentSave();
+    const prog = ensureChildProgression(save, child.id);
+    const summary = this.childSummary();
+    this.reportScreen.render({
+      child: {
+        name: child.name,
+        grade: child.grade,
+        textbookLabel: textbookLabel(child.textbookId),
+        level: summary.level,
+        totalXp: prog.totalXp,
+        alloy: summary.alloy,
+        starCrystals: summary.starCrystals,
+      },
+      units: this.unitsWithStars().map((u) => ({
+        id: u.id,
+        title: u.title,
+        stars: u.stars ?? 0,
+      })),
+      learning: learningSummary(save, child.id, this.clock.now()),
+      onBack: () => {
+        this.nav.backToStarMap();
+        this.renderCurrent();
+      },
     });
   }
 

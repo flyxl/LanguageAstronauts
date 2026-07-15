@@ -2,6 +2,7 @@ export type MainPathScreen =
   | "profile"
   | "starmap"
   | "base"
+  | "report"
   | "sortie"
   | "battle"
   | "settlement";
@@ -24,6 +25,10 @@ export class MainPathNav {
 
   goBase(): void {
     this.screen = "base";
+  }
+
+  goReport(): void {
+    this.screen = "report";
   }
 
   goSortie(): void {
