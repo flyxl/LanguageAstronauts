@@ -75,23 +75,17 @@ python3 -m http.server 8799
 # 浏览器打开 http://localhost:8799
 ```
 
-## Cocos v2 迁移
+## Cocos v2 / 独立 App
 
-- **当前**：Web MVP 仍在仓库根目录运行。
-- **可玩切片（推荐开发试玩）**：`play/` Vite App，共享 `app/assets/scripts` 领域层。
+- **可玩 Web 切片**：`play/`（`npm run dev` → http://127.0.0.1:5173）
+- **Android APK（debug）**：`releases/language-astronauts-debug.apk`
   ```bash
-  cd play && npm install && npm run dev
-  # 打开 http://127.0.0.1:5173
+  cd play && npm run android:apk
+  adb install -r ../releases/language-astronauts-debug.apk
   ```
-  领域测试：`cd app && npm test -- --run`
-- **未来**：Cocos 工程根目录统一为 `app/`（本机 Creator 3.8.7 可用；规格目标 3.8.8）。
-- **引擎 / 平台**：Cocos Creator → 离线 **iOS/Android** 原生包；领域代码不依赖 `cc`，便于先 Web/Capacitor 后接编辑器。
-- **规划入口**：
-  - 产品 GDD：`docs/product/GDD-v2-cocos.md`
-  - 总体规格：`docs/superpowers/specs/2026-07-15-language-astronauts-cocos-redesign-design.md`
-  - 总计划：`docs/superpowers/plans/2026-07-15-language-astronauts-cocos-master-plan.md`
-  - 状态索引：`docs/document-status.md`
-- 上列为目标规划；`play/` 已可完整体验切片闭环（档案/星图/战斗/武器宠物/结算）。
+- 领域测试：`cd app && npm test -- --run`
+- Cocos 工程根：`app/`（本机 Creator 3.8.7）；规格与计划见 `docs/`
+
 
 ## 存档迁移
 

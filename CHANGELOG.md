@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Capacitor Android 工程与 debug APK：`releases/language-astronauts-debug.apk`（`com.languageastronauts.app`）。
 - `app/` 可测试 TypeScript 领域地基（存档 v5、档案、知识装甲战斗、武器/宠物/成长）。
 - `play/` Vite 可玩切片：孩子档案、3A 全星图、四 Boss 战斗、武器宠物养成、本地存档。
 - Vitest：14 项领域测试通过。

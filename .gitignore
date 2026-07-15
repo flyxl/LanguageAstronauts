@@ -10,3 +10,11 @@ app/build/
 app/node_modules/
 play/node_modules/
 play/dist/
+play/android/.gradle/
+play/android/build/
+play/android/app/build/
+play/android/local.properties
+play/android/captures/
+*.apk
+!releases/**/*.apk
+
