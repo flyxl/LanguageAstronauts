@@ -1,0 +1,12 @@
+{
+  "ver": "4.0.24",
+  "importer": "typescript",
+  "imported": true,
+  "uuid": "bda93a2e-3bb5-4fe8-9a3d-0a89173b70c7",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "moduleId": "project:///assets/scripts/presentation/BootApp.ts",
+    "importer": "typescript"
+  }
+}

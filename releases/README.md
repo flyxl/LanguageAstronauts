@@ -1,36 +1,39 @@
-# Android APK 发布说明
+# Android 发布说明
 
-> **Status:** Target delivered (debug) · emulator verified  
+> **Status:** Target  
+> **Applies to:** Cocos Creator 原生 Android（非 WebView / 非 Capacitor）  
 > **Last verified:** 2026-07-15
 
-## 产物
+## 交付口径（硬约束）
+
+- **唯一合法安装包**：由 Cocos Creator **Native Android** 构建产出的 APK/AAB。  
+- **明确禁止**：Capacitor、Cordova、PWA 壳、任意 WebView 包装作为正式交付。  
+- 历史误用 Capacitor 打出的 debug 包**已作废**，不得再分发或写入发布清单。
+
+## 产物（Cocos Native）
 
 | 文件 | 说明 |
 | --- | --- |
-| `releases/language-astronauts-debug.apk` | Capacitor + Vite 可玩切片的 debug 安装包（约 4.0MB） |
+| `releases/language-astronauts-debug.apk` | Cocos Creator 3.8.x Native `assembleDebug` 安装包（构建成功后放置于此） |
 
-## 包信息（aapt）
-
-- package: `com.languageastronauts.app`
-- label: 时空语航员
-- versionName: `1.0` / versionCode: `1`
-- minSdk: 24 / targetSdk: 36
-- launchable-activity: `com.languageastronauts.app.MainActivity`
-- zip integrity: OK
+包名目标：`com.languageastronauts.app`  
+启动 Activity（Cocos Native 模板）：`com.cocos.game.AppActivity`
 
 ## 本地构建
 
 ```bash
 export ANDROID_HOME=$HOME/Library/Android/sdk
-cd play
-npm install
-npm run android:apk
-# 若 wrapper 拉取失败，可用本机 Gradle 8.14：
-# npm run cap:sync && ~/.gradle/wrapper/dists/gradle-8.14-all/.../bin/gradle -p android assembleDebug
-cp play/android/app/build/outputs/apk/debug/app-debug.apk releases/language-astronauts-debug.apk
+export NDK_ROOT=$ANDROID_HOME/ndk/28.2.13676358   # 按本机已装 NDK 调整
+
+# 在 Creator 中打开 app/，或用 CLI：
+"/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/MacOS/CocosCreator" \
+  --project "$PWD/app" \
+  --build "platform=android;debug=true;md5Cache=false;replaceSplashScreen=false;packages.android.packageName=com.languageastronauts.app;packages.android.apiLevel=android-28;packages.android.appABIs=['arm64-v8a'];packages.android.useDebugKeystore=true;packages.android.sdkPath=$ANDROID_HOME;packages.android.ndkPath=$NDK_ROOT"
+
+# 构建完成后将 debug APK 复制到 releases/
 ```
 
-安装到设备：
+安装：
 
 ```bash
 adb install -r releases/language-astronauts-debug.apk
@@ -38,14 +41,8 @@ adb install -r releases/language-astronauts-debug.apk
 
 ## 验证清单
 
-- [x] `assembleDebug` BUILD SUCCESSFUL
-- [x] APK 存在且 `unzip -t` 无错误
-- [x] `aapt dump badging` 包名/启动 Activity/标签正确
-- [x] AVD `la_api28_arm`（API 28 / arm64）安装成功
-- [x] 冷启动后渲染「创建孩子档案」页（已修 WebView：关闭会生成 `?.65` 的 minify，并垫 `globalThis`）
-- [x] 创建档案后进入「星图远征 · 3A」并可看到 Unit 出击列表
-- [x] logcat 无 `SyntaxError` / `ReferenceError` / `js.error`
-
-## 兼容性说明
-
-旧系统镜像自带的 WebView（如 Chromium 66）能力较弱。`play/vite.config.ts` 使用 `build.target=es2019` 且 `minify:false`，`index.html` 注入 `globalThis` 垫片。真机通常自带可更新的 WebView，建议 Chromium ≥ 80。
+- [ ] Cocos Creator Native `assembleDebug` / CLI build 成功  
+- [ ] APK 内含 `libcocos.so`（或等价原生库），**不是** Capacitor/WebView 壳  
+- [ ] `aapt dump badging` 包名与启动 Activity 正确  
+- [ ] 模拟器/真机冷启动进入 Cocos 场景（非浏览器引擎）  
+- [ ] logcat 无 Capacitor / Chrome WebView 业务加载链

@@ -8,15 +8,7 @@ export default defineConfig({
       "@domain": path.resolve(__dirname, "../app/assets/scripts")
     }
   },
-  // Android 9 WebView：关掉 minify，避免 `? 0.65` 被压成非法/歧义的 `?.65`。
-  build: {
-    target: "es2019",
-    cssTarget: "chrome69",
-    minify: false
-  },
-  esbuild: {
-    target: "es2019"
-  },
+  // play/ 仅为预览；正式交付走 Cocos Native，不依赖 WebView minify 约束。
   server: {
     port: 5173,
     open: false

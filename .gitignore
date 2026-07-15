@@ -18,3 +18,5 @@ play/android/captures/
 *.apk
 !releases/**/*.apk
 
+
+!app/temp/tsconfig.cocos.json

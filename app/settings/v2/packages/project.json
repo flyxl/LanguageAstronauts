@@ -1,9 +1,13 @@
 {
+  "__version__": "1.0.6",
   "general": {
     "designResolution": {
       "width": 720,
       "height": 1280,
+      "fitWidth": false,
       "fitHeight": true
     }
-  }
+  },
+  "script": {},
+  "layer": []
 }

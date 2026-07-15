@@ -1,7 +1,7 @@
 {
-  "name": "language-astronauts-cocos",
+  "name": "LanguageAstronauts",
   "private": true,
-  "version": "0.1.0",
+  "version": "3.8.7",
   "scripts": {
     "test": "vitest",
     "test:run": "vitest run",
@@ -10,5 +10,9 @@
   "devDependencies": {
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
+  },
+  "uuid": "530a9e9e-dc2f-4c0d-b0c5-5cfd60c322dd",
+  "creator": {
+    "version": "3.8.7"
   }
 }

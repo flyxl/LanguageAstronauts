@@ -6,18 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "cap:sync": "npm run build && npx cap sync android",
-    "android:open": "npx cap open android",
-    "android:apk": "npm run cap:sync && cd android && ./gradlew assembleDebug"
+    "preview": "vite preview"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
     "vite": "^6.3.5"
-  },
-  "dependencies": {
-    "@capacitor/android": "^8.4.2",
-    "@capacitor/cli": "^8.4.2",
-    "@capacitor/core": "^8.4.2"
   }
 }

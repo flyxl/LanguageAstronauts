@@ -29,6 +29,7 @@ cd app && node --import tsx ../tools/validate-content.ts assets/content
 ## 4. 发布门槛
 
 - P0–P4 门禁通过；
-- iOS + Android 可安装测试包；
+- iOS + Android **Cocos Creator Native** 可安装测试包（禁止 Capacitor / WebView 壳）；
+- APK 验包需含原生引擎库（如 `libcocos.so`），不得以 Chrome/WebView 为业务运行时；
 - 无强制联网弹窗；
 - 变更写入 `CHANGELOG.md`。

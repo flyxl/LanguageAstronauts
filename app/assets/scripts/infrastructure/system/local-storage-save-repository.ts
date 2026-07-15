@@ -15,9 +15,18 @@ function parse(raw: string | null): SaveV5 | null {
   }
 }
 
-/** Browser / Capacitor localStorage adapter (Cocos 编辑器内可再换为 sys.localStorage). */
+/** Storage adapter for browser / Vitest / Cocos Native（优先 sys.localStorage）。 */
+function defaultStorage(): Storage {
+  const sysLike = (globalThis as { sys?: { localStorage?: Storage } }).sys;
+  if (sysLike?.localStorage) return sysLike.localStorage;
+  if (typeof globalThis !== "undefined" && "localStorage" in globalThis) {
+    return (globalThis as { localStorage: Storage }).localStorage;
+  }
+  throw new Error("No localStorage available");
+}
+
 export class LocalStorageSaveRepository implements SaveRepository {
-  constructor(private readonly storage: Storage = window.localStorage) {}
+  constructor(private readonly storage: Storage = defaultStorage()) {}
 
   async load(): Promise<SaveV5 | null> {
     return parse(this.storage.getItem(MAIN_KEY)) ?? parse(this.storage.getItem(BACKUP_KEY));

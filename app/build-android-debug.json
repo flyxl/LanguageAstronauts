@@ -1,0 +1,33 @@
+{
+  "name": "android",
+  "platform": "android",
+  "buildPath": "project://build",
+  "debug": true,
+  "md5Cache": false,
+  "startScene": "ae7c6b45-d61d-4698-8483-c7b42971fbe9",
+  "packages": {
+    "android": {
+      "packageName": "com.languageastronauts.app",
+      "apiLevel": "android-34",
+      "appABIs": [
+        "arm64-v8a"
+      ],
+      "useDebugKeystore": true,
+      "orientation": {
+        "portrait": true,
+        "landscapeLeft": false,
+        "landscapeRight": false,
+        "upsideDown": false
+      },
+      "sdkPath": "/Users/flyxl/Library/Android/sdk",
+      "ndkPath": "/Users/flyxl/Library/Android/sdk/ndk/28.2.13676358",
+      "renderBackEnd": {
+        "vulkan": false,
+        "gles3": true,
+        "gles2": true
+      }
+    },
+    "native": {}
+  },
+  "mainBundleCompressionType": "merge_dep"
+}

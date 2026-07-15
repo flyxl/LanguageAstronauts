@@ -75,17 +75,15 @@ python3 -m http.server 8799
 # 浏览器打开 http://localhost:8799
 ```
 
-## Cocos v2 / 独立 App
+## Cocos v2 / 原生独立 App
 
-- **可玩 Web 切片**：`play/`（`npm run dev` → http://127.0.0.1:5173）
-- **Android APK（debug）**：`releases/language-astronauts-debug.apk`
-  ```bash
-  cd play && npm run android:apk
-  adb install -r ../releases/language-astronauts-debug.apk
-  ```
+**交付硬约束**：正式 Android/iOS 包必须由 **Cocos Creator Native** 构建。  
+**明确禁止**：Capacitor / Cordova / PWA 壳 / WebView 包装作为安装包交付（仓库内已移除 Capacitor 工程）。
+
+- Cocos 工程根：`app/`（本机 Creator **3.8.7**；规格写 3.8.8，构建以本机为准）
 - 领域测试：`cd app && npm test -- --run`
-- Cocos 工程根：`app/`（本机 Creator 3.8.7）；规格与计划见 `docs/`
-
+- Native Android 构建与验证：见 [`releases/README.md`](releases/README.md)
+- `play/` 仅为领域层 **Web 预览**（非交付物），不得再接 Capacitor
 
 ## 存档迁移
 
