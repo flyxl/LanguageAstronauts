@@ -32,6 +32,7 @@ export type StarMapModel = {
   selectedUnitId: string | null;
   onSelectUnit: (id: string) => void;
   onSortie: () => void;
+  onBase: () => void;
 };
 
 const MAX_CARDS = 8;
@@ -197,6 +198,12 @@ export class StarMapScreen {
       node.setPosition(x + chip.w / 2, 0, 0);
       x += chip.w + 12;
     }
+
+    makeCtaButton(topBar, "BaseBtn", "整备", 88, 36, () => model.onBase()).setPosition(
+      this.width / 2 - 100,
+      0,
+      0
+    );
 
     const grid = new Node("UnitGrid");
     screen.addChild(grid);

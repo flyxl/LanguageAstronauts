@@ -15,11 +15,14 @@ import type { BattleQuestion } from "../domain/battle/question-builder";
 import type { ContentItem } from "../domain/content/content-types";
 import { ProfileService } from "../domain/profile/profile-service";
 import { calculateLevel } from "../domain/progression/xp";
+import { PETS, type PetId } from "../domain/progression/pets";
 import { ensureChildProgression } from "../domain/save/create-default-save";
+import type { WeaponId } from "../domain/weapons/weapons";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
 import { SystemClock } from "../infrastructure/system/system-clock";
 import { MathRandomSource } from "../infrastructure/system/math-random-source";
 import { MainPathNav } from "./main-path/main-path-nav";
+import { BaseScreen } from "./screens/base-screen";
 import { BootProfileScreen } from "./screens/boot-profile-screen";
 import { StarMapScreen } from "./screens/star-map-screen";
 import { SortieScreen } from "./screens/sortie-screen";
@@ -81,6 +84,14 @@ const FALLBACK_3A_U1_ITEMS: ContentItem[] = [
 
 const PREP_MS = 1200;
 
+const WEAPON_ALLOY_PRICES: Record<WeaponId, number> = {
+  pulse: 0,
+  plasma: 80,
+  flame: 120,
+  frost: 160,
+  thunder: 220,
+};
+
 /**
  * Cocos Native 主链路组合根：Profile → StarMap → Sortie → Battle → Settlement。
  * 禁止 WebView / Capacitor。
@@ -99,6 +110,7 @@ export class BootApp extends Component {
 
   private profileScreen!: BootProfileScreen;
   private starMapScreen!: StarMapScreen;
+  private baseScreen!: BaseScreen;
   private sortieScreen!: SortieScreen;
   private battleScreen!: BattleScreen;
   private settlementScreen!: SettlementScreen;
@@ -109,6 +121,7 @@ export class BootApp extends Component {
 
   private prepNode: Node | null = null;
   private profileErrorNode: Node | null = null;
+  private deployCapHint = false;
 
   async onLoad() {
     profiler.hideStats();
@@ -168,6 +181,7 @@ export class BootApp extends Component {
 
     this.profileScreen = new BootProfileScreen(this.screenHost, this.viewport);
     this.starMapScreen = new StarMapScreen(this.screenHost, this.viewport);
+    this.baseScreen = new BaseScreen(this.screenHost, this.viewport);
     this.sortieScreen = new SortieScreen(this.screenHost, this.viewport);
     this.battleScreen = new BattleScreen(this.screenHost, this.viewport);
     this.settlementScreen = new SettlementScreen(this.screenHost, this.viewport);
@@ -178,6 +192,7 @@ export class BootApp extends Component {
     this.clearProfileError();
     this.profileScreen.destroy();
     this.starMapScreen.destroy();
+    this.baseScreen.destroy();
     this.sortieScreen.destroy();
     this.battleScreen.destroy();
     this.settlementScreen.destroy();
@@ -190,6 +205,9 @@ export class BootApp extends Component {
         break;
       case "starmap":
         this.renderStarMap();
+        break;
+      case "base":
+        this.renderBase();
         break;
       case "sortie":
         this.renderSortie();
@@ -242,7 +260,116 @@ export class BootApp extends Component {
         this.nav.goSortie();
         this.renderCurrent();
       },
+      onBase: () => {
+        this.deployCapHint = false;
+        this.nav.goBase();
+        this.renderCurrent();
+      },
     });
+  }
+
+  private renderBase() {
+    const child = this.activeChild();
+    if (!child) {
+      this.nav.backToStarMap();
+      this.renderCurrent();
+      return;
+    }
+    const save = this.profiles.currentSave();
+    const prog = ensureChildProgression(save, child.id);
+    this.baseScreen.render({
+      child: this.childSummary(),
+      progression: {
+        weaponId: prog.weaponId,
+        ownedWeapons: prog.ownedWeapons,
+        petIds: prog.petIds,
+        deployedPets: prog.deployedPets,
+        petBond: prog.petBond,
+      },
+      settings: {
+        soundEnabled: save.settings.soundEnabled,
+        ttsEnabled: save.settings.ttsEnabled,
+        reduceMotion: save.settings.reduceMotion,
+      },
+      deployCapHint: this.deployCapHint,
+      onBack: () => {
+        this.deployCapHint = false;
+        this.nav.backToStarMap();
+        this.renderCurrent();
+      },
+      onEquipWeapon: (id) => void this.onEquipWeapon(id),
+      onBuyWeapon: (id) => void this.onBuyWeapon(id),
+      onBuyPet: (id) => void this.onBuyPet(id),
+      onTogglePetDeploy: (id) => void this.onTogglePetDeploy(id),
+      onToggleSetting: (key) => void this.onToggleSetting(key),
+    });
+  }
+
+  private async persistAndRerender() {
+    await this.repo.commit(this.profiles.currentSave());
+    this.renderCurrent();
+  }
+
+  private async onEquipWeapon(id: WeaponId) {
+    const child = this.activeChild();
+    if (!child) return;
+    const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
+    if (!prog.ownedWeapons.includes(id)) return;
+    prog.weaponId = id;
+    this.deployCapHint = false;
+    await this.persistAndRerender();
+  }
+
+  private async onBuyWeapon(id: WeaponId) {
+    const child = this.activeChild();
+    if (!child) return;
+    const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
+    const cost = WEAPON_ALLOY_PRICES[id];
+    if (prog.alloy < cost) return;
+    prog.alloy -= cost;
+    if (!prog.ownedWeapons.includes(id)) prog.ownedWeapons.push(id);
+    prog.weaponId = id;
+    this.deployCapHint = false;
+    await this.persistAndRerender();
+  }
+
+  private async onBuyPet(id: PetId) {
+    const child = this.activeChild();
+    if (!child) return;
+    const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
+    const pet = PETS[id];
+    if (prog.starCrystals < pet.priceCrystal) return;
+    prog.starCrystals -= pet.priceCrystal;
+    prog.petIds.push(id);
+    prog.petBond[id] = 1;
+    if (prog.deployedPets.length < 2) prog.deployedPets.push(id);
+    this.deployCapHint = false;
+    await this.persistAndRerender();
+  }
+
+  private async onTogglePetDeploy(id: PetId) {
+    const child = this.activeChild();
+    if (!child) return;
+    const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
+    if (!prog.petIds.includes(id)) return;
+    if (prog.deployedPets.includes(id)) {
+      prog.deployedPets = prog.deployedPets.filter((x) => x !== id);
+      this.deployCapHint = false;
+    } else if (prog.deployedPets.length < 2) {
+      prog.deployedPets.push(id);
+      this.deployCapHint = false;
+    } else {
+      this.deployCapHint = true;
+      this.renderCurrent();
+      return;
+    }
+    await this.persistAndRerender();
+  }
+
+  private async onToggleSetting(key: "soundEnabled" | "ttsEnabled" | "reduceMotion") {
+    const save = this.profiles.currentSave();
+    save.settings[key] = !save.settings[key];
+    await this.persistAndRerender();
   }
 
   private renderSortie() {

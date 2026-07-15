@@ -1,4 +1,10 @@
-export type MainPathScreen = "profile" | "starmap" | "sortie" | "battle" | "settlement";
+export type MainPathScreen =
+  | "profile"
+  | "starmap"
+  | "base"
+  | "sortie"
+  | "battle"
+  | "settlement";
 
 export class MainPathNav {
   screen: MainPathScreen;
@@ -14,6 +20,10 @@ export class MainPathNav {
 
   selectUnit(unitId: string): void {
     this.selectedUnitId = unitId;
+  }
+
+  goBase(): void {
+    this.screen = "base";
   }
 
   goSortie(): void {
