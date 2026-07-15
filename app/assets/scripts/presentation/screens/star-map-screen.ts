@@ -186,7 +186,11 @@ export class StarMapScreen {
       { text: `星晶 ${model.child.starCrystals}`, w: 100 },
     ];
 
-    let x = -chips.reduce((sum, c) => sum + c.w, 0) / 2;
+    const chipGap = 12;
+    const baseBtnW = 88;
+    const chipsWidth = chips.reduce((sum, c) => sum + c.w, 0) + chipGap * (chips.length - 1);
+    const rowWidth = chipsWidth + chipGap + baseBtnW;
+    let x = -rowWidth / 2;
     for (const chip of chips) {
       const node = makeChip(
         topBar,
@@ -198,11 +202,12 @@ export class StarMapScreen {
         UiTheme.colors.accentInfo
       );
       node.setPosition(x + chip.w / 2, 0, 0);
-      x += chip.w + 12;
+      x += chip.w + chipGap;
     }
 
-    makeCtaButton(topBar, "BaseBtn", "整备", 88, 36, () => model.onBase()).setPosition(
-      this.width / 2 - 100,
+    // Keep 「整备」 in the same top row (not at screen edge — that clipped off-canvas).
+    makeCtaButton(topBar, "BaseBtn", "整备", baseBtnW, 36, () => model.onBase()).setPosition(
+      x + baseBtnW / 2,
       0,
       0
     );
