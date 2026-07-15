@@ -33,3 +33,4 @@ cd app && node --import tsx ../tools/validate-content.ts assets/content
 - APK 验包需含原生引擎库（如 `libcocos.so`），不得以 Chrome/WebView 为业务运行时；
 - 无强制联网弹窗；
 - 变更写入 `CHANGELOG.md`。
+- Native 主链路 UI 可用 adb 横屏截图验收（`docs/screenshot/07–09-native-*.png`）。

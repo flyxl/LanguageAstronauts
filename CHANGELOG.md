@@ -21,5 +21,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - P0 文档重整：固化 Web/PWA MVP 当前态审计，归档旧 GDD，建立 Current/Target/Archived 索引。
 - 新增 Cocos v2 产品 GDD 与学习/战斗/成长/武器宠物/音画/架构/内容/存档/测试分册。
 - README / `releases/README.md` 明确：**仅 Cocos Native 为合法安装包**；禁止 Capacitor。
+- 刷新 Cocos Native 主链路 UI 截图（Boot / StarMap / Sortie），见 `docs/screenshot/07–09-native-*.png`。
 
 > 可安装 APK 必须以 Cocos Creator Native Android 构建为准；`play/` 仅为领域预览，非交付。
