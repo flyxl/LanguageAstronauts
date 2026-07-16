@@ -15,6 +15,7 @@ import {
   makeLabel,
   makePanel,
 } from "../ui/ui-factory";
+import { armorPhaseLabel } from "../ui/armor-phase-label";
 import { assertPlayerSafeCopy, UiTheme, type Rgba } from "../ui/theme";
 
 type SizeLike = { width: number; height: number } | Size;
@@ -291,7 +292,7 @@ export class BattleScreen {
     ).setPosition(0, 0, 0);
 
     makeLabel(bars, "ArmorLabel", {
-      string: `知识装甲 · ${hud.phase}（${hud.nodesRemaining}/${hud.nodesTotal}）`,
+      string: `知识装甲 · ${armorPhaseLabel(hud.phase)}（${hud.nodesRemaining}/${hud.nodesTotal}）`,
       fontSize: UiTheme.font.chip,
       color: UiTheme.colors.textSecondary,
       width: 560,

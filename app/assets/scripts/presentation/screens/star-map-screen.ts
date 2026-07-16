@@ -14,6 +14,7 @@ import {
 } from "../ui/ui-factory";
 import { assertPlayerSafeCopy, UiTheme, type Rgba } from "../ui/theme";
 import { formatStars } from "../ui/format-stars";
+import { unitCardTitle } from "../ui/unit-card-title";
 
 export { formatStars };
 
@@ -45,13 +46,6 @@ const CARD_W = 360;
 const CARD_H = 112;
 const COL_GAP = 48;
 const ROW_GAP = 16;
-
-function truncateTitle(title: string, maxLen = 18): string {
-  if (title.length <= maxLen) {
-    return title;
-  }
-  return `${title.slice(0, maxLen - 1)}…`;
-}
 
 function itemCount(unit: StarMapUnit): number {
   return unit.items?.length ?? 13;
@@ -123,24 +117,28 @@ function makeUnitCard(
   g.stroke();
   bg.addComponent(UITransform).setContentSize(CARD_W, CARD_H);
 
-  const unitNo = makeLabel(card, "UnitNo", {
-    string: `Unit ${index + 1}`,
+  const badgeW = 56;
+  const badge = makeLabel(card, "UnitNo", {
+    string: `U${index + 1}`,
     fontSize: UiTheme.font.chip,
-    color: UiTheme.colors.textSecondary,
-    width: CARD_W - 32,
+    color: UiTheme.colors.accentInfo,
+    width: badgeW,
     height: 22,
   });
-  unitNo.horizontalAlign = Label.HorizontalAlign.LEFT;
-  unitNo.node.setPosition(-CARD_W / 2 + 16, CARD_H / 2 - 24, 0);
+  badge.horizontalAlign = Label.HorizontalAlign.RIGHT;
+  badge.node.getComponent(UITransform)!.setAnchorPoint(1, 0.5);
+  badge.node.setPosition(CARD_W / 2 - 14, CARD_H / 2 - 22, 0);
 
+  const titleW = CARD_W - 32 - badgeW;
   const title = makeLabel(card, "Title", {
-    string: truncateTitle(unit.title),
+    string: unitCardTitle(unit.title, 22),
     fontSize: UiTheme.font.cardTitle,
-    width: CARD_W - 32,
+    width: titleW,
     height: 28,
   });
   title.horizontalAlign = Label.HorizontalAlign.LEFT;
-  title.node.setPosition(-CARD_W / 2 + 16, 16, 0);
+  title.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+  title.node.setPosition(-CARD_W / 2 + 16, 14, 0);
 
   const meta = makeLabel(card, "Meta", {
     string: `${itemCount(unit)} 语言点 · ${formatStars(unit.stars ?? 0)}`,
@@ -150,7 +148,8 @@ function makeUnitCard(
     height: 24,
   });
   meta.horizontalAlign = Label.HorizontalAlign.LEFT;
-  meta.node.setPosition(-CARD_W / 2 + 16, -20, 0);
+  meta.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+  meta.node.setPosition(-CARD_W / 2 + 16, -22, 0);
 
   card.addComponent(UITransform).setContentSize(CARD_W, CARD_H);
   card.on(Node.EventType.TOUCH_END, onSelect);
@@ -281,7 +280,7 @@ export class StarMapScreen {
       const idx = model.units.findIndex((u) => u.id === model.selectedUnitId);
       const unit = idx >= 0 ? model.units[idx] : null;
       const contextText = unit
-        ? truncateTitle(unit.title, 22)
+        ? unitCardTitle(unit.title, 28)
         : `Unit ${idx + 1}`;
 
       const bottomBar = new Node("BottomBar");
