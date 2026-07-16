@@ -27,6 +27,15 @@ function pick(arr, n) {
   return shuffle(arr).slice(0, n);
 }
 
+/** 会话完整英文朗读文本（问句 + 回应） */
+function dialogueSpeakText(d) {
+  if (!d) return "";
+  const prompt = (d.prompt || "").trim();
+  const answer = (d.answer || "").trim();
+  if (prompt && answer) return `${prompt} ${answer}`;
+  return answer || prompt;
+}
+
 // 当前孩子教材词汇池（用于生成干扰项）
 function _courseData() {
   return Catalog.getActiveCourseData();
@@ -239,7 +248,7 @@ class Battle {
       promptZh: "",
       speaker: d.speaker,
       promptLabel: "阅读会话",
-      speak: d.answer || d.prompt,
+      speak: dialogueSpeakText(d),
       options,
       correct: d.zh,
       item: d,

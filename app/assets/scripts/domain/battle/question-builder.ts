@@ -29,6 +29,13 @@ function sameKind(pool: ContentItem[], item: ContentItem): ContentItem[] {
   return pool.filter((x) => x.contentId !== item.contentId && x.kind === item.kind);
 }
 
+function dialogueSpeakText(item: ContentItem): string {
+  const prompt = (item.prompt ?? item.en ?? "").trim();
+  const answer = (item.answer ?? "").trim();
+  if (prompt && answer) return `${prompt} ${answer}`;
+  return answer || prompt;
+}
+
 function pickDistractors(
   pool: ContentItem[],
   item: ContentItem,
@@ -101,7 +108,7 @@ function makeQuestion(
         promptLabel: "阅读会话",
         options,
         correct: item.zh,
-        speakText: item.answer ?? item.en,
+        speakText: dialogueSpeakText(item),
         item,
       };
     }
