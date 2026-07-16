@@ -31,7 +31,7 @@ const WEAPON_ALLOY_PRICES: Record<WeaponId, number> = {
 
 const MAX_DEPLOYED_PETS = 2;
 const MAX_WEAPON_LEVEL = 10;
-const PANEL_W = 380;
+const PANEL_W = 360;
 const PANEL_H = 520;
 const ROW_H = 44;
 
@@ -164,6 +164,7 @@ function makePanelTitle(parent: Node, text: string, y: number): void {
     height: 28,
   });
   title.horizontalAlign = Label.HorizontalAlign.LEFT;
+  title.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
   title.node.setPosition(-PANEL_W / 2 + 16, y, 0);
 }
 
@@ -222,7 +223,7 @@ export class BaseScreen {
     screen.addChild(columns);
     columns.setPosition(0, -24, 0);
 
-    const colGap = 24;
+    const colGap = 32;
     const totalW = PANEL_W * 3 + colGap * 2;
     const startX = -totalW / 2 + PANEL_W / 2;
 
@@ -271,7 +272,8 @@ export class BaseScreen {
     const rowPitch = 72;
     let y = PANEL_H / 2 - 84;
     const leftX = -PANEL_W / 2 + 20;
-    const actionX = PANEL_W / 2 - 56;
+    // Stay inside half-width 190 so actions never spill into 宠物舱.
+    const equipX = PANEL_W / 2 - 64;
 
     weapons.forEach((w) => {
       const row = new Node(`Weapon_${w.id}`);
@@ -285,29 +287,29 @@ export class BaseScreen {
       const nameLbl = makeLabel(row, "Name", {
         string: `${w.name}  Lv.${level}`,
         fontSize: UiTheme.font.body,
-        width: 210,
+        width: 200,
         height: 28,
       });
       nameLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
       nameLbl.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-      nameLbl.node.setPosition(leftX, 12, 0);
+      nameLbl.node.setPosition(leftX, owned ? 12 : 0, 0);
 
       const tagLbl = makeLabel(row, "Tag", {
         string: w.label,
         fontSize: UiTheme.font.chip,
         color: UiTheme.colors.textSecondary,
-        width: 80,
+        width: 56,
         height: 22,
       });
       tagLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
       tagLbl.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-      tagLbl.node.setPosition(leftX, -14, 0);
+      tagLbl.node.setPosition(leftX, owned ? -14 : 0, 0);
 
       if (owned && level < MAX_WEAPON_LEVEL) {
         const cost = weaponUpgradeCost(level);
-        makeSecondaryButton(row, "Upgrade", `升级 ${cost}`, 88, 28, () =>
+        makeSecondaryButton(row, "Upgrade", `升级 ${cost}`, 88, 26, () =>
           onUpgrade(w.id)
-        ).setPosition(actionX - 92, 0, 0);
+        ).setPosition(leftX + 130, -14, 0);
       } else if (owned && level >= MAX_WEAPON_LEVEL) {
         const maxLbl = makeLabel(row, "MaxLv", {
           string: "满级",
@@ -316,22 +318,23 @@ export class BaseScreen {
           width: 48,
           height: 22,
         });
-        maxLbl.horizontalAlign = Label.HorizontalAlign.CENTER;
-        maxLbl.node.setPosition(actionX - 92, 0, 0);
+        maxLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
+        maxLbl.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+        maxLbl.node.setPosition(leftX + 70, -14, 0);
       }
 
       if (equipped) {
-        makeStatusChip(row, "Equipped", "已装备", 72).setPosition(actionX, 0, 0);
+        makeStatusChip(row, "Equipped", "已装备", 72).setPosition(equipX, 0, 0);
       } else if (owned) {
         makeSecondaryButton(row, "Equip", "装备", 72, 28, () => onEquip(w.id)).setPosition(
-          actionX,
+          equipX,
           0,
           0
         );
       } else {
         const price = WEAPON_ALLOY_PRICES[w.id];
         makeSecondaryButton(row, "Buy", `合金 ${price}`, 88, 28, () => onBuy(w.id)).setPosition(
-          actionX,
+          equipX,
           0,
           0
         );
