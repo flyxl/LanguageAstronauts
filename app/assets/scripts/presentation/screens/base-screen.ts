@@ -7,7 +7,9 @@ import {
   UITransform,
 } from "cc";
 import { PETS, type PetId } from "../../domain/progression/pets";
-import { WEAPONS, type WeaponId } from "../../domain/weapons/weapons";
+import { formatPetBond } from "../../domain/progression/pet-bond";
+import { SHIP_SKINS, type ShipSkinId } from "../../domain/progression/ship-skins";
+import { WEAPONS, weaponUpgradeCost, type WeaponId } from "../../domain/weapons/weapons";
 import {
   attachStarfield,
   colorOf,
@@ -28,6 +30,7 @@ const WEAPON_ALLOY_PRICES: Record<WeaponId, number> = {
 };
 
 const MAX_DEPLOYED_PETS = 2;
+const MAX_WEAPON_LEVEL = 10;
 const PANEL_W = 380;
 const PANEL_H = 520;
 const ROW_H = 44;
@@ -41,6 +44,9 @@ export type BaseSettings = {
 export type BaseProgression = {
   weaponId: string;
   ownedWeapons: string[];
+  weaponLevels: Record<string, number>;
+  shipSkinId: string;
+  ownedShipSkins: string[];
   petIds: string[];
   deployedPets: string[];
   petBond: Record<string, number>;
@@ -54,8 +60,11 @@ export type BaseModel = {
   onBack: () => void;
   onEquipWeapon: (id: WeaponId) => void;
   onBuyWeapon: (id: WeaponId) => void;
+  onUpgradeWeapon: (id: WeaponId) => void;
   onBuyPet: (id: PetId) => void;
   onTogglePetDeploy: (id: PetId) => void;
+  onSelectShipSkin: (id: ShipSkinId) => void;
+  onBuyShipSkin: (id: ShipSkinId) => void;
   onToggleSetting: (key: keyof BaseSettings) => void;
 };
 
@@ -222,7 +231,8 @@ export class BaseScreen {
       startX,
       model.progression,
       model.onEquipWeapon,
-      model.onBuyWeapon
+      model.onBuyWeapon,
+      model.onUpgradeWeapon
     );
     this.renderPetsPanel(
       columns,
@@ -235,7 +245,10 @@ export class BaseScreen {
     this.renderSettingsPanel(
       columns,
       startX + (PANEL_W + colGap) * 2,
+      model.progression,
       model.settings,
+      model.onSelectShipSkin,
+      model.onBuyShipSkin,
       model.onToggleSetting
     );
   }
@@ -245,7 +258,8 @@ export class BaseScreen {
     x: number,
     prog: BaseProgression,
     onEquip: (id: WeaponId) => void,
-    onBuy: (id: WeaponId) => void
+    onBuy: (id: WeaponId) => void,
+    onUpgrade: (id: WeaponId) => void
   ): void {
     const panel = new Node("WeaponsPanel");
     parent.addChild(panel);
@@ -263,15 +277,16 @@ export class BaseScreen {
 
       const owned = prog.ownedWeapons.includes(w.id);
       const equipped = prog.weaponId === w.id;
+      const level = Math.max(1, prog.weaponLevels[w.id] ?? 1);
 
       const nameLbl = makeLabel(row, "Name", {
-        string: w.name,
+        string: `${w.name}  Lv.${level}`,
         fontSize: UiTheme.font.body,
-        width: 200,
+        width: 220,
         height: ROW_H,
       });
       nameLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
-      nameLbl.node.setPosition(-PANEL_W / 2 + 16, 0, 0);
+      nameLbl.node.setPosition(-PANEL_W / 2 + 16, owned ? 8 : 0, 0);
 
       const tagLbl = makeLabel(row, "Tag", {
         string: w.label,
@@ -281,15 +296,15 @@ export class BaseScreen {
         height: ROW_H,
       });
       tagLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
-      tagLbl.node.setPosition(-PANEL_W / 2 + 200, 0, 0);
+      tagLbl.node.setPosition(-PANEL_W / 2 + 220, owned ? 8 : 0, 0);
 
       const actionX = PANEL_W / 2 - 72;
       if (equipped) {
-        makeStatusChip(row, "Equipped", "已装备", 72).setPosition(actionX, 0, 0);
+        makeStatusChip(row, "Equipped", "已装备", 72).setPosition(actionX, owned ? 8 : 0, 0);
       } else if (owned) {
-        makeSecondaryButton(row, "Equip", "装备", 72, 32, () => onEquip(w.id)).setPosition(
+        makeSecondaryButton(row, "Equip", "装备", 72, 28, () => onEquip(w.id)).setPosition(
           actionX,
-          0,
+          8,
           0
         );
       } else {
@@ -301,7 +316,24 @@ export class BaseScreen {
         );
       }
 
-      y -= ROW_H + 8;
+      if (owned && level < MAX_WEAPON_LEVEL) {
+        const cost = weaponUpgradeCost(level);
+        makeSecondaryButton(row, "Upgrade", `升级 ${cost}`, 96, 26, () =>
+          onUpgrade(w.id)
+        ).setPosition(-PANEL_W / 2 + 64, -14, 0);
+      } else if (owned && level >= MAX_WEAPON_LEVEL) {
+        const maxLbl = makeLabel(row, "MaxLv", {
+          string: "满级",
+          fontSize: UiTheme.font.chip,
+          color: UiTheme.colors.accentCta,
+          width: 48,
+          height: 22,
+        });
+        maxLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
+        maxLbl.node.setPosition(-PANEL_W / 2 + 16, -14, 0);
+      }
+
+      y -= ROW_H + 18;
     });
   }
 
@@ -363,7 +395,7 @@ export class BaseScreen {
       nameLbl.node.setPosition(-PANEL_W / 2 + 16, 8, 0);
 
       const descLbl = makeLabel(row, "Desc", {
-        string: pet.describe(bond),
+        string: `${pet.describe(bond).split(" · ")[0]} · ${formatPetBond(bond)}`,
         fontSize: UiTheme.font.chip,
         color: UiTheme.colors.textSecondary,
         width: PANEL_W - 120,
@@ -400,22 +432,84 @@ export class BaseScreen {
   private renderSettingsPanel(
     parent: Node,
     x: number,
+    prog: BaseProgression,
     settings: BaseSettings,
+    onSelectSkin: (id: ShipSkinId) => void,
+    onBuySkin: (id: ShipSkinId) => void,
     onToggle: (key: keyof BaseSettings) => void
   ): void {
     const panel = new Node("SettingsPanel");
     parent.addChild(panel);
     panel.setPosition(x, 0, 0);
     makePanel(panel, "Bg", PANEL_W, PANEL_H);
-    makePanelTitle(panel, "设置", PANEL_H / 2 - 36);
+    makePanelTitle(panel, "舰体与设置", PANEL_H / 2 - 36);
+
+    const skinTitle = makeLabel(panel, "SkinTitle", {
+      string: "飞船涂装",
+      fontSize: UiTheme.font.chip,
+      color: UiTheme.colors.textSecondary,
+      width: PANEL_W - 32,
+      height: 22,
+    });
+    skinTitle.horizontalAlign = Label.HorizontalAlign.LEFT;
+    skinTitle.node.setPosition(-PANEL_W / 2 + 16, PANEL_H / 2 - 68, 0);
+
+    let y = PANEL_H / 2 - 100;
+    for (const skin of Object.values(SHIP_SKINS)) {
+      const row = new Node(`Skin_${skin.id}`);
+      panel.addChild(row);
+      row.setPosition(0, y, 0);
+
+      const owned = prog.ownedShipSkins.includes(skin.id);
+      const selected = prog.shipSkinId === skin.id;
+
+      const nameLbl = makeLabel(row, "Name", {
+        string: skin.name,
+        fontSize: UiTheme.font.body,
+        width: 160,
+        height: 28,
+      });
+      nameLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
+      nameLbl.node.setPosition(-PANEL_W / 2 + 16, 6, 0);
+
+      const blurb = makeLabel(row, "Blurb", {
+        string: skin.blurb,
+        fontSize: UiTheme.font.chip,
+        color: UiTheme.colors.textSecondary,
+        width: 160,
+        height: 20,
+      });
+      blurb.horizontalAlign = Label.HorizontalAlign.LEFT;
+      blurb.node.setPosition(-PANEL_W / 2 + 16, -12, 0);
+
+      const actionX = PANEL_W / 2 - 72;
+      if (selected) {
+        makeStatusChip(row, "Selected", "航行中", 72).setPosition(actionX, 0, 0);
+      } else if (owned) {
+        makeSecondaryButton(row, "Select", "换装", 72, 28, () =>
+          onSelectSkin(skin.id)
+        ).setPosition(actionX, 0, 0);
+      } else {
+        makeSecondaryButton(
+          row,
+          "BuySkin",
+          `星晶 ${skin.priceCrystal}`,
+          88,
+          28,
+          () => onBuySkin(skin.id)
+        ).setPosition(actionX + 8, 0, 0);
+      }
+
+      y -= 52;
+    }
 
     const toggles: Array<{ key: keyof BaseSettings; label: string; on: boolean }> = [
       { key: "soundEnabled", label: "音效", on: settings.soundEnabled },
-      { key: "ttsEnabled", label: "TTS", on: settings.ttsEnabled },
+      { key: "ttsEnabled", label: "朗读", on: settings.ttsEnabled },
       { key: "reduceMotion", label: "减少动效", on: settings.reduceMotion },
     ];
 
-    let y = PANEL_H / 2 - 72;
+    y -= 8;
     toggles.forEach((t) => {
       const row = new Node(`Setting_${t.key}`);
       panel.addChild(row);
@@ -442,7 +536,7 @@ export class BaseScreen {
         () => onToggle(t.key)
       ).setPosition(PANEL_W / 2 - 52, 0, 0);
 
-      y -= ROW_H + 12;
+      y -= ROW_H + 8;
     });
   }
 

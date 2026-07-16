@@ -24,7 +24,18 @@ export function ensureChildProgression(save: SaveV5, childId: string) {
   if (!save.progressionByChild[childId]) {
     save.progressionByChild[childId] = createChildProgression();
   }
-  return save.progressionByChild[childId];
+  const prog = save.progressionByChild[childId];
+  if (!prog.weaponLevels) {
+    prog.weaponLevels = {};
+    for (const id of prog.ownedWeapons ?? ["pulse"]) {
+      prog.weaponLevels[id] = 1;
+    }
+  }
+  if (!prog.ownedShipSkins || prog.ownedShipSkins.length === 0) {
+    prog.ownedShipSkins = [prog.shipSkinId || "classic"];
+  }
+  if (!prog.shipSkinId) prog.shipSkinId = "classic";
+  return prog;
 }
 
 export function ensureDailyByChild(save: SaveV5): Record<string, import("../progression/daily-missions").DailyMissionState> {

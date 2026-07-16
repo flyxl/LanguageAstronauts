@@ -18,6 +18,7 @@ import type { ContentItem } from "../domain/content/content-types";
 import { ProfileService } from "../domain/profile/profile-service";
 import { calculateLevel } from "../domain/progression/xp";
 import { PETS, type PetId } from "../domain/progression/pets";
+import { SHIP_SKINS, type ShipSkinId } from "../domain/progression/ship-skins";
 import { collectDueContentItems, countDueReviews } from "../domain/learning/collect-due-items";
 import { listDueContentIds } from "../domain/learning/mastery";
 import type { SaveV5 } from "../domain/save/save-v5";
@@ -28,7 +29,7 @@ import {
   SAVE_EXPORT_STORAGE_KEY,
   serializeSave,
 } from "../domain/save/save-transfer";
-import type { WeaponId } from "../domain/weapons/weapons";
+import { weaponUpgradeCost, type WeaponId } from "../domain/weapons/weapons";
 import { ensureDailyMissionState, type DailyProgressSignal } from "../domain/progression/daily-missions";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
 import { SystemClock } from "../infrastructure/system/system-clock";
@@ -358,6 +359,9 @@ export class BootApp extends Component {
       progression: {
         weaponId: prog.weaponId,
         ownedWeapons: prog.ownedWeapons,
+        weaponLevels: prog.weaponLevels,
+        shipSkinId: prog.shipSkinId,
+        ownedShipSkins: prog.ownedShipSkins,
         petIds: prog.petIds,
         deployedPets: prog.deployedPets,
         petBond: prog.petBond,
@@ -375,8 +379,11 @@ export class BootApp extends Component {
       },
       onEquipWeapon: (id) => void this.onEquipWeapon(id),
       onBuyWeapon: (id) => void this.onBuyWeapon(id),
+      onUpgradeWeapon: (id) => void this.onUpgradeWeapon(id),
       onBuyPet: (id) => void this.onBuyPet(id),
       onTogglePetDeploy: (id) => void this.onTogglePetDeploy(id),
+      onSelectShipSkin: (id) => void this.onSelectShipSkin(id),
+      onBuyShipSkin: (id) => void this.onBuyShipSkin(id),
       onToggleSetting: (key) => void this.onToggleSetting(key),
     });
   }
@@ -540,7 +547,47 @@ export class BootApp extends Component {
     if (prog.alloy < cost) return;
     prog.alloy -= cost;
     if (!prog.ownedWeapons.includes(id)) prog.ownedWeapons.push(id);
+    if (!prog.weaponLevels[id]) prog.weaponLevels[id] = 1;
     prog.weaponId = id;
+    this.deployCapHint = false;
+    await this.persistAndRerender();
+  }
+
+  private async onUpgradeWeapon(id: WeaponId) {
+    const child = this.activeChild();
+    if (!child) return;
+    const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
+    if (!prog.ownedWeapons.includes(id)) return;
+    const level = Math.max(1, prog.weaponLevels[id] ?? 1);
+    if (level >= 10) return;
+    const cost = weaponUpgradeCost(level);
+    if (prog.alloy < cost) return;
+    prog.alloy -= cost;
+    prog.weaponLevels[id] = level + 1;
+    this.deployCapHint = false;
+    await this.persistAndRerender();
+  }
+
+  private async onSelectShipSkin(id: ShipSkinId) {
+    const child = this.activeChild();
+    if (!child) return;
+    const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
+    if (!prog.ownedShipSkins.includes(id)) return;
+    prog.shipSkinId = id;
+    this.deployCapHint = false;
+    await this.persistAndRerender();
+  }
+
+  private async onBuyShipSkin(id: ShipSkinId) {
+    const child = this.activeChild();
+    if (!child) return;
+    const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
+    const skin = SHIP_SKINS[id];
+    if (prog.ownedShipSkins.includes(id)) return;
+    if (prog.starCrystals < skin.priceCrystal) return;
+    prog.starCrystals -= skin.priceCrystal;
+    prog.ownedShipSkins.push(id);
+    prog.shipSkinId = id;
     this.deployCapHint = false;
     await this.persistAndRerender();
   }

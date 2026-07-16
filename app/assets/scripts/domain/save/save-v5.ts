@@ -25,7 +25,10 @@ export interface ChildProgression {
   starCrystals: number;
   weaponId: string;
   ownedWeapons: string[];
+  /** per-weapon level 1–10 */
+  weaponLevels: Record<string, number>;
   shipSkinId: string;
+  ownedShipSkins: string[];
   petIds: string[];
   deployedPets: string[];
   petBond: Record<string, number>;
@@ -60,7 +63,9 @@ export function createChildProgression(): ChildProgression {
     starCrystals: 0,
     weaponId: "pulse",
     ownedWeapons: ["pulse"],
+    weaponLevels: { pulse: 1 },
     shipSkinId: "classic",
+    ownedShipSkins: ["classic"],
     petIds: [],
     deployedPets: [],
     petBond: {},

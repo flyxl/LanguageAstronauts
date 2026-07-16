@@ -203,7 +203,12 @@ export class BattleSession {
         this.shipHp = Math.min(this.shipMaxHp, this.shipHp + 8);
       }
       const quality = result.quality;
-      const dmg = calcWeaponDamage(prog.weaponId as WeaponId, quality, this.momentum);
+      const dmg = calcWeaponDamage(
+        prog.weaponId as WeaponId,
+        quality,
+        this.momentum,
+        prog.weaponLevels?.[prog.weaponId] ?? 1
+      );
       const petDmg = petDamageBonus(prog.deployedPets, prog.petBond);
       result.damage = dmg;
       result.petDamage = petDmg;
@@ -226,7 +231,7 @@ export class BattleSession {
       this.alloyGained += outcome === "first_correct" ? 6 : 3;
 
       for (const petId of prog.deployedPets) {
-        prog.petBond[petId] = (prog.petBond[petId] ?? 1) + 1;
+        prog.petBond[petId] = Math.min(20, (prog.petBond[petId] ?? 1) + 1);
       }
 
       if (armorHit.cleared) {
