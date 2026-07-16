@@ -237,7 +237,7 @@ export class StarMapScreen {
         UiTheme.colors.bgPanel,
         UiTheme.colors.accentCta,
         () => model.onDueReview()
-      ).setPosition(-90, this.height / 2 - 96, 0);
+      ).setPosition(-90, this.height / 2 - 118, 0);
     }
 
     makeChip(
@@ -248,7 +248,7 @@ export class StarMapScreen {
       40,
       UiTheme.colors.bgDeep,
       UiTheme.colors.accentInfo
-    ).setPosition(model.dueCount > 0 ? 90 : 0, this.height / 2 - 96, 0);
+    ).setPosition(model.dueCount > 0 ? 90 : 0, this.height / 2 - 118, 0);
 
     const grid = new Node("UnitGrid");
     screen.addChild(grid);
