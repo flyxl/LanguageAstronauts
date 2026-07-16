@@ -9,6 +9,7 @@ import {
 } from "cc";
 import { assertPlayerSafeCopy, UiTheme, type Rgba } from "./theme";
 import { attachStarfield } from "./starfield-bg";
+import type { ScreenLayout } from "./layout";
 
 export { attachStarfield };
 
@@ -38,13 +39,38 @@ export function makeLabel(parent: Node, name: string, opts: MakeLabelOpts): Labe
   return label;
 }
 
+/** Semi-transparent top/bottom chrome strip within the content frame. */
+export function makeChromeBar(
+  parent: Node,
+  name: string,
+  w: number,
+  h: number,
+  accentBottom = true
+): Node {
+  const bar = new Node(name);
+  parent.addChild(bar);
+  const g = bar.addComponent(Graphics);
+  g.fillColor = colorOf(UiTheme.colors.chrome);
+  g.roundRect(-w / 2, -h / 2, w, h, 0);
+  g.fill();
+  if (accentBottom) {
+    g.strokeColor = colorOf(UiTheme.colors.strokePanel);
+    g.lineWidth = 1;
+    g.moveTo(-w / 2, -h / 2);
+    g.lineTo(w / 2, -h / 2);
+    g.stroke();
+  }
+  bar.addComponent(UITransform).setContentSize(w, h);
+  return bar;
+}
+
 export function makePanel(parent: Node, name: string, w: number, h: number): Node {
   const panel = new Node(name);
   parent.addChild(panel);
   const g = panel.addComponent(Graphics);
   const fill = UiTheme.colors.bgPanel;
   const stroke = UiTheme.colors.strokePanel;
-  const radius = 12;
+  const radius = 16;
   g.fillColor = colorOf(fill);
   g.roundRect(-w / 2, -h / 2, w, h, radius);
   g.fill();
@@ -52,8 +78,50 @@ export function makePanel(parent: Node, name: string, w: number, h: number): Nod
   g.lineWidth = 2;
   g.roundRect(-w / 2, -h / 2, w, h, radius);
   g.stroke();
+  // Accent top edge
+  g.strokeColor = colorOf(UiTheme.colors.accentInfo);
+  g.lineWidth = 2;
+  g.moveTo(-w / 2 + radius, h / 2 - 1);
+  g.lineTo(w / 2 - radius, h / 2 - 1);
+  g.stroke();
   panel.addComponent(UITransform).setContentSize(w, h);
   return panel;
+}
+
+export function makeSecondaryButton(
+  parent: Node,
+  name: string,
+  label: string,
+  w: number,
+  h: number,
+  onTap: (event?: EventTouch) => void
+): Node {
+  assertPlayerSafeCopy(label);
+  const btn = new Node(name);
+  parent.addChild(btn);
+  const g = btn.addComponent(Graphics);
+  const radius = 12;
+  g.fillColor = colorOf(UiTheme.colors.bgPanel);
+  g.roundRect(-w / 2, -h / 2, w, h, radius);
+  g.fill();
+  g.strokeColor = colorOf(UiTheme.colors.strokePanel);
+  g.lineWidth = 2;
+  g.roundRect(-w / 2, -h / 2, w, h, radius);
+  g.stroke();
+  btn.addComponent(UITransform).setContentSize(w, h);
+
+  const labelNode = new Node("Label");
+  btn.addChild(labelNode);
+  const lbl = labelNode.addComponent(Label);
+  lbl.string = label;
+  lbl.fontSize = UiTheme.font.chip;
+  lbl.color = colorOf(UiTheme.colors.textPrimary);
+  lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
+  lbl.verticalAlign = Label.VerticalAlign.CENTER;
+  labelNode.addComponent(UITransform).setContentSize(w - 16, h - 8);
+
+  btn.on(Node.EventType.TOUCH_END, onTap);
+  return btn;
 }
 
 export function makeCtaButton(
@@ -72,6 +140,10 @@ export function makeCtaButton(
   g.fillColor = colorOf(UiTheme.colors.accentCta);
   g.roundRect(-w / 2, -h / 2, w, h, radius);
   g.fill();
+  g.strokeColor = colorOf({ r: 255, g: 220, b: 120, a: 180 });
+  g.lineWidth = 2;
+  g.roundRect(-w / 2, -h / 2, w, h, radius);
+  g.stroke();
   btn.addComponent(UITransform).setContentSize(w, h);
 
   const labelNode = new Node("Label");
@@ -87,3 +159,17 @@ export function makeCtaButton(
   btn.on(Node.EventType.TOUCH_END, onTap);
   return btn;
 }
+
+/** Focus dim behind battle/question panels. */
+export function makeFocusScrim(parent: Node, layout: ScreenLayout): Node {
+  const scrim = new Node("FocusScrim");
+  parent.addChild(scrim);
+  scrim.setSiblingIndex(1);
+  const g = scrim.addComponent(Graphics);
+  g.fillColor = colorOf(UiTheme.colors.scrim);
+  g.rect(-layout.contentW / 2, -layout.contentH / 2, layout.contentW, layout.contentH);
+  g.fill();
+  scrim.addComponent(UITransform).setContentSize(layout.contentW, layout.contentH);
+  return scrim;
+}
+

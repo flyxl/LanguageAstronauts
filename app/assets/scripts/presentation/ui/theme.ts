@@ -14,7 +14,9 @@ const FORBIDDEN = [
 export const UiTheme = {
   colors: {
     bgDeep: { r: 11, g: 18, b: 32, a: 255 } satisfies Rgba,
-    bgPanel: { r: 20, g: 32, b: 51, a: 225 } satisfies Rgba,
+    bgPanel: { r: 20, g: 32, b: 51, a: 235 } satisfies Rgba,
+    chrome: { r: 8, g: 14, b: 26, a: 220 } satisfies Rgba,
+    scrim: { r: 4, g: 8, b: 16, a: 140 } satisfies Rgba,
     strokePanel: { r: 58, g: 85, b: 120, a: 255 } satisfies Rgba,
     textPrimary: { r: 232, g: 238, b: 248, a: 255 } satisfies Rgba,
     textSecondary: { r: 155, g: 176, b: 201, a: 255 } satisfies Rgba,

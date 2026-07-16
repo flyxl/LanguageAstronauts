@@ -23,6 +23,50 @@ function shuffle<T>(arr: T[], random: RandomSource): T[] {
   return a;
 }
 
+type DistractorSlot = "vocab_en" | "vocab_zh" | "dialogue_answer" | "dialogue_zh";
+
+function sameKind(pool: ContentItem[], item: ContentItem): ContentItem[] {
+  return pool.filter((x) => x.contentId !== item.contentId && x.kind === item.kind);
+}
+
+function pickDistractors(
+  pool: ContentItem[],
+  item: ContentItem,
+  slot: DistractorSlot,
+  count: number,
+  random: RandomSource
+): string[] {
+  const peers = sameKind(pool, item);
+  const extract = (o: ContentItem): string => {
+    switch (slot) {
+      case "vocab_en":
+        return o.en;
+      case "vocab_zh":
+        return o.zh;
+      case "dialogue_answer":
+        return o.answer ?? o.en;
+      case "dialogue_zh":
+        return o.zh;
+    }
+  };
+  const correct =
+    slot === "vocab_en"
+      ? item.en
+      : slot === "vocab_zh" || slot === "dialogue_zh"
+        ? item.zh
+        : item.answer ?? item.en;
+  const values = shuffle(
+    peers.map(extract).filter((v) => Boolean(v) && v !== correct),
+    random
+  );
+  const unique: string[] = [];
+  for (const v of values) {
+    if (!unique.includes(v)) unique.push(v);
+    if (unique.length >= count) break;
+  }
+  return unique;
+}
+
 export function buildQuestions(
   items: ContentItem[],
   skill: QuestionType,
@@ -45,13 +89,10 @@ function makeQuestion(
   pool: ContentItem[],
   random: RandomSource
 ): BattleQuestion {
-  const others = pool.filter((x) => x.contentId !== item.contentId);
   if (item.kind === "dialogue") {
     if (type === "reading") {
-      const options = shuffle(
-        [item.zh, ...shuffle(others.map((o) => o.zh), random).slice(0, 3)],
-        random
-      );
+      const distractors = pickDistractors(pool, item, "dialogue_zh", 3, random);
+      const options = shuffle([item.zh, ...distractors], random);
       return {
         questionId: `${item.contentId}:${type}`,
         contentId: item.contentId,
@@ -61,14 +102,11 @@ function makeQuestion(
         options,
         correct: item.zh,
         speakText: item.answer ?? item.en,
-        item
+        item,
       };
     }
     const answer = item.answer ?? item.en;
-    const distractors = shuffle(
-      others.map((o) => o.answer ?? o.en).filter(Boolean),
-      random
-    ).slice(0, 3);
+    const distractors = pickDistractors(pool, item, "dialogue_answer", 3, random);
     const options = shuffle([answer, ...distractors], random);
     return {
       questionId: `${item.contentId}:${type}`,
@@ -79,15 +117,13 @@ function makeQuestion(
       options,
       correct: answer,
       speakText: item.prompt ?? item.en,
-      item
+      item,
     };
   }
 
   if (type === "listening") {
-    const options = shuffle(
-      [item.zh, ...shuffle(others.map((o) => o.zh), random).slice(0, 3)],
-      random
-    );
+    const distractors = pickDistractors(pool, item, "vocab_zh", 3, random);
+    const options = shuffle([item.zh, ...distractors], random);
     return {
       questionId: `${item.contentId}:listening`,
       contentId: item.contentId,
@@ -97,14 +133,12 @@ function makeQuestion(
       options,
       correct: item.zh,
       speakText: item.en,
-      item
+      item,
     };
   }
   if (type === "reading") {
-    const options = shuffle(
-      [item.zh, ...shuffle(others.map((o) => o.zh), random).slice(0, 3)],
-      random
-    );
+    const distractors = pickDistractors(pool, item, "vocab_zh", 3, random);
+    const options = shuffle([item.zh, ...distractors], random);
     return {
       questionId: `${item.contentId}:reading`,
       contentId: item.contentId,
@@ -114,7 +148,7 @@ function makeQuestion(
       options,
       correct: item.zh,
       speakText: item.en,
-      item
+      item,
     };
   }
   if (type === "spelling" && !/\s/.test(item.en)) {
@@ -128,7 +162,7 @@ function makeQuestion(
       correct: item.en.toLowerCase(),
       speakText: item.en,
       letters: shuffle(item.en.toLowerCase().split(""), random),
-      item
+      item,
     };
   }
   if (type === "speaking") {
@@ -141,13 +175,11 @@ function makeQuestion(
       options: [],
       correct: item.en,
       speakText: item.en,
-      item
+      item,
     };
   }
-  const options = shuffle(
-    [item.en, ...shuffle(others.map((o) => o.en), random).slice(0, 3)],
-    random
-  );
+  const distractors = pickDistractors(pool, item, "vocab_en", 3, random);
+  const options = shuffle([item.en, ...distractors], random);
   return {
     questionId: `${item.contentId}:choice`,
     contentId: item.contentId,
@@ -157,6 +189,6 @@ function makeQuestion(
     options,
     correct: item.en,
     speakText: item.en,
-    item
+    item,
   };
 }

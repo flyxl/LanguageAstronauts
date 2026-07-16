@@ -9,12 +9,20 @@ import {
 import {
   attachStarfield,
   colorOf,
+  makeChromeBar,
   makeCtaButton,
   makeLabel,
+  makeSecondaryButton,
 } from "../ui/ui-factory";
 import { assertPlayerSafeCopy, UiTheme, type Rgba } from "../ui/theme";
 import { formatStars } from "../ui/format-stars";
 import { unitCardTitle } from "../ui/unit-card-title";
+import {
+  contentRight,
+  createContentRoot,
+  gridColsForContent,
+  measureScreen,
+} from "../ui/layout";
 
 export { formatStars };
 
@@ -25,6 +33,7 @@ export type StarMapUnit = {
   title: string;
   items?: unknown[];
   stars?: number;
+  locked?: boolean;
 };
 
 export type StarMapModel = {
@@ -42,10 +51,12 @@ export type StarMapModel = {
 };
 
 const MAX_CARDS = 8;
-const CARD_W = 360;
-const CARD_H = 112;
-const COL_GAP = 48;
+const CARD_W = 300;
+const CARD_H = 108;
+const COL_GAP = 24;
 const ROW_GAP = 16;
+const TOP_BAR_H = 72;
+const BOTTOM_BAR_H = 80;
 
 function itemCount(unit: StarMapUnit): number {
   return unit.items?.length ?? 13;
@@ -85,9 +96,7 @@ function makeChip(
   lbl.verticalAlign = Label.VerticalAlign.CENTER;
   labelNode.addComponent(UITransform).setContentSize(w - 16, h - 8);
 
-  if (onTap) {
-    chip.on(Node.EventType.TOUCH_END, onTap);
-  }
+  if (onTap) chip.on(Node.EventType.TOUCH_END, onTap);
   return chip;
 }
 
@@ -101,8 +110,13 @@ function makeUnitCard(
   const card = new Node(`UnitCard_${unit.id}`);
   parent.addChild(card);
 
-  const stroke = selected ? UiTheme.colors.accentCta : UiTheme.colors.strokePanel;
-  const lineWidth = selected ? 3 : 2;
+  const locked = Boolean(unit.locked);
+  const stroke = locked
+    ? UiTheme.colors.textSecondary
+    : selected
+      ? UiTheme.colors.accentCta
+      : UiTheme.colors.strokePanel;
+  const lineWidth = selected && !locked ? 3 : 2;
 
   const bg = new Node("Bg");
   card.addChild(bg);
@@ -117,42 +131,44 @@ function makeUnitCard(
   g.stroke();
   bg.addComponent(UITransform).setContentSize(CARD_W, CARD_H);
 
-  const badgeW = 56;
   const badge = makeLabel(card, "UnitNo", {
-    string: `U${index + 1}`,
+    string: locked ? "锁" : `U${index + 1}`,
     fontSize: UiTheme.font.chip,
-    color: UiTheme.colors.accentInfo,
-    width: badgeW,
+    color: locked ? UiTheme.colors.textSecondary : UiTheme.colors.accentInfo,
+    width: 40,
     height: 22,
   });
   badge.horizontalAlign = Label.HorizontalAlign.RIGHT;
   badge.node.getComponent(UITransform)!.setAnchorPoint(1, 0.5);
-  badge.node.setPosition(CARD_W / 2 - 14, CARD_H / 2 - 22, 0);
+  badge.node.setPosition(CARD_W / 2 - 12, CARD_H / 2 - 16, 0);
 
-  const titleW = CARD_W - 32 - badgeW;
   const title = makeLabel(card, "Title", {
-    string: unitCardTitle(unit.title, 22),
+    string: unitCardTitle(unit.title, 32),
     fontSize: UiTheme.font.cardTitle,
-    width: titleW,
-    height: 28,
+    color: locked ? UiTheme.colors.textSecondary : UiTheme.colors.textPrimary,
+    width: CARD_W - 28,
+    height: 26,
   });
   title.horizontalAlign = Label.HorizontalAlign.LEFT;
+  title.overflow = Label.Overflow.CLAMP;
   title.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-  title.node.setPosition(-CARD_W / 2 + 16, 14, 0);
+  title.node.setPosition(-CARD_W / 2 + 14, 6, 0);
 
   const meta = makeLabel(card, "Meta", {
-    string: `${itemCount(unit)} 语言点 · ${formatStars(unit.stars ?? 0)}`,
-    fontSize: UiTheme.font.body,
+    string: locked
+      ? "完成前序单元后解锁"
+      : `${itemCount(unit)} 语言点 · ${formatStars(unit.stars ?? 0)}`,
+    fontSize: UiTheme.font.chip,
     color: UiTheme.colors.textSecondary,
-    width: CARD_W - 32,
-    height: 24,
+    width: CARD_W - 28,
+    height: 22,
   });
   meta.horizontalAlign = Label.HorizontalAlign.LEFT;
   meta.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-  meta.node.setPosition(-CARD_W / 2 + 16, -22, 0);
+  meta.node.setPosition(-CARD_W / 2 + 14, -26, 0);
 
   card.addComponent(UITransform).setContentSize(CARD_W, CARD_H);
-  card.on(Node.EventType.TOUCH_END, onSelect);
+  if (!locked) card.on(Node.EventType.TOUCH_END, onSelect);
   return card;
 }
 
@@ -177,30 +193,44 @@ export class StarMapScreen {
 
     attachStarfield(screen, this.width, this.height, 42);
 
+    const layout = measureScreen(this.width, this.height);
+    const content = createContentRoot(screen, layout);
+    const cw = layout.contentW;
+    const ch = layout.contentH;
+
+    const topY = ch / 2 - TOP_BAR_H / 2;
+    makeChromeBar(content, "TopChrome", cw, TOP_BAR_H).setPosition(0, topY, 0);
+
     const topBar = new Node("TopBar");
-    screen.addChild(topBar);
-    topBar.setPosition(0, this.height / 2 - 52, 0);
+    content.addChild(topBar);
+    topBar.setPosition(0, topY, 0);
+
+    const title = makeLabel(topBar, "ScreenTitle", {
+      string: "星图",
+      fontSize: UiTheme.font.screenTitle,
+      width: 80,
+      height: 40,
+    });
+    title.horizontalAlign = Label.HorizontalAlign.LEFT;
+    title.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+    title.node.setPosition(-cw / 2 + 20, 0, 0);
 
     const chips: Array<{ text: string; w: number }> = [
-      { text: model.child.name, w: 120 },
-      { text: `Lv.${model.child.level}`, w: 72 },
-      { text: `合金 ${model.child.alloy}`, w: 100 },
-      { text: `星晶 ${model.child.starCrystals}`, w: 100 },
+      { text: model.child.name, w: 108 },
+      { text: `Lv.${model.child.level}`, w: 64 },
+      { text: `合金 ${model.child.alloy}`, w: 92 },
+      { text: `星晶 ${model.child.starCrystals}`, w: 92 },
     ];
-
-    const chipGap = 12;
-    const baseBtnW = 88;
-    const reportBtnW = 72;
+    const chipGap = 10;
     const chipsWidth = chips.reduce((sum, c) => sum + c.w, 0) + chipGap * (chips.length - 1);
-    const rowWidth = chipsWidth + chipGap + reportBtnW + chipGap + baseBtnW;
-    let x = -rowWidth / 2;
+    let x = -chipsWidth / 2;
     for (const chip of chips) {
       const node = makeChip(
         topBar,
         chip.text,
         chip.text,
         chip.w,
-        36,
+        34,
         UiTheme.colors.bgDeep,
         UiTheme.colors.accentInfo
       );
@@ -208,60 +238,57 @@ export class StarMapScreen {
       x += chip.w + chipGap;
     }
 
-    makeChip(
-      topBar,
-      "ReportBtn",
-      "学情",
-      reportBtnW,
-      36,
-      UiTheme.colors.bgPanel,
-      UiTheme.colors.accentCta,
-      () => model.onReport()
-    ).setPosition(x + reportBtnW / 2, 0, 0);
-    x += reportBtnW + chipGap;
-
-    // Keep 「整备」 in the same top row (not at screen edge — that clipped off-canvas).
-    makeCtaButton(topBar, "BaseBtn", "整备", baseBtnW, 36, () => model.onBase()).setPosition(
-      x + baseBtnW / 2,
+    makeSecondaryButton(topBar, "ReportBtn", "学情", 68, 34, () => model.onReport()).setPosition(
+      contentRight(layout, 108),
+      0,
+      0
+    );
+    makeCtaButton(topBar, "BaseBtn", "整备", 72, 34, () => model.onBase()).setPosition(
+      contentRight(layout, 24),
       0,
       0
     );
 
+    const subBar = new Node("SubBar");
+    content.addChild(subBar);
+    subBar.setPosition(0, topY - TOP_BAR_H / 2 - 28, 0);
+
     if (model.dueCount > 0) {
       makeChip(
-        screen,
+        subBar,
         "DueReviewChip",
         `到期复习 ${model.dueCount}`,
-        148,
-        40,
+        140,
+        36,
         UiTheme.colors.bgPanel,
         UiTheme.colors.accentCta,
         () => model.onDueReview()
-      ).setPosition(-90, this.height / 2 - 118, 0);
+      ).setPosition(-78, 0, 0);
     }
 
     makeChip(
-      screen,
+      subBar,
       "DailyChip",
       `今日护航 ${model.dailyDone}/${model.dailyTotal}`,
-      148,
-      40,
+      140,
+      36,
       UiTheme.colors.bgDeep,
       UiTheme.colors.accentInfo
-    ).setPosition(model.dueCount > 0 ? 90 : 0, this.height / 2 - 118, 0);
+    ).setPosition(model.dueCount > 0 ? 78 : 0, 0, 0);
 
     const grid = new Node("UnitGrid");
-    screen.addChild(grid);
+    content.addChild(grid);
 
     const visible = model.units.slice(0, MAX_CARDS);
     const colW = CARD_W + COL_GAP;
     const rowH = CARD_H + ROW_GAP;
-    const cols = 2;
+    const cols = gridColsForContent(cw, CARD_W, COL_GAP, 3);
     const rows = Math.ceil(visible.length / cols);
     const gridW = cols * colW - COL_GAP;
     const gridH = rows * rowH - ROW_GAP;
     const startX = -gridW / 2 + CARD_W / 2;
-    const startY = gridH / 2 - CARD_H / 2 - 20;
+    const startY = gridH / 2 - CARD_H / 2;
+    grid.setPosition(0, -12, 0);
 
     visible.forEach((unit, i) => {
       const col = i % cols;
@@ -279,33 +306,48 @@ export class StarMapScreen {
     if (model.selectedUnitId) {
       const idx = model.units.findIndex((u) => u.id === model.selectedUnitId);
       const unit = idx >= 0 ? model.units[idx] : null;
+      const locked = Boolean(unit?.locked);
       const contextText = unit
-        ? unitCardTitle(unit.title, 28)
+        ? locked
+          ? "该单元尚未解锁"
+          : unitCardTitle(unit.title, 24)
         : `Unit ${idx + 1}`;
 
+      const bottomY = -ch / 2 + BOTTOM_BAR_H / 2;
+      makeChromeBar(content, "BottomChrome", cw, BOTTOM_BAR_H, false).setPosition(0, bottomY, 0);
+
       const bottomBar = new Node("BottomBar");
-      screen.addChild(bottomBar);
-      const bottomY = -this.height / 2 + 56;
-      bottomBar.setPosition(this.width / 2 - 200, bottomY, 0);
+      content.addChild(bottomBar);
+      bottomBar.setPosition(0, bottomY, 0);
 
       const ctx = makeLabel(bottomBar, "SelectedCtx", {
         string: contextText,
         fontSize: UiTheme.font.body,
         color: UiTheme.colors.textSecondary,
-        width: 220,
+        width: 360,
         height: 32,
       });
-      ctx.horizontalAlign = Label.HorizontalAlign.RIGHT;
-      ctx.node.setPosition(-90, 0, 0);
+      ctx.horizontalAlign = Label.HorizontalAlign.LEFT;
+      ctx.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+      ctx.node.setPosition(-cw / 2 + 24, 0, 0);
 
-      makeCtaButton(
-        bottomBar,
-        "SortieBtn",
-        "出击",
-        160,
-        52,
-        () => model.onSortie()
-      ).setPosition(80, 0, 0);
+      if (!locked) {
+        makeCtaButton(bottomBar, "SortieBtn", "出击", 160, 48, () => model.onSortie()).setPosition(
+          cw / 2 - 104,
+          0,
+          0
+        );
+      } else {
+        makeChip(
+          bottomBar,
+          "LockedSortie",
+          "未解锁",
+          160,
+          48,
+          UiTheme.colors.bgDeep,
+          UiTheme.colors.textSecondary
+        ).setPosition(cw / 2 - 104, 0, 0);
+      }
     }
   }
 

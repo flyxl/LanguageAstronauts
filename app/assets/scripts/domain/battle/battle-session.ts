@@ -47,6 +47,11 @@ export interface AnswerResult {
   quality: number;
 }
 
+export interface TacticalBoostOption {
+  id: "firepower" | "shield";
+  label: string;
+}
+
 export class BattleSession {
   readonly battleId: string;
   private formIndex = 0;
@@ -63,6 +68,10 @@ export class BattleSession {
   finished = false;
   win = false;
   private seenCorrect = new Set<string>();
+  private answersResolved = 0;
+  private boostsTaken = 0;
+  private tacticalMul = 1;
+  pendingBoost: TacticalBoostOption[] | null = null;
 
   constructor(
     private readonly unitId: string,
@@ -207,7 +216,8 @@ export class BattleSession {
         prog.weaponId as WeaponId,
         quality,
         this.momentum,
-        prog.weaponLevels?.[prog.weaponId] ?? 1
+        prog.weaponLevels?.[prog.weaponId] ?? 1,
+        this.tacticalMul
       );
       const petDmg = petDamageBonus(prog.deployedPets, prog.petBond);
       result.damage = dmg;
@@ -264,7 +274,30 @@ export class BattleSession {
       momentum: this.momentum
     });
 
+    // Consume the question so rapid re-taps cannot re-resolve it.
+    this.current = null;
+    if (!this.finished) {
+      this.answersResolved += 1;
+      if (this.answersResolved % 3 === 0 && this.boostsTaken < 3) {
+        this.pendingBoost = [
+          { id: "firepower", label: "火力强化" },
+          { id: "shield", label: "护盾加固" },
+        ];
+      }
+    }
+
     return result;
+  }
+
+  chooseBoost(id: "firepower" | "shield"): void {
+    if (!this.pendingBoost || this.finished) return;
+    if (id === "firepower") {
+      this.tacticalMul = Math.min(1.6, this.tacticalMul + 0.2);
+    } else {
+      this.shipHp = Math.min(this.shipMaxHp, this.shipHp + 16);
+    }
+    this.boostsTaken += 1;
+    this.pendingBoost = null;
   }
 
   private finish(win: boolean) {

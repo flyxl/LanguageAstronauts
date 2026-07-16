@@ -1,11 +1,12 @@
 import {
+  Color,
+  EditBox,
   EventTouch,
   Graphics,
   Label,
   Node,
   Size,
   UITransform,
-  view,
 } from "cc";
 import {
   attachStarfield,
@@ -15,25 +16,12 @@ import {
   makePanel,
 } from "../ui/ui-factory";
 import { assertPlayerSafeCopy, UiTheme, type Rgba } from "../ui/theme";
+import { createContentRoot, measureScreen } from "../ui/layout";
 
-const NAME_OPTIONS = ["小航员", "宇航员", "启航者"] as const;
 const TEXTBOOK = "沪教牛津 2024";
 const GRADE = "3A";
 const FIELD_W = 300;
-
-function leftSafeInset(screenWidth: number): number {
-  // Punch-hole / island devices clip the far left in landscape; keep brand clear of it.
-  let inset = Math.max(160, Math.round(screenWidth * 0.12));
-  try {
-    const safe = view.getSafeAreaRect?.();
-    if (safe && typeof safe.x === "number") {
-      inset = Math.max(inset, Math.round(safe.x) + 48);
-    }
-  } catch {
-    // keep fallback inset
-  }
-  return inset;
-}
+const NAME_MAX = 16;
 
 function makeChip(
   parent: Node,
@@ -93,8 +81,7 @@ export class BootProfileScreen {
   private readonly width: number;
   private readonly height: number;
   private screenRoot: Node | null = null;
-  private nameIndex = 0;
-  private nameChipLabel: Label | null = null;
+  private nameEdit: EditBox | null = null;
 
   constructor(root: Node, size: { width: number; height: number } | Size) {
     this.root = root;
@@ -111,39 +98,40 @@ export class BootProfileScreen {
 
     attachStarfield(screen, this.width, this.height, 42);
 
+    const layout = measureScreen(this.width, this.height);
+    const content = createContentRoot(screen, layout);
+    const cw = layout.contentW;
+
+    const brandX = -cw * 0.24;
+    const brandBoxW = Math.min(480, Math.round(cw * 0.38));
+    const panelW = 400;
+    const panelH = 440;
+    const panelX = cw * 0.24;
+
     const brand = new Node("Brand");
-    screen.addChild(brand);
-    // Keep brand fully on-screen (ultra-wide + left camera cutout).
-    const brandLeft = -this.width / 2 + leftSafeInset(this.width);
-    brand.setPosition(0, 10, 0);
+    content.addChild(brand);
 
     const title = makeLabel(brand, "BrandTitle", {
       string: "时空语航员",
       fontSize: UiTheme.font.brand,
-      width: Math.min(520, this.width * 0.42),
+      width: brandBoxW,
       height: 72,
     });
-    title.horizontalAlign = Label.HorizontalAlign.LEFT;
-    title.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-    title.node.setPosition(brandLeft, 40, 0);
+    title.horizontalAlign = Label.HorizontalAlign.CENTER;
+    title.node.setPosition(brandX, 48, 0);
 
     const subtitle = makeLabel(brand, "BrandSubtitle", {
       string: "教材同步星际训练，答对即发射。",
       fontSize: UiTheme.font.body,
       color: UiTheme.colors.textSecondary,
-      width: Math.min(480, this.width * 0.4),
+      width: brandBoxW,
       height: 56,
     });
-    subtitle.horizontalAlign = Label.HorizontalAlign.LEFT;
-    subtitle.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-    subtitle.node.setPosition(brandLeft, -24, 0);
+    subtitle.horizontalAlign = Label.HorizontalAlign.CENTER;
+    subtitle.node.setPosition(brandX, -16, 0);
 
-    const panelW = 420;
-    const panelH = 460;
     const panelRoot = new Node("ProfilePanel");
-    screen.addChild(panelRoot);
-    // Sit in the right half but keep ≥48px from the right edge.
-    const panelX = Math.min(this.width * 0.22, this.width / 2 - panelW / 2 - 48);
+    content.addChild(panelRoot);
     panelRoot.setPosition(panelX, 0, 0);
     makePanel(panelRoot, "PanelBg", panelW, panelH);
 
@@ -155,29 +143,85 @@ export class BootProfileScreen {
     });
     panelTitle.horizontalAlign = Label.HorizontalAlign.LEFT;
     panelTitle.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-    // Keep title fully inside the panel frame.
-    panelTitle.node.setPosition(-panelW / 2 + 24, panelH / 2 - 56, 0);
+    panelTitle.node.setPosition(-panelW / 2 + 24, panelH / 2 - 48, 0);
 
     const fields = new Node("Fields");
     panelRoot.addChild(fields);
-    fields.setPosition(0, 16, 0);
+    fields.setPosition(0, 8, 0);
 
-    // Interactive name: gold stroke. Read-only fields: info stroke + same width.
-    fieldCaption(fields, "NameCaption", "航员代号（点按切换）", 110);
-    const nameChip = makeChip(
-      fields,
-      "NameChip",
-      NAME_OPTIONS[this.nameIndex],
-      FIELD_W,
-      44,
-      UiTheme.colors.bgDeep,
-      UiTheme.colors.accentCta,
-      () => this.cycleName()
+    fieldCaption(fields, "NameCaption", "航员代号（可输入，最多 16 字）", 128);
+
+    const editHost = new Node("NameEditHost");
+    fields.addChild(editHost);
+    editHost.setPosition(0, 84, 0);
+    const hostG = editHost.addComponent(Graphics);
+    hostG.fillColor = colorOf(UiTheme.colors.bgDeep);
+    hostG.roundRect(-FIELD_W / 2, -22, FIELD_W, 44, 10);
+    hostG.fill();
+    hostG.strokeColor = colorOf(UiTheme.colors.accentCta);
+    hostG.lineWidth = 2;
+    hostG.roundRect(-FIELD_W / 2, -22, FIELD_W, 44, 10);
+    hostG.stroke();
+    editHost.addComponent(UITransform).setContentSize(FIELD_W, 44);
+
+    const textLabelNode = new Node("TextLabel");
+    editHost.addChild(textLabelNode);
+    const textUt = textLabelNode.addComponent(UITransform);
+    textUt.setContentSize(FIELD_W - 24, 36);
+    textUt.setAnchorPoint(0, 0.5);
+    textLabelNode.setPosition(-FIELD_W / 2 + 12, 0, 0);
+    const textLabel = textLabelNode.addComponent(Label);
+    textLabel.string = "";
+    textLabel.fontSize = UiTheme.font.body;
+    textLabel.color = colorOf(UiTheme.colors.textPrimary);
+    textLabel.horizontalAlign = Label.HorizontalAlign.LEFT;
+    textLabel.verticalAlign = Label.VerticalAlign.CENTER;
+    textLabel.overflow = Label.Overflow.SHRINK;
+
+    const placeholderNode = new Node("Placeholder");
+    editHost.addChild(placeholderNode);
+    const phUt = placeholderNode.addComponent(UITransform);
+    phUt.setContentSize(FIELD_W - 24, 36);
+    phUt.setAnchorPoint(0, 0.5);
+    placeholderNode.setPosition(-FIELD_W / 2 + 12, 0, 0);
+    const placeholderLabel = placeholderNode.addComponent(Label);
+    placeholderLabel.string = "输入代号";
+    placeholderLabel.fontSize = UiTheme.font.body;
+    placeholderLabel.color = colorOf(UiTheme.colors.textSecondary);
+    placeholderLabel.horizontalAlign = Label.HorizontalAlign.LEFT;
+    placeholderLabel.verticalAlign = Label.VerticalAlign.CENTER;
+
+    const editNode = new Node("NameEdit");
+    editHost.addChild(editNode);
+    const editUt = editNode.addComponent(UITransform);
+    editUt.setContentSize(FIELD_W - 24, 36);
+    editUt.setAnchorPoint(0, 0.5);
+    editNode.setPosition(-FIELD_W / 2 + 12, 0, 0);
+    const edit = editNode.addComponent(EditBox);
+    edit.string = "小航员";
+    edit.placeholder = "输入代号";
+    edit.maxLength = NAME_MAX;
+    edit.inputMode = EditBox.InputMode.SINGLE_LINE;
+    edit.inputFlag = EditBox.InputFlag.DEFAULT;
+    edit.returnType = EditBox.KeyboardReturnType.DONE;
+    edit.fontSize = UiTheme.font.body;
+    edit.textLabel = textLabel;
+    edit.placeholderLabel = placeholderLabel;
+    edit.fontColor = new Color(
+      UiTheme.colors.textPrimary.r,
+      UiTheme.colors.textPrimary.g,
+      UiTheme.colors.textPrimary.b,
+      255
     );
-    nameChip.setPosition(0, 72, 0);
-    this.nameChipLabel = nameChip.getChildByName("Label")!.getComponent(Label)!;
+    edit.placeholderFontColor = new Color(
+      UiTheme.colors.textSecondary.r,
+      UiTheme.colors.textSecondary.g,
+      UiTheme.colors.textSecondary.b,
+      255
+    );
+    this.nameEdit = edit;
 
-    fieldCaption(fields, "TextbookCaption", "教材", 20);
+    fieldCaption(fields, "TextbookCaption", "教材", 32);
     makeChip(
       fields,
       "TextbookChip",
@@ -186,9 +230,9 @@ export class BootProfileScreen {
       40,
       UiTheme.colors.bgDeep,
       UiTheme.colors.strokePanel
-    ).setPosition(0, -16, 0);
+    ).setPosition(0, -4, 0);
 
-    fieldCaption(fields, "GradeCaption", "年级", -70);
+    fieldCaption(fields, "GradeCaption", "年级", -58);
     makeChip(
       fields,
       "GradeChip",
@@ -197,18 +241,15 @@ export class BootProfileScreen {
       40,
       UiTheme.colors.bgDeep,
       UiTheme.colors.strokePanel
-    ).setPosition(0, -106, 0);
+    ).setPosition(0, -94, 0);
 
     const ctaH = 56;
-    const ctaBottomMargin = 28;
-    makeCtaButton(
-      panelRoot,
-      "CreateBtn",
-      "创建并出航",
-      FIELD_W,
-      ctaH,
-      () => opts.onCreate(NAME_OPTIONS[this.nameIndex])
-    ).setPosition(0, -panelH / 2 + ctaBottomMargin + ctaH / 2, 0);
+    makeCtaButton(panelRoot, "CreateBtn", "创建并出航", FIELD_W, ctaH, () => {
+      const raw = (this.nameEdit?.string ?? "").trim() || "小航员";
+      const name = raw.slice(0, NAME_MAX);
+      assertPlayerSafeCopy(name);
+      opts.onCreate(name);
+    }).setPosition(0, -panelH / 2 + 28 + ctaH / 2, 0);
   }
 
   getScreenRoot(): Node | null {
@@ -220,13 +261,6 @@ export class BootProfileScreen {
       this.screenRoot.destroy();
       this.screenRoot = null;
     }
-    this.nameChipLabel = null;
-  }
-
-  private cycleName(): void {
-    this.nameIndex = (this.nameIndex + 1) % NAME_OPTIONS.length;
-    if (this.nameChipLabel) {
-      this.nameChipLabel.string = NAME_OPTIONS[this.nameIndex];
-    }
+    this.nameEdit = null;
   }
 }

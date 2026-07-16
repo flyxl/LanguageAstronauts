@@ -8,7 +8,10 @@ import {
   JsonAsset,
   profiler,
   native,
+  ResolutionPolicy,
+  UITransform,
 } from "cc";
+import { DESIGN } from "./ui/viewport";
 import bundledCatalog from "../../content/catalog.json";
 import type { AppEvents } from "../core/app-events";
 import { EventBus } from "../core/event-bus";
@@ -31,6 +34,7 @@ import {
 } from "../domain/save/save-transfer";
 import { weaponUpgradeCost, type WeaponId } from "../domain/weapons/weapons";
 import { ensureDailyMissionState, type DailyProgressSignal } from "../domain/progression/daily-missions";
+import { isUnitUnlocked } from "../domain/progression/star-medals";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
 import { SystemClock } from "../infrastructure/system/system-clock";
 import { MathRandomSource } from "../infrastructure/system/math-random-source";
@@ -101,7 +105,7 @@ const FALLBACK_3A_U1_ITEMS: ContentItem[] = [
   },
 ];
 
-const PREP_MS = 1200;
+const PREP_MS = 500;
 
 const WEAPON_ALLOY_PRICES: Record<WeaponId, number> = {
   pulse: 0,
@@ -168,9 +172,13 @@ export class BootApp extends Component {
   private reportToastNode: Node | null = null;
   private deployCapHint = false;
   private pendingBattleMode: "campaign" | "review" = "campaign";
+  private answering = false;
+  private baseToastNode: Node | null = null;
+  private flowToastNode: Node | null = null;
 
   async onLoad() {
     profiler.hideStats();
+    this.applyDesignViewport();
     this.repo = new LocalStorageSaveRepository();
     this.profiles = new ProfileService(this.repo, this.clock, this.random);
     await this.profiles.start();
@@ -182,8 +190,27 @@ export class BootApp extends Component {
       this.nav.selectUnit(this.units[0].id);
     }
 
+    // Re-apply after awaits — engine/widget may reset canvas to scene defaults.
+    this.applyDesignViewport();
     this.buildShell();
     this.renderCurrent();
+  }
+
+  /**
+   * FIXED_HEIGHT: keep 720h, expand width on ultra-wide so the frame fills
+   * the screen (no SHOW_ALL letterboxing). Sync Canvas to visible size
+   * (scene historically shipped as 960×640).
+   */
+  private applyDesignViewport() {
+    view.setDesignResolutionSize(DESIGN.width, DESIGN.height, ResolutionPolicy.FIXED_HEIGHT);
+    const visible = view.getVisibleSize();
+    const width = Math.max(DESIGN.width, Math.round(visible.width));
+    const height = Math.max(DESIGN.height, Math.round(visible.height));
+    const ut = this.node.getComponent(UITransform);
+    if (ut) {
+      ut.setContentSize(width, height);
+    }
+    this.viewport = { width, height };
   }
 
   private applyCatalogJson(json: { units?: CatalogUnit[] } | null | undefined): boolean {
@@ -227,8 +254,7 @@ export class BootApp extends Component {
   }
 
   private buildShell() {
-    const size = view.getVisibleSize();
-    this.viewport = { width: size.width, height: size.height };
+    this.applyDesignViewport();
 
     this.screenHost = new Node("ScreenHost");
     this.node.addChild(this.screenHost);
@@ -243,7 +269,10 @@ export class BootApp extends Component {
   }
 
   private renderCurrent() {
-    this.clearPrepLabel();
+    const screen = this.nav.screen;
+    if (this.prepNode && screen !== "sortie" && screen !== "starmap") {
+      this.clearPrepLabel();
+    }
     this.clearProfileError();
     this.clearReportToast();
     this.profileScreen.destroy();
@@ -299,11 +328,15 @@ export class BootApp extends Component {
 
   private unitsWithStars() {
     const child = this.activeChild();
-    if (!child) return this.units;
+    if (!child) {
+      return this.units.map((u, i) => ({ ...u, stars: 0, locked: i > 0 }));
+    }
     const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
-    return this.units.map((u) => ({
+    const ids = this.units.map((u) => u.id);
+    return this.units.map((u, i) => ({
       ...u,
       stars: prog.unitStars[u.id] ?? 0,
+      locked: !isUnitUnlocked(i, ids, prog.unitStars),
     }));
   }
 
@@ -316,19 +349,24 @@ export class BootApp extends Component {
       child != null
         ? ensureDailyMissionState(ensureDailyByChild(save)[child.id], this.clock.now())
         : null;
+    const units = this.unitsWithStars();
 
     this.starMapScreen.render({
       child: this.childSummary(),
-      units: this.unitsWithStars(),
+      units,
       selectedUnitId: this.nav.selectedUnitId,
       dueCount,
       dailyDone: daily?.completedCount() ?? 0,
       dailyTotal: 3,
       onSelectUnit: (id) => {
+        const unit = units.find((u) => u.id === id);
+        if (unit?.locked) return;
         this.nav.selectUnit(id);
         this.renderCurrent();
       },
       onSortie: () => {
+        const unit = units.find((u) => u.id === this.nav.selectedUnitId);
+        if (unit?.locked) return;
         this.nav.goSortie();
         this.renderCurrent();
       },
@@ -516,6 +554,58 @@ export class BootApp extends Component {
     this.scheduleOnce(this.clearReportToast, 2);
   }
 
+  private showFlowToast(message: string) {
+    this.clearFlowToast();
+    const host = this.screenHost;
+    const toast = new Node("FlowToast");
+    host.addChild(toast);
+    this.flowToastNode = toast;
+    const lbl = makeLabel(toast, "ToastLabel", {
+      string: message,
+      fontSize: UiTheme.font.body,
+      color: UiTheme.colors.accentCta,
+      width: 420,
+      height: 36,
+    });
+    lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
+    toast.setPosition(0, -this.viewport.height / 2 + 120, 0);
+    this.scheduleOnce(this.clearFlowToast, 2.5);
+  }
+
+  private clearFlowToast = (): void => {
+    this.unschedule(this.clearFlowToast);
+    if (this.flowToastNode) {
+      this.flowToastNode.destroy();
+      this.flowToastNode = null;
+    }
+  };
+
+  private showBaseToast(message: string) {
+    this.clearBaseToast();
+    const host = this.baseScreen.getScreenRoot() ?? this.screenHost;
+    const toast = new Node("BaseToast");
+    host.addChild(toast);
+    this.baseToastNode = toast;
+    const lbl = makeLabel(toast, "ToastLabel", {
+      string: message,
+      fontSize: UiTheme.font.body,
+      color: UiTheme.colors.accentCta,
+      width: 320,
+      height: 32,
+    });
+    lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
+    toast.setPosition(0, -this.viewport.height / 2 + 100, 0);
+    this.scheduleOnce(this.clearBaseToast, 2);
+  }
+
+  private clearBaseToast = (): void => {
+    this.unschedule(this.clearBaseToast);
+    if (this.baseToastNode) {
+      this.baseToastNode.destroy();
+      this.baseToastNode = null;
+    }
+  };
+
   private clearReportToast = (): void => {
     this.unschedule(this.clearReportToast);
     if (this.reportToastNode) {
@@ -544,7 +634,10 @@ export class BootApp extends Component {
     if (!child) return;
     const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
     const cost = WEAPON_ALLOY_PRICES[id];
-    if (prog.alloy < cost) return;
+    if (prog.alloy < cost) {
+      this.showBaseToast("合金不足");
+      return;
+    }
     prog.alloy -= cost;
     if (!prog.ownedWeapons.includes(id)) prog.ownedWeapons.push(id);
     if (!prog.weaponLevels[id]) prog.weaponLevels[id] = 1;
@@ -561,7 +654,10 @@ export class BootApp extends Component {
     const level = Math.max(1, prog.weaponLevels[id] ?? 1);
     if (level >= 10) return;
     const cost = weaponUpgradeCost(level);
-    if (prog.alloy < cost) return;
+    if (prog.alloy < cost) {
+      this.showBaseToast("合金不足");
+      return;
+    }
     prog.alloy -= cost;
     prog.weaponLevels[id] = level + 1;
     this.deployCapHint = false;
@@ -584,7 +680,10 @@ export class BootApp extends Component {
     const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
     const skin = SHIP_SKINS[id];
     if (prog.ownedShipSkins.includes(id)) return;
-    if (prog.starCrystals < skin.priceCrystal) return;
+    if (prog.starCrystals < skin.priceCrystal) {
+      this.showBaseToast("星晶不足");
+      return;
+    }
     prog.starCrystals -= skin.priceCrystal;
     prog.ownedShipSkins.push(id);
     prog.shipSkinId = id;
@@ -597,7 +696,10 @@ export class BootApp extends Component {
     if (!child) return;
     const prog = ensureChildProgression(this.profiles.currentSave(), child.id);
     const pet = PETS[id];
-    if (prog.starCrystals < pet.priceCrystal) return;
+    if (prog.starCrystals < pet.priceCrystal) {
+      this.showBaseToast("星晶不足");
+      return;
+    }
     prog.starCrystals -= pet.priceCrystal;
     prog.petIds.push(id);
     prog.petBond[id] = 1;
@@ -644,38 +746,130 @@ export class BootApp extends Component {
   }
 
   private renderBattle() {
-    if (!this.session || !this.currentQ) {
+    if (!this.session) {
+      this.showFlowToast("战斗会话异常，已返回星图");
+      this.clearBattleSession();
+      this.nav.backToStarMap();
+      this.renderCurrent();
+      return;
+    }
+    const boosting = Boolean(this.session.pendingBoost);
+    if (!boosting && !this.currentQ) {
+      this.showFlowToast("暂无题目，已返回星图");
+      this.clearBattleSession();
       this.nav.backToStarMap();
       this.renderCurrent();
       return;
     }
     this.battleScreen.render({
       hud: this.session.hud(),
-      question: this.currentQ,
+      question: boosting ? null : this.currentQ,
       spellBuffer: this.spellBuffer,
+      inputLocked: this.answering,
+      boostOptions: this.session.pendingBoost,
       onQuit: () => void this.onBattleQuit(),
       onAnswer: (choice, opts) => void this.onBattleAnswer(choice, opts),
+      onChooseBoost: (id) => this.onChooseBoost(id),
       onSpellClear: () => {
+        if (this.answering) return;
         this.spellBuffer = "";
         this.renderCurrent();
       },
       onSpellAppend: (ch) => {
+        if (this.answering) return;
         this.spellBuffer += ch;
         this.renderCurrent();
       },
       onSpellSubmit: () => void this.onBattleAnswer(this.spellBuffer),
-      onReplayAudio: () => this.speakListeningPrompt(),
+      onReplayAudio: () => this.speakQuestionAudio(),
     });
-    this.speakListeningPrompt();
+    if (!boosting) this.speakQuestionAudio();
   }
 
-  private speakListeningPrompt() {
-    if (!this.currentQ || this.currentQ.type !== "listening") return;
+  private onChooseBoost(id: "firepower" | "shield") {
+    if (!this.session?.pendingBoost) return;
+    this.session.chooseBoost(id);
+    this.currentQ = this.session.nextQuestion();
+    this.spellBuffer = "";
+    this.answering = false;
+    this.renderCurrent();
+  }
+
+  private async onBattleAnswer(
+    choice: string,
+    opts: { quality?: number; assisted?: boolean } = {}
+  ) {
+    if (this.answering) return;
+    if (!this.session || !this.currentQ) return;
+    if (this.session.pendingBoost) return;
+    this.answering = true;
+    this.stopBattleSpeech();
+    const qType = this.currentQ.type;
+    const mode = this.session.mode;
+    let result;
+    try {
+      result = this.session.answer(choice, opts);
+    } catch {
+      this.answering = false;
+      return;
+    }
+    const child = this.activeChild();
+    if (child && result.correct && (qType === "spelling" || qType === "listening" || qType === "speaking")) {
+      this.applyDailySignal(child.id, {
+        type: "weak_question_type_completed",
+        questionType: qType,
+      });
+    }
+    if (this.session.finished) {
+      if (child) {
+        this.applyDailySignal(child.id, { type: "battle_finished" });
+        if (mode === "review") {
+          const dueLeft = countDueReviews(
+            this.profiles.currentSave().learning,
+            child.id,
+            this.clock.now(),
+            this.units
+          );
+          if (dueLeft === 0) {
+            this.applyDailySignal(child.id, { type: "due_reviews_cleared" });
+          }
+        }
+        this.claimDailyIfReady(child.id);
+      }
+      await this.repo.commit(this.profiles.currentSave());
+      this.answering = false;
+      this.nav.goSettlement();
+      this.renderCurrent();
+      return;
+    }
+    if (this.session.pendingBoost) {
+      this.currentQ = null;
+      this.renderCurrent();
+      return;
+    }
+    this.currentQ = this.session.nextQuestion();
+    this.spellBuffer = "";
+    this.answering = false;
+    this.renderCurrent();
+  }
+
+  private speakQuestionAudio() {
+    const q = this.currentQ;
+    if (!q || (q.type !== "listening" && q.type !== "speaking")) return;
     const enabled = this.profiles.currentSave().settings.ttsEnabled;
-    speakLearningText(
-      { text: this.currentQ.speakText, enabled, lang: "en-US" },
+    const result = speakLearningText(
+      { text: q.speakText, enabled, lang: "en-US" },
       readRuntimeTtsEnv()
     );
+    if (!enabled) {
+      this.showFlowToast("朗读已关闭，可在基地「舰体与设置」开启");
+      return;
+    }
+    if (!result.attempted) {
+      this.showFlowToast(
+        result.backend === "none" ? "本设备暂不支持语音朗读" : "语音播放失败，请点「再听一次」"
+      );
+    }
   }
 
   private stopBattleSpeech() {
@@ -693,7 +887,7 @@ export class BootApp extends Component {
       hud: this.session.hud(),
       onHome: () => {
         this.clearBattleSession();
-        this.nav.backToStarMap();
+        this.nav.goBase();
         this.renderCurrent();
       },
     });
@@ -735,14 +929,37 @@ export class BootApp extends Component {
 
   private startBattle(opts: { mode: "campaign" | "review" }) {
     const child = this.activeChild();
-    if (!child) return;
+    if (!child) {
+      this.showFlowToast("请先创建航员档案");
+      this.nav.screen = "profile";
+      this.renderCurrent();
+      return;
+    }
 
     let unitId: string;
     let items: ContentItem[];
 
     if (opts.mode === "campaign") {
-      const unit = this.units.find((u) => u.id === this.nav.selectedUnitId);
-      if (!unit || unit.items.length === 0) return;
+      const units = this.unitsWithStars();
+      const unit = units.find((u) => u.id === this.nav.selectedUnitId);
+      if (!unit) {
+        this.showFlowToast("请先选择学习单元");
+        this.nav.backToStarMap();
+        this.renderCurrent();
+        return;
+      }
+      if (unit.locked) {
+        this.showFlowToast("该单元尚未解锁");
+        this.nav.backToStarMap();
+        this.renderCurrent();
+        return;
+      }
+      if (unit.items.length === 0) {
+        this.showFlowToast("该单元暂无题目");
+        this.nav.backToStarMap();
+        this.renderCurrent();
+        return;
+      }
       unitId = unit.id;
       items = unit.items;
     } else {
@@ -771,50 +988,16 @@ export class BootApp extends Component {
       opts.mode
     );
     this.currentQ = this.session.nextQuestion();
-    this.spellBuffer = "";
-    this.nav.goBattle();
-    this.renderCurrent();
-  }
-
-  private async onBattleAnswer(
-    choice: string,
-    opts: { quality?: number; assisted?: boolean } = {}
-  ) {
-    if (!this.session || !this.currentQ) return;
-    this.stopBattleSpeech();
-    const qType = this.currentQ.type;
-    const mode = this.session.mode;
-    const result = this.session.answer(choice, opts);
-    const child = this.activeChild();
-    if (child && result.correct && (qType === "spelling" || qType === "listening" || qType === "speaking")) {
-      this.applyDailySignal(child.id, {
-        type: "weak_question_type_completed",
-        questionType: qType,
-      });
-    }
-    if (this.session.finished) {
-      if (child) {
-        this.applyDailySignal(child.id, { type: "battle_finished" });
-        if (mode === "review") {
-          const dueLeft = countDueReviews(
-            this.profiles.currentSave().learning,
-            child.id,
-            this.clock.now(),
-            this.units
-          );
-          if (dueLeft === 0) {
-            this.applyDailySignal(child.id, { type: "due_reviews_cleared" });
-          }
-        }
-        this.claimDailyIfReady(child.id);
-      }
-      await this.repo.commit(this.profiles.currentSave());
-      this.nav.goSettlement();
+    if (!this.currentQ) {
+      this.showFlowToast("题目加载失败，请重试");
+      this.clearBattleSession();
+      this.nav.backToStarMap();
       this.renderCurrent();
       return;
     }
-    this.currentQ = this.session.nextQuestion();
     this.spellBuffer = "";
+    this.answering = false;
+    this.nav.goBattle();
     this.renderCurrent();
   }
 
@@ -859,6 +1042,7 @@ export class BootApp extends Component {
     this.session = null;
     this.currentQ = null;
     this.spellBuffer = "";
+    this.answering = false;
   }
 
   private clearPrepLabel() {
@@ -902,7 +1086,7 @@ export class BootApp extends Component {
       height: 32,
     });
     lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
-    err.setPosition(280, -100, 0);
+    err.setPosition(0, -this.viewport.height / 2 + 140, 0);
   }
 
   private clearProfileError() {

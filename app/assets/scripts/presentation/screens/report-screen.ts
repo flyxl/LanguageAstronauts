@@ -47,8 +47,8 @@ export type ReportModel = {
 
 const MAX_UNITS = 8;
 const PANEL_W = 920;
-const PANEL_H = 520;
-const ROW_H = 36;
+const PANEL_H = 560;
+const ROW_H = 28;
 
 function truncateTitle(title: string, maxLen = 28): string {
   if (title.length <= maxLen) return title;
@@ -174,37 +174,39 @@ export class ReportScreen {
 
     const { child, units, learning } = model;
 
-    sectionCaption(panelRoot, "航员档案", PANEL_H / 2 - 48);
-    statLine(panelRoot, `${child.name} · ${child.grade} · ${child.textbookLabel}`, PANEL_H / 2 - 80);
+    sectionCaption(panelRoot, "航员档案", PANEL_H / 2 - 40);
+    statLine(panelRoot, `${child.name} · ${child.grade} · ${child.textbookLabel}`, PANEL_H / 2 - 70);
     statLine(
       panelRoot,
       `Lv.${child.level} · 经验 ${child.totalXp} · 合金 ${child.alloy} · 星晶 ${child.starCrystals}`,
-      PANEL_H / 2 - 116
+      PANEL_H / 2 - 100
     );
 
-    sectionCaption(panelRoot, "单元进度", 72);
+    sectionCaption(panelRoot, "学习摘要", PANEL_H / 2 - 140);
+    statLine(panelRoot, `到期复习 ${learning.dueCount} 项 · 已接触 ${learning.seenCount} · 首次答对 ${learning.masteredCount}`, PANEL_H / 2 - 168);
+
+    sectionCaption(panelRoot, "单元进度", PANEL_H / 2 - 210);
     const visible = units.slice(0, MAX_UNITS);
+    const listTop = PANEL_H / 2 - 240;
     visible.forEach((unit, i) => {
-      unitRow(panelRoot, i, unit, 40 - i * ROW_H);
+      unitRow(panelRoot, i, unit, listTop - i * ROW_H);
     });
     if (visible.length === 0) {
-      statLine(panelRoot, "暂无单元记录", 40);
+      statLine(panelRoot, "暂无单元记录", listTop);
     }
 
-    sectionCaption(panelRoot, "学习摘要", -120);
-    statLine(panelRoot, `到期复习 ${learning.dueCount} 项`, -154);
-    statLine(panelRoot, `已接触 ${learning.seenCount} 项 · 首次答对 ${learning.masteredCount} 项`, -190);
-
+    // Actions sit below the unit list — no overlap with Unit 6–8.
+    const actionsY = -PANEL_H / 2 + 56;
     makeSecondaryButton(panelRoot, "ExportSaveBtn", "导出存档", 140, 40, () =>
       model.onExportSave()
-    ).setPosition(-90, -PANEL_H / 2 + 96, 0);
+    ).setPosition(-170, actionsY, 0);
     makeSecondaryButton(panelRoot, "ImportSaveBtn", "导入存档", 140, 40, () =>
       model.onImportSave()
-    ).setPosition(90, -PANEL_H / 2 + 96, 0);
+    ).setPosition(0, actionsY, 0);
 
-    makeCtaButton(panelRoot, "BackCta", "返回星图", 200, 48, () => model.onBack()).setPosition(
-      0,
-      -PANEL_H / 2 + 48,
+    makeCtaButton(panelRoot, "BackCta", "返回星图", 160, 44, () => model.onBack()).setPosition(
+      170,
+      actionsY,
       0
     );
   }

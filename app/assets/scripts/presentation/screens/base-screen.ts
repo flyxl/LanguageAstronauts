@@ -13,11 +13,14 @@ import { WEAPONS, weaponUpgradeCost, type WeaponId } from "../../domain/weapons/
 import {
   attachStarfield,
   colorOf,
+  makeChromeBar,
   makeCtaButton,
   makeLabel,
   makePanel,
+  makeSecondaryButton,
 } from "../ui/ui-factory";
 import { assertPlayerSafeCopy, UiTheme, type Rgba } from "../ui/theme";
+import { contentRight, createContentRoot, measureScreen } from "../ui/layout";
 
 type SizeLike = { width: number; height: number } | Size;
 
@@ -31,7 +34,7 @@ const WEAPON_ALLOY_PRICES: Record<WeaponId, number> = {
 
 const MAX_DEPLOYED_PETS = 2;
 const MAX_WEAPON_LEVEL = 10;
-const PANEL_W = 360;
+const PANEL_W = 348;
 const PANEL_H = 520;
 const ROW_H = 44;
 
@@ -108,42 +111,6 @@ function makeChip(
   return chip;
 }
 
-function makeSecondaryButton(
-  parent: Node,
-  name: string,
-  label: string,
-  w: number,
-  h: number,
-  onTap: (event?: EventTouch) => void
-): Node {
-  assertPlayerSafeCopy(label);
-  const btn = new Node(name);
-  parent.addChild(btn);
-  const g = btn.addComponent(Graphics);
-  const radius = 10;
-  g.fillColor = colorOf(UiTheme.colors.bgPanel);
-  g.roundRect(-w / 2, -h / 2, w, h, radius);
-  g.fill();
-  g.strokeColor = colorOf(UiTheme.colors.strokePanel);
-  g.lineWidth = 2;
-  g.roundRect(-w / 2, -h / 2, w, h, radius);
-  g.stroke();
-  btn.addComponent(UITransform).setContentSize(w, h);
-
-  const labelNode = new Node("Label");
-  btn.addChild(labelNode);
-  const lbl = labelNode.addComponent(Label);
-  lbl.string = label;
-  lbl.fontSize = UiTheme.font.chip;
-  lbl.color = colorOf(UiTheme.colors.textPrimary);
-  lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
-  lbl.verticalAlign = Label.VerticalAlign.CENTER;
-  labelNode.addComponent(UITransform).setContentSize(w - 12, h - 8);
-
-  btn.on(Node.EventType.TOUCH_END, onTap);
-  return btn;
-}
-
 function makeStatusChip(parent: Node, name: string, text: string, w: number): Node {
   return makeChip(
     parent,
@@ -189,9 +156,16 @@ export class BaseScreen {
 
     attachStarfield(screen, this.width, this.height, 42);
 
+    const layout = measureScreen(this.width, this.height);
+    const content = createContentRoot(screen, layout);
+    const cw = layout.contentW;
+    const topY = layout.contentH / 2 - 52;
+
+    makeChromeBar(content, "TopChrome", cw, 64).setPosition(0, topY, 0);
+
     const topBar = new Node("TopBar");
-    screen.addChild(topBar);
-    topBar.setPosition(0, this.height / 2 - 52, 0);
+    content.addChild(topBar);
+    topBar.setPosition(0, topY, 0);
 
     const chips: Array<{ text: string; w: number }> = [
       { text: model.child.name, w: 120 },
@@ -217,13 +191,13 @@ export class BaseScreen {
 
     makeSecondaryButton(topBar, "BackBtn", "返回星图", 120, 36, () =>
       model.onBack()
-    ).setPosition(this.width / 2 - 100, 0, 0);
+    ).setPosition(contentRight(layout, 20), 0, 0);
 
     const columns = new Node("Columns");
-    screen.addChild(columns);
+    content.addChild(columns);
     columns.setPosition(0, -24, 0);
 
-    const colGap = 32;
+    const colGap = 28;
     const totalW = PANEL_W * 3 + colGap * 2;
     const startX = -totalW / 2 + PANEL_W / 2;
 
@@ -231,6 +205,7 @@ export class BaseScreen {
       columns,
       startX,
       model.progression,
+      model.child.alloy,
       model.onEquipWeapon,
       model.onBuyWeapon,
       model.onUpgradeWeapon
@@ -239,6 +214,7 @@ export class BaseScreen {
       columns,
       startX + PANEL_W + colGap,
       model.progression,
+      model.child.starCrystals,
       model.deployCapHint ?? false,
       model.onBuyPet,
       model.onTogglePetDeploy
@@ -247,6 +223,7 @@ export class BaseScreen {
       columns,
       startX + (PANEL_W + colGap) * 2,
       model.progression,
+      model.child.starCrystals,
       model.settings,
       model.onSelectShipSkin,
       model.onBuyShipSkin,
@@ -258,6 +235,7 @@ export class BaseScreen {
     parent: Node,
     x: number,
     prog: BaseProgression,
+    alloy: number,
     onEquip: (id: WeaponId) => void,
     onBuy: (id: WeaponId) => void,
     onUpgrade: (id: WeaponId) => void
@@ -269,11 +247,12 @@ export class BaseScreen {
     makePanelTitle(panel, "武器库", PANEL_H / 2 - 36);
 
     const weapons = Object.values(WEAPONS);
-    const rowPitch = 72;
+    const rowPitch = 76;
     let y = PANEL_H / 2 - 84;
     const leftX = -PANEL_W / 2 + 28;
-    // Chip/button centers must stay ≤ halfWidth - halfBtn so strokes stay inside the frame.
-    const equipX = PANEL_W / 2 - 84;
+    const nameW = 176;
+    // Keep action chips inside the right frame edge.
+    const actionX = PANEL_W / 2 - 74;
 
     weapons.forEach((w) => {
       const row = new Node(`Weapon_${w.id}`);
@@ -283,24 +262,26 @@ export class BaseScreen {
       const owned = prog.ownedWeapons.includes(w.id);
       const equipped = prog.weaponId === w.id;
       const level = Math.max(1, prog.weaponLevels[w.id] ?? 1);
-      const nameText = `${w.name}  Lv.${level}`;
 
+      // Line 1: weapon name only (level lives on line 2 with the tag).
       const nameLbl = makeLabel(row, "Name", {
-        string: nameText,
+        string: w.name,
         fontSize: UiTheme.font.body,
-        width: 188,
-        height: 28,
+        width: nameW,
+        height: 26,
       });
       nameLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
       nameLbl.overflow = Label.Overflow.CLAMP;
       nameLbl.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-      nameLbl.node.setPosition(leftX, 12, 0);
+      nameLbl.node.setPosition(leftX, 14, 0);
 
+      // Line 2: tag · Lv.n  (+ upgrade when owned and not max)
+      const metaParts = [`${w.label}`, `Lv.${level}`];
       const tagLbl = makeLabel(row, "Tag", {
-        string: w.label,
+        string: metaParts.join(" · "),
         fontSize: UiTheme.font.chip,
         color: UiTheme.colors.textSecondary,
-        width: 56,
+        width: 110,
         height: 22,
       });
       tagLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
@@ -309,9 +290,15 @@ export class BaseScreen {
 
       if (owned && level < MAX_WEAPON_LEVEL) {
         const cost = weaponUpgradeCost(level);
-        makeSecondaryButton(row, "Upgrade", `升级 ${cost}`, 88, 26, () =>
-          onUpgrade(w.id)
-        ).setPosition(leftX + 130, -14, 0);
+        const canAfford = alloy >= cost;
+        makeSecondaryButton(
+          row,
+          "Upgrade",
+          canAfford ? `升级 ${cost}` : `缺合金`,
+          80,
+          26,
+          () => onUpgrade(w.id)
+        ).setPosition(leftX + 140, -14, 0);
       } else if (owned && level >= MAX_WEAPON_LEVEL) {
         const maxLbl = makeLabel(row, "MaxLv", {
           string: "满级",
@@ -322,24 +309,28 @@ export class BaseScreen {
         });
         maxLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
         maxLbl.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-        maxLbl.node.setPosition(leftX + 70, -14, 0);
+        maxLbl.node.setPosition(leftX + 118, -14, 0);
       }
 
       if (equipped) {
-        makeStatusChip(row, "Equipped", "已装备", 72).setPosition(equipX, 0, 0);
+        makeStatusChip(row, "Equipped", "已装备", 72).setPosition(actionX, 4, 0);
       } else if (owned) {
         makeSecondaryButton(row, "Equip", "装备", 72, 28, () => onEquip(w.id)).setPosition(
-          equipX,
-          0,
+          actionX,
+          4,
           0
         );
       } else {
         const price = WEAPON_ALLOY_PRICES[w.id];
-        makeSecondaryButton(row, "Buy", `合金 ${price}`, 88, 28, () => onBuy(w.id)).setPosition(
-          equipX,
-          0,
-          0
-        );
+        const canAfford = alloy >= price;
+        makeSecondaryButton(
+          row,
+          "Buy",
+          canAfford ? `合金 ${price}` : `缺合金`,
+          84,
+          28,
+          () => onBuy(w.id)
+        ).setPosition(actionX, 4, 0);
       }
 
       y -= rowPitch;
@@ -350,6 +341,7 @@ export class BaseScreen {
     parent: Node,
     x: number,
     prog: BaseProgression,
+    starCrystals: number,
     deployCapHint: boolean,
     onBuy: (id: PetId) => void,
     onToggleDeploy: (id: PetId) => void
@@ -420,10 +412,11 @@ export class BaseScreen {
       descLbl.node.setPosition(petLeft, -12, 0);
 
       if (!owned) {
+        const canAfford = starCrystals >= pet.priceCrystal;
         makeSecondaryButton(
           row,
           "Buy",
-          `星晶 ${pet.priceCrystal}`,
+          canAfford ? `星晶 ${pet.priceCrystal}` : `缺星晶`,
           88,
           32,
           () => onBuy(pet.id)
@@ -447,6 +440,7 @@ export class BaseScreen {
     parent: Node,
     x: number,
     prog: BaseProgression,
+    starCrystals: number,
     settings: BaseSettings,
     onSelectSkin: (id: ShipSkinId) => void,
     onBuySkin: (id: ShipSkinId) => void,
@@ -504,10 +498,11 @@ export class BaseScreen {
           onSelectSkin(skin.id)
         ).setPosition(actionX, 0, 0);
       } else {
+        const canAfford = starCrystals >= skin.priceCrystal;
         makeSecondaryButton(
           row,
           "BuySkin",
-          `星晶 ${skin.priceCrystal}`,
+          canAfford ? `星晶 ${skin.priceCrystal}` : `缺星晶`,
           88,
           28,
           () => onBuySkin(skin.id)

@@ -1,3 +1,5 @@
+import { native, sys } from "cc";
+
 export type SpeakRequest = {
   text: string;
   lang?: string;
@@ -94,25 +96,26 @@ export function stopLearningSpeech(env: TtsEnv): void {
   }
 }
 
+/** Runtime TTS env — must use cc.native on device builds (globalThis.native is empty). */
 export function readRuntimeTtsEnv(): TtsEnv {
-  const g = globalThis as unknown as {
-    cc?: { sys?: { os?: string; isNative?: boolean } };
-    sys?: { os?: string; isNative?: boolean };
-    native?: { reflection?: NativeReflection };
+  let reflection: NativeReflection | null = null;
+  try {
+    const bridge = native?.reflection;
+    if (bridge?.callStaticMethod) {
+      reflection = bridge as NativeReflection;
+    }
+  } catch {
+    reflection = null;
+  }
+
+  const g = globalThis as {
     speechSynthesis?: WebSpeechSynthesis;
     SpeechSynthesisUtterance?: WebSpeechUtteranceCtor;
   };
 
-  const sys = g.cc?.sys ?? g.sys;
-  let reflection: NativeReflection | null = null;
-  const n = g.native;
-  if (n?.reflection?.callStaticMethod) {
-    reflection = n.reflection;
-  }
-
   return {
-    os: sys?.os,
-    isNative: !!sys?.isNative,
+    os: sys.os,
+    isNative: sys.isNative,
     reflection,
     speechSynthesis: g.speechSynthesis ?? null,
     SpeechSynthesisUtterance: g.SpeechSynthesisUtterance ?? null,

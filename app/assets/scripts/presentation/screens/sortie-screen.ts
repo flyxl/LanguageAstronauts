@@ -1,5 +1,4 @@
 import {
-  EventTouch,
   Graphics,
   Label,
   Node,
@@ -9,11 +8,14 @@ import {
 import {
   attachStarfield,
   colorOf,
+  makeChromeBar,
   makeCtaButton,
   makeLabel,
   makePanel,
+  makeSecondaryButton,
 } from "../ui/ui-factory";
 import { assertPlayerSafeCopy, UiTheme, type Rgba } from "../ui/theme";
+import { createContentRoot, measureScreen } from "../ui/layout";
 
 const BOSS_STAGES = ["听", "读", "拼", "说"] as const;
 
@@ -60,42 +62,6 @@ function makeChip(
   return chip;
 }
 
-function makeSecondaryButton(
-  parent: Node,
-  name: string,
-  label: string,
-  w: number,
-  h: number,
-  onTap: (event?: EventTouch) => void
-): Node {
-  assertPlayerSafeCopy(label);
-  const btn = new Node(name);
-  parent.addChild(btn);
-  const g = btn.addComponent(Graphics);
-  const radius = 14;
-  g.fillColor = colorOf(UiTheme.colors.bgPanel);
-  g.roundRect(-w / 2, -h / 2, w, h, radius);
-  g.fill();
-  g.strokeColor = colorOf(UiTheme.colors.strokePanel);
-  g.lineWidth = 2;
-  g.roundRect(-w / 2, -h / 2, w, h, radius);
-  g.stroke();
-  btn.addComponent(UITransform).setContentSize(w, h);
-
-  const labelNode = new Node("Label");
-  btn.addChild(labelNode);
-  const lbl = labelNode.addComponent(Label);
-  lbl.string = label;
-  lbl.fontSize = UiTheme.font.cardTitle;
-  lbl.color = colorOf(UiTheme.colors.textPrimary);
-  lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
-  lbl.verticalAlign = Label.VerticalAlign.CENTER;
-  labelNode.addComponent(UITransform).setContentSize(w - 16, h - 8);
-
-  btn.on(Node.EventType.TOUCH_END, onTap);
-  return btn;
-}
-
 export class SortieScreen {
   private readonly root: Node;
   private readonly width: number;
@@ -117,21 +83,27 @@ export class SortieScreen {
 
     attachStarfield(screen, this.width, this.height, 42);
 
+    const layout = measureScreen(this.width, this.height);
+    const content = createContentRoot(screen, layout);
+    const cw = layout.contentW;
+    const ch = layout.contentH;
+    const panelW = Math.min(cw - 80, 720);
+
     const taskBar = new Node("TaskBar");
-    screen.addChild(taskBar);
-    taskBar.setPosition(0, this.height / 2 - 72, 0);
-    makePanel(taskBar, "TaskPanel", 720, 56);
+    content.addChild(taskBar);
+    taskBar.setPosition(0, ch / 2 - 88, 0);
+    makePanel(taskBar, "TaskPanel", panelW, 56);
     const taskTitle = makeLabel(taskBar, "UnitTitle", {
       string: model.unitTitle,
       fontSize: UiTheme.font.screenTitle,
-      width: 680,
+      width: panelW - 40,
       height: 40,
     });
     taskTitle.horizontalAlign = Label.HorizontalAlign.CENTER;
 
     const chain = new Node("BossChain");
-    screen.addChild(chain);
-    chain.setPosition(0, 40, 0);
+    content.addChild(chain);
+    chain.setPosition(0, 32, 0);
 
     const chipW = 56;
     const chipH = 40;
@@ -166,7 +138,7 @@ export class SortieScreen {
       }
     });
 
-    const body = makeLabel(screen, "BodyCopy", {
+    const body = makeLabel(content, "BodyCopy", {
       string: "知识装甲待命，答对即发射。",
       fontSize: UiTheme.font.body,
       color: UiTheme.colors.textSecondary,
@@ -174,11 +146,14 @@ export class SortieScreen {
       height: 48,
     });
     body.horizontalAlign = Label.HorizontalAlign.CENTER;
-    body.node.setPosition(0, -40, 0);
+    body.node.setPosition(0, -48, 0);
+
+    const bottomY = -ch / 2 + 64;
+    makeChromeBar(content, "BottomChrome", cw, 72, false).setPosition(0, bottomY, 0);
 
     const actions = new Node("Actions");
-    screen.addChild(actions);
-    actions.setPosition(0, -this.height / 2 + 72, 0);
+    content.addChild(actions);
+    actions.setPosition(0, bottomY, 0);
 
     makeSecondaryButton(
       actions,

@@ -97,9 +97,9 @@ export class SettlementScreen {
     const chipH = 40;
     const chipGap = 16;
     const chipData = [
-      `XP +${hud.xpGained}`,
+      `经验 +${hud.xpGained}`,
       `合金 +${hud.alloyGained}`,
-      `水晶 ${hud.crystals}`,
+      `星晶 +${Math.floor(hud.crystals / 3)}`,
     ];
     const totalW = chipData.length * chipW + (chipData.length - 1) * chipGap;
     let x = -totalW / 2 + chipW / 2;

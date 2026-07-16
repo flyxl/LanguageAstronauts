@@ -6,67 +6,38 @@ import {
   Size,
   UITransform,
 } from "cc";
-import type { BattleHud } from "../../domain/battle/battle-session";
+import type { BattleHud, TacticalBoostOption } from "../../domain/battle/battle-session";
 import type { BattleQuestion } from "../../domain/battle/question-builder";
 import {
   attachStarfield,
   colorOf,
+  makeChromeBar,
   makeCtaButton,
+  makeFocusScrim,
   makeLabel,
   makePanel,
+  makeSecondaryButton,
 } from "../ui/ui-factory";
 import { armorPhaseLabel } from "../ui/armor-phase-label";
 import { assertPlayerSafeCopy, UiTheme, type Rgba } from "../ui/theme";
+import { contentRight, createContentRoot, measureScreen } from "../ui/layout";
 
 type SizeLike = { width: number; height: number } | Size;
 
 export type BattleModel = {
   hud: BattleHud;
-  question: BattleQuestion;
+  question: BattleQuestion | null;
   spellBuffer?: string;
+  inputLocked?: boolean;
+  boostOptions?: TacticalBoostOption[] | null;
   onQuit: () => void;
   onAnswer: (choice: string, opts?: { quality?: number; assisted?: boolean }) => void;
+  onChooseBoost?: (id: "firepower" | "shield") => void;
   onSpellClear?: () => void;
   onSpellAppend?: (ch: string) => void;
   onSpellSubmit?: () => void;
   onReplayAudio?: () => void;
 };
-
-function makeSecondaryButton(
-  parent: Node,
-  name: string,
-  label: string,
-  w: number,
-  h: number,
-  onTap: (event?: EventTouch) => void
-): Node {
-  assertPlayerSafeCopy(label);
-  const btn = new Node(name);
-  parent.addChild(btn);
-  const g = btn.addComponent(Graphics);
-  const radius = 14;
-  g.fillColor = colorOf(UiTheme.colors.bgPanel);
-  g.roundRect(-w / 2, -h / 2, w, h, radius);
-  g.fill();
-  g.strokeColor = colorOf(UiTheme.colors.strokePanel);
-  g.lineWidth = 2;
-  g.roundRect(-w / 2, -h / 2, w, h, radius);
-  g.stroke();
-  btn.addComponent(UITransform).setContentSize(w, h);
-
-  const labelNode = new Node("Label");
-  btn.addChild(labelNode);
-  const lbl = labelNode.addComponent(Label);
-  lbl.string = label;
-  lbl.fontSize = UiTheme.font.cardTitle;
-  lbl.color = colorOf(UiTheme.colors.textPrimary);
-  lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
-  lbl.verticalAlign = Label.VerticalAlign.CENTER;
-  labelNode.addComponent(UITransform).setContentSize(w - 16, h - 8);
-
-  btn.on(Node.EventType.TOUCH_END, onTap);
-  return btn;
-}
 
 function makeBar(
   parent: Node,
@@ -133,16 +104,17 @@ function renderChoiceArea(
   parent: Node,
   q: BattleQuestion,
   onAnswer: BattleModel["onAnswer"],
+  panelW: number,
   offsetY = -40
 ): void {
   const grid = new Node("OptionGrid");
   parent.addChild(grid);
   grid.setPosition(0, offsetY, 0);
 
-  const optW = 280;
-  const optH = 64;
-  const gapX = 24;
-  const gapY = 16;
+  const optW = Math.min(300, Math.floor((panelW - 80) / 2));
+  const optH = 60;
+  const gapX = 20;
+  const gapY = 14;
   const positions = [
     { x: -(optW + gapX) / 2, y: (optH + gapY) / 2 },
     { x: (optW + gapX) / 2, y: (optH + gapY) / 2 },
@@ -160,7 +132,7 @@ function renderChoiceArea(
   });
 }
 
-function renderSpellingArea(parent: Node, model: BattleModel): void {
+function renderSpellingArea(parent: Node, model: BattleModel, panelW: number): void {
   const q = model.question;
   const buffer = model.spellBuffer ?? "";
 
@@ -168,7 +140,7 @@ function renderSpellingArea(parent: Node, model: BattleModel): void {
     string: buffer ? `已拼：${buffer}` : "已拼：…",
     fontSize: UiTheme.font.body,
     color: UiTheme.colors.textSecondary,
-    width: 560,
+    width: panelW - 80,
     height: 32,
   });
   spellOut.horizontalAlign = Label.HorizontalAlign.CENTER;
@@ -180,7 +152,7 @@ function renderSpellingArea(parent: Node, model: BattleModel): void {
 
   const letterSize = 48;
   const gap = 8;
-  const lettersList = q.letters ?? [];
+  const lettersList = q?.letters ?? [];
   const totalW = lettersList.length * letterSize + (lettersList.length - 1) * gap;
   let x = -totalW / 2 + letterSize / 2;
 
@@ -249,127 +221,176 @@ export class BattleScreen {
 
     attachStarfield(screen, this.width, this.height, 42);
 
+    const layout = measureScreen(this.width, this.height);
+    const content = createContentRoot(screen, layout);
+    const cw = layout.contentW;
+    const ch = layout.contentH;
     const hud = model.hud;
     const q = model.question;
+    const panelW = Math.min(cw - 64, 920);
+    const panelH = 360;
+
+    const topY = ch / 2 - 56;
+    makeChromeBar(content, "TopChrome", cw, 112).setPosition(0, topY - 28, 0);
 
     const topBar = new Node("TopBar");
-    screen.addChild(topBar);
-    topBar.setPosition(0, this.height / 2 - 56, 0);
+    content.addChild(topBar);
+    topBar.setPosition(0, topY, 0);
 
     makeLabel(topBar, "BossLabel", {
       string: `${hud.bossName} · 形态 ${hud.formIndex + 1}/${hud.formTotal}`,
-      fontSize: UiTheme.font.chip,
+      fontSize: UiTheme.font.cardTitle,
       color: UiTheme.colors.accentInfo,
-      width: 420,
-      height: 28,
-    });
+      width: 480,
+      height: 32,
+    }).node.setPosition(-cw / 2 + 24, 24, 0);
 
-    makeSecondaryButton(topBar, "QuitBtn", "撤离", 100, 44, () => model.onQuit()).setPosition(
-      this.width / 2 - 120,
-      0,
+    makeSecondaryButton(topBar, "QuitBtn", "撤离", 96, 40, () => model.onQuit()).setPosition(
+      contentRight(layout, 20),
+      24,
       0
     );
 
+    const barW = Math.min(cw - 120, 720);
     const bars = new Node("Bars");
-    screen.addChild(bars);
-    bars.setPosition(0, this.height / 2 - 120, 0);
+    content.addChild(bars);
+    bars.setPosition(0, topY - 8, 0);
 
     makeLabel(bars, "ShipLabel", {
       string: "飞船护盾",
       fontSize: UiTheme.font.chip,
       color: UiTheme.colors.textSecondary,
-      width: 200,
-      height: 24,
-    }).node.setPosition(-280, 24, 0);
+      width: 120,
+      height: 22,
+    }).node.setPosition(-barW / 2, 18, 0);
 
-    makeBar(
-      bars,
-      "ShipBar",
-      560,
-      16,
-      hud.shipHp / hud.shipMaxHp,
-      UiTheme.colors.accentCta
-    ).setPosition(0, 0, 0);
+    makeBar(bars, "ShipBar", barW, 14, hud.shipHp / hud.shipMaxHp, UiTheme.colors.accentCta).setPosition(
+      0,
+      0,
+      0
+    );
 
     makeLabel(bars, "ArmorLabel", {
       string: `知识装甲 · ${armorPhaseLabel(hud.phase)}（${hud.nodesRemaining}/${hud.nodesTotal}）`,
       fontSize: UiTheme.font.chip,
       color: UiTheme.colors.textSecondary,
-      width: 560,
-      height: 24,
-    }).node.setPosition(0, -32, 0);
+      width: barW,
+      height: 22,
+    }).node.setPosition(-barW / 2, -28, 0);
 
     makeBar(
       bars,
       "ArmorBar",
-      560,
-      16,
+      barW,
+      14,
       hud.nodesRemaining / hud.nodesTotal,
       UiTheme.colors.accentInfo
-    ).setPosition(0, -56, 0);
+    ).setPosition(0, -44, 0);
 
     const stats = new Node("Stats");
-    screen.addChild(stats);
-    stats.setPosition(0, this.height / 2 - 200, 0);
+    content.addChild(stats);
+    stats.setPosition(0, topY - 56, 0);
 
     makeLabel(stats, "Combo", {
       string: `连击 ${hud.combo}`,
       fontSize: UiTheme.font.chip,
-      width: 120,
-      height: 28,
-    }).node.setPosition(-180, 0, 0);
+      width: 100,
+      height: 24,
+    }).node.setPosition(-160, 0, 0);
 
     makeLabel(stats, "Momentum", {
       string: `动量 ${hud.momentum}`,
       fontSize: UiTheme.font.chip,
-      width: 120,
-      height: 28,
+      width: 100,
+      height: 24,
     }).node.setPosition(0, 0, 0);
 
     makeLabel(stats, "Crystals", {
-      string: `水晶 +${hud.crystals}`,
+      string: `星晶仓 +${hud.crystals}`,
       fontSize: UiTheme.font.chip,
       width: 120,
-      height: 28,
-    }).node.setPosition(180, 0, 0);
+      height: 24,
+    }).node.setPosition(160, 0, 0);
+
+    makeFocusScrim(content, layout);
 
     const panel = new Node("QuestionPanel");
-    screen.addChild(panel);
-    panel.setPosition(0, -40, 0);
-    makePanel(panel, "PanelBg", 720, 320);
+    content.addChild(panel);
+    panel.setPosition(0, -48, 0);
+    makePanel(panel, "PanelBg", panelW, panelH);
+
+    if (model.boostOptions && model.boostOptions.length >= 2) {
+      makeLabel(panel, "BoostTitle", {
+        string: "战术强化（二选一）",
+        fontSize: UiTheme.font.screenTitle,
+        width: panelW - 80,
+        height: 40,
+      }).node.setPosition(0, 90, 0);
+      const hint = makeLabel(panel, "BoostHint", {
+        string: "只影响本局战斗表现，不改题目对错",
+        fontSize: UiTheme.font.body,
+        color: UiTheme.colors.textSecondary,
+        width: panelW - 80,
+        height: 28,
+      });
+      hint.horizontalAlign = Label.HorizontalAlign.CENTER;
+      hint.node.setPosition(0, 44, 0);
+      const left = model.boostOptions[0]!;
+      const right = model.boostOptions[1]!;
+      makeCtaButton(panel, "BoostL", left.label, 220, 72, () =>
+        model.onChooseBoost?.(left.id)
+      ).setPosition(-140, -40, 0);
+      makeCtaButton(panel, "BoostR", right.label, 220, 72, () =>
+        model.onChooseBoost?.(right.id)
+      ).setPosition(140, -40, 0);
+      return;
+    }
+
+    if (!q) return;
+
+    const locked = Boolean(model.inputLocked);
+    const answer = (choice: string, opts?: { quality?: number; assisted?: boolean }) => {
+      if (locked) return;
+      model.onAnswer(choice, opts);
+    };
 
     makeLabel(panel, "PromptLabel", {
       string: q.promptLabel,
       fontSize: UiTheme.font.chip,
-      color: UiTheme.colors.textSecondary,
-      width: 640,
+      color: UiTheme.colors.accentInfo,
+      width: panelW - 80,
       height: 24,
-    }).node.setPosition(0, 120, 0);
+    }).node.setPosition(0, panelH / 2 - 56, 0);
 
     const promptLbl = makeLabel(panel, "Prompt", {
       string: q.prompt,
       fontSize: UiTheme.font.screenTitle,
-      width: 640,
+      width: panelW - 80,
       height: 48,
     });
     promptLbl.horizontalAlign = Label.HorizontalAlign.CENTER;
-    promptLbl.node.setPosition(0, 72, 0);
+    promptLbl.node.setPosition(0, panelH / 2 - 104, 0);
 
     const answerArea = new Node("AnswerArea");
     panel.addChild(answerArea);
-    answerArea.setPosition(0, -20, 0);
+    answerArea.setPosition(0, -24, 0);
 
     if (q.type === "listening" && model.onReplayAudio) {
-      makeSecondaryButton(panel, "ReplayAudio", "再听一次", 160, 48, () =>
-        model.onReplayAudio?.()
-      ).setPosition(0, 28, 0);
-      renderChoiceArea(answerArea, q, model.onAnswer, -56);
+      makeSecondaryButton(panel, "ReplayAudio", "再听一次", 160, 48, () => {
+        if (!locked) model.onReplayAudio?.();
+      }).setPosition(0, panelH / 2 - 148, 0);
+      renderChoiceArea(answerArea, q, answer, panelW, -48);
     } else if (q.type === "spelling") {
-      renderSpellingArea(answerArea, model);
+      renderSpellingArea(answerArea, model, panelW);
     } else if (q.type === "speaking") {
-      renderSpeakingArea(answerArea, q, model.onAnswer);
+      if (model.onReplayAudio) {
+        makeSecondaryButton(panel, "ReplayAudio", "听示范", 160, 48, () => {
+          if (!locked) model.onReplayAudio?.();
+        }).setPosition(0, panelH / 2 - 148, 0);
+      }
+      renderSpeakingArea(answerArea, q, answer);
     } else {
-      renderChoiceArea(answerArea, q, model.onAnswer);
+      renderChoiceArea(answerArea, q, answer, panelW);
     }
   }
 

@@ -25,10 +25,13 @@ export function calcWeaponDamage(
   weaponId: WeaponId,
   quality: number,
   momentum: number,
-  level = 1
+  level = 1,
+  tacticalMultiplier = 1
 ): number {
   const w = WEAPONS[weaponId] ?? WEAPONS.pulse;
   const levelMul = 1 + Math.min(9, Math.max(0, level - 1)) * 0.035;
   const momentumMul = 1 + Math.min(5, Math.max(0, momentum)) * 0.08;
-  return Math.round(w.baseDamage * w.damageMul * levelMul * quality * momentumMul);
+  return Math.round(
+    w.baseDamage * w.damageMul * levelMul * quality * momentumMul * tacticalMultiplier
+  );
 }
