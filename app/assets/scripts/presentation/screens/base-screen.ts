@@ -271,9 +271,9 @@ export class BaseScreen {
     const weapons = Object.values(WEAPONS);
     const rowPitch = 72;
     let y = PANEL_H / 2 - 84;
-    const leftX = -PANEL_W / 2 + 20;
-    // Stay inside half-width 190 so actions never spill into 宠物舱.
-    const equipX = PANEL_W / 2 - 64;
+    const leftX = -PANEL_W / 2 + 24;
+    // Chip/button centers must stay ≤ halfWidth - halfBtn so strokes stay inside the frame.
+    const equipX = PANEL_W / 2 - 84;
 
     weapons.forEach((w) => {
       const row = new Node(`Weapon_${w.id}`);
