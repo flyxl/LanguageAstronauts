@@ -5,6 +5,7 @@ import {
   Node,
   Size,
   UITransform,
+  view,
 } from "cc";
 import {
   attachStarfield,
@@ -19,6 +20,20 @@ const NAME_OPTIONS = ["小航员", "宇航员", "启航者"] as const;
 const TEXTBOOK = "沪教牛津 2024";
 const GRADE = "3A";
 const FIELD_W = 300;
+
+function leftSafeInset(screenWidth: number): number {
+  // Punch-hole / island devices clip the far left in landscape; keep brand clear of it.
+  let inset = Math.max(96, Math.round(screenWidth * 0.06));
+  try {
+    const safe = view.getSafeAreaRect?.();
+    if (safe && typeof safe.x === "number") {
+      inset = Math.max(inset, Math.round(safe.x) + 24);
+    }
+  } catch {
+    // keep fallback inset
+  }
+  return inset;
+}
 
 function makeChip(
   parent: Node,
@@ -98,8 +113,8 @@ export class BootProfileScreen {
 
     const brand = new Node("Brand");
     screen.addChild(brand);
-    // Keep brand fully on-screen on ultra-wide phones (fitWidth → short height, full width).
-    const brandLeft = -this.width / 2 + 48;
+    // Keep brand fully on-screen (ultra-wide + left camera cutout).
+    const brandLeft = -this.width / 2 + leftSafeInset(this.width);
     brand.setPosition(0, 10, 0);
 
     const title = makeLabel(brand, "BrandTitle", {
