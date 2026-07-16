@@ -721,6 +721,14 @@ export class BootApp extends Component {
 
   private async onBattleQuit() {
     await this.repo.commit(this.profiles.currentSave());
+    // GDD: 紧急撤离仍进结算（保留学习进度，无胜利星章）
+    if (this.session) {
+      this.session.finished = true;
+      this.session.win = false;
+      this.nav.goSettlement();
+      this.renderCurrent();
+      return;
+    }
     this.clearBattleSession();
     this.nav.backToStarMap();
     this.renderCurrent();
