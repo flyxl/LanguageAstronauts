@@ -23,11 +23,11 @@ const FIELD_W = 300;
 
 function leftSafeInset(screenWidth: number): number {
   // Punch-hole / island devices clip the far left in landscape; keep brand clear of it.
-  let inset = Math.max(96, Math.round(screenWidth * 0.06));
+  let inset = Math.max(160, Math.round(screenWidth * 0.12));
   try {
     const safe = view.getSafeAreaRect?.();
     if (safe && typeof safe.x === "number") {
-      inset = Math.max(inset, Math.round(safe.x) + 24);
+      inset = Math.max(inset, Math.round(safe.x) + 48);
     }
   } catch {
     // keep fallback inset
@@ -156,7 +156,7 @@ export class BootProfileScreen {
     panelTitle.horizontalAlign = Label.HorizontalAlign.LEFT;
     panelTitle.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
     // Keep title fully inside the panel frame.
-    panelTitle.node.setPosition(-panelW / 2 + 24, panelH / 2 - 40, 0);
+    panelTitle.node.setPosition(-panelW / 2 + 24, panelH / 2 - 56, 0);
 
     const fields = new Node("Fields");
     panelRoot.addChild(fields);
