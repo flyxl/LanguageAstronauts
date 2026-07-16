@@ -98,34 +98,38 @@ export class BootProfileScreen {
 
     const brand = new Node("Brand");
     screen.addChild(brand);
-    brand.setPosition(-this.width * 0.28, 10, 0);
+    // Keep brand fully on-screen on ultra-wide phones (fitWidth → short height, full width).
+    const brandLeft = -this.width / 2 + 48;
+    brand.setPosition(0, 10, 0);
 
     const title = makeLabel(brand, "BrandTitle", {
       string: "时空语航员",
       fontSize: UiTheme.font.brand,
-      width: 520,
+      width: Math.min(520, this.width * 0.42),
       height: 72,
     });
     title.horizontalAlign = Label.HorizontalAlign.LEFT;
     title.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-    title.node.setPosition(-200, 40, 0);
+    title.node.setPosition(brandLeft, 40, 0);
 
     const subtitle = makeLabel(brand, "BrandSubtitle", {
       string: "教材同步星际训练，答对即发射。",
       fontSize: UiTheme.font.body,
       color: UiTheme.colors.textSecondary,
-      width: 480,
+      width: Math.min(480, this.width * 0.4),
       height: 56,
     });
     subtitle.horizontalAlign = Label.HorizontalAlign.LEFT;
     subtitle.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-    subtitle.node.setPosition(-200, -24, 0);
+    subtitle.node.setPosition(brandLeft, -24, 0);
 
     const panelW = 420;
     const panelH = 460;
     const panelRoot = new Node("ProfilePanel");
     screen.addChild(panelRoot);
-    panelRoot.setPosition(this.width * 0.22, 0, 0);
+    // Sit in the right half but keep ≥48px from the right edge.
+    const panelX = Math.min(this.width * 0.22, this.width / 2 - panelW / 2 - 48);
+    panelRoot.setPosition(panelX, 0, 0);
     makePanel(panelRoot, "PanelBg", panelW, panelH);
 
     const panelTitle = makeLabel(panelRoot, "PanelTitle", {
