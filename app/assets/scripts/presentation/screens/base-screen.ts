@@ -271,7 +271,7 @@ export class BaseScreen {
     const weapons = Object.values(WEAPONS);
     const rowPitch = 72;
     let y = PANEL_H / 2 - 84;
-    const leftX = -PANEL_W / 2 + 24;
+    const leftX = -PANEL_W / 2 + 28;
     // Chip/button centers must stay ≤ halfWidth - halfBtn so strokes stay inside the frame.
     const equipX = PANEL_W / 2 - 84;
 
@@ -283,16 +283,18 @@ export class BaseScreen {
       const owned = prog.ownedWeapons.includes(w.id);
       const equipped = prog.weaponId === w.id;
       const level = Math.max(1, prog.weaponLevels[w.id] ?? 1);
+      const nameText = `${w.name}  Lv.${level}`;
 
       const nameLbl = makeLabel(row, "Name", {
-        string: `${w.name}  Lv.${level}`,
+        string: nameText,
         fontSize: UiTheme.font.body,
-        width: 200,
+        width: 188,
         height: 28,
       });
       nameLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
+      nameLbl.overflow = Label.Overflow.CLAMP;
       nameLbl.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-      nameLbl.node.setPosition(leftX, owned ? 12 : 0, 0);
+      nameLbl.node.setPosition(leftX, 12, 0);
 
       const tagLbl = makeLabel(row, "Tag", {
         string: w.label,
@@ -303,7 +305,7 @@ export class BaseScreen {
       });
       tagLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
       tagLbl.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-      tagLbl.node.setPosition(leftX, owned ? -14 : 0, 0);
+      tagLbl.node.setPosition(leftX, -14, 0);
 
       if (owned && level < MAX_WEAPON_LEVEL) {
         const cost = weaponUpgradeCost(level);
@@ -362,26 +364,30 @@ export class BaseScreen {
       string: `出战最多 ${MAX_DEPLOYED_PETS} 只`,
       fontSize: UiTheme.font.chip,
       color: UiTheme.colors.textSecondary,
-      width: PANEL_W - 32,
+      width: PANEL_W - 40,
       height: 22,
     });
     sub.horizontalAlign = Label.HorizontalAlign.LEFT;
-    sub.node.setPosition(-PANEL_W / 2 + 16, PANEL_H / 2 - 58, 0);
+    sub.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+    sub.node.setPosition(-PANEL_W / 2 + 20, PANEL_H / 2 - 58, 0);
 
     if (deployCapHint) {
       const alert = makeLabel(panel, "DeployCapAlert", {
         string: "出战位已满，请先撤下一只",
         fontSize: UiTheme.font.chip,
         color: UiTheme.colors.accentCta,
-        width: PANEL_W - 32,
+        width: PANEL_W - 40,
         height: 22,
       });
       alert.horizontalAlign = Label.HorizontalAlign.LEFT;
-      alert.node.setPosition(-PANEL_W / 2 + 16, PANEL_H / 2 - 80, 0);
+      alert.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+      alert.node.setPosition(-PANEL_W / 2 + 20, PANEL_H / 2 - 80, 0);
     }
 
     const pets = Object.values(PETS);
     let y = PANEL_H / 2 - 96;
+    const petLeft = -PANEL_W / 2 + 20;
+    const petActionX = PANEL_W / 2 - 64;
 
     pets.forEach((pet) => {
       const row = new Node(`Pet_${pet.id}`);
@@ -395,23 +401,24 @@ export class BaseScreen {
       const nameLbl = makeLabel(row, "Name", {
         string: pet.name,
         fontSize: UiTheme.font.body,
-        width: 100,
+        width: 120,
         height: ROW_H,
       });
       nameLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
-      nameLbl.node.setPosition(-PANEL_W / 2 + 16, 8, 0);
+      nameLbl.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+      nameLbl.node.setPosition(petLeft, 8, 0);
 
       const descLbl = makeLabel(row, "Desc", {
         string: `${pet.describe(bond).split(" · ")[0]} · ${formatPetBond(bond)}`,
         fontSize: UiTheme.font.chip,
         color: UiTheme.colors.textSecondary,
-        width: PANEL_W - 120,
+        width: PANEL_W - 140,
         height: 22,
       });
       descLbl.horizontalAlign = Label.HorizontalAlign.LEFT;
-      descLbl.node.setPosition(-PANEL_W / 2 + 16, -12, 0);
+      descLbl.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+      descLbl.node.setPosition(petLeft, -12, 0);
 
-      const actionX = PANEL_W / 2 - 72;
       if (!owned) {
         makeSecondaryButton(
           row,
@@ -420,7 +427,7 @@ export class BaseScreen {
           88,
           32,
           () => onBuy(pet.id)
-        ).setPosition(actionX + 8, 0, 0);
+        ).setPosition(petActionX, 0, 0);
       } else {
         makeSecondaryButton(
           row,
@@ -429,7 +436,7 @@ export class BaseScreen {
           72,
           32,
           () => onToggleDeploy(pet.id)
-        ).setPosition(actionX, 0, 0);
+        ).setPosition(petActionX, 0, 0);
       }
 
       y -= ROW_H + 16;

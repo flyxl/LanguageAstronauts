@@ -18,6 +18,7 @@ import { assertPlayerSafeCopy, UiTheme, type Rgba } from "../ui/theme";
 const NAME_OPTIONS = ["小航员", "宇航员", "启航者"] as const;
 const TEXTBOOK = "沪教牛津 2024";
 const GRADE = "3A";
+const FIELD_W = 300;
 
 function makeChip(
   parent: Node,
@@ -64,11 +65,12 @@ function fieldCaption(parent: Node, name: string, text: string, y: number): void
     string: text,
     fontSize: UiTheme.font.chip,
     color: UiTheme.colors.textSecondary,
-    width: 320,
+    width: FIELD_W,
     height: 24,
   });
   caption.horizontalAlign = Label.HorizontalAlign.LEFT;
-  caption.node.setPosition(-150, y, 0);
+  caption.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+  caption.node.setPosition(-FIELD_W / 2, y, 0);
 }
 
 export class BootProfileScreen {
@@ -96,7 +98,7 @@ export class BootProfileScreen {
 
     const brand = new Node("Brand");
     screen.addChild(brand);
-    brand.setPosition(-320, 20, 0);
+    brand.setPosition(-this.width * 0.28, 10, 0);
 
     const title = makeLabel(brand, "BrandTitle", {
       string: "时空语航员",
@@ -105,7 +107,8 @@ export class BootProfileScreen {
       height: 72,
     });
     title.horizontalAlign = Label.HorizontalAlign.LEFT;
-    title.node.setPosition(0, 40, 0);
+    title.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+    title.node.setPosition(-200, 40, 0);
 
     const subtitle = makeLabel(brand, "BrandSubtitle", {
       string: "教材同步星际训练，答对即发射。",
@@ -115,13 +118,14 @@ export class BootProfileScreen {
       height: 56,
     });
     subtitle.horizontalAlign = Label.HorizontalAlign.LEFT;
-    subtitle.node.setPosition(0, -24, 0);
+    subtitle.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+    subtitle.node.setPosition(-200, -24, 0);
 
     const panelW = 420;
     const panelH = 460;
     const panelRoot = new Node("ProfilePanel");
     screen.addChild(panelRoot);
-    panelRoot.setPosition(280, 0, 0);
+    panelRoot.setPosition(this.width * 0.22, 0, 0);
     makePanel(panelRoot, "PanelBg", panelW, panelH);
 
     const panelTitle = makeLabel(panelRoot, "PanelTitle", {
@@ -131,54 +135,58 @@ export class BootProfileScreen {
       height: 40,
     });
     panelTitle.horizontalAlign = Label.HorizontalAlign.LEFT;
-    panelTitle.node.setPosition(-panelW / 2 + 32, panelH / 2 - 48, 0);
+    panelTitle.node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
+    // Keep title fully inside the panel frame.
+    panelTitle.node.setPosition(-panelW / 2 + 24, panelH / 2 - 40, 0);
 
     const fields = new Node("Fields");
     panelRoot.addChild(fields);
+    fields.setPosition(0, 16, 0);
 
-    fieldCaption(fields, "NameCaption", "航员代号", 60);
+    // Interactive name: gold stroke. Read-only fields: info stroke + same width.
+    fieldCaption(fields, "NameCaption", "航员代号（点按切换）", 110);
     const nameChip = makeChip(
       fields,
       "NameChip",
       NAME_OPTIONS[this.nameIndex],
-      300,
+      FIELD_W,
       44,
       UiTheme.colors.bgDeep,
       UiTheme.colors.accentCta,
       () => this.cycleName()
     );
-    nameChip.setPosition(0, 24, 0);
+    nameChip.setPosition(0, 72, 0);
     this.nameChipLabel = nameChip.getChildByName("Label")!.getComponent(Label)!;
 
-    fieldCaption(fields, "TextbookCaption", "教材", -24);
+    fieldCaption(fields, "TextbookCaption", "教材", 20);
     makeChip(
       fields,
       "TextbookChip",
       TEXTBOOK,
-      300,
+      FIELD_W,
       40,
       UiTheme.colors.bgDeep,
-      UiTheme.colors.accentInfo
-    ).setPosition(0, -60, 0);
+      UiTheme.colors.strokePanel
+    ).setPosition(0, -16, 0);
 
-    fieldCaption(fields, "GradeCaption", "年级", -86);
+    fieldCaption(fields, "GradeCaption", "年级", -70);
     makeChip(
       fields,
       "GradeChip",
       GRADE,
-      120,
+      FIELD_W,
       40,
       UiTheme.colors.bgDeep,
-      UiTheme.colors.accentInfo
-    ).setPosition(0, -108, 0);
+      UiTheme.colors.strokePanel
+    ).setPosition(0, -106, 0);
 
     const ctaH = 56;
-    const ctaBottomMargin = 36;
+    const ctaBottomMargin = 28;
     makeCtaButton(
       panelRoot,
       "CreateBtn",
       "创建并出航",
-      panelW - 48,
+      FIELD_W,
       ctaH,
       () => opts.onCreate(NAME_OPTIONS[this.nameIndex])
     ).setPosition(0, -panelH / 2 + ctaBottomMargin + ctaH / 2, 0);
