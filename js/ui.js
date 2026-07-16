@@ -736,7 +736,7 @@ const UI = {
              <div class="text-xs opacity-60">请朗读这个单词：</div>
              <div class="text-2xl font-black" style="color:var(--accent)">${q.correct}</div>
            </div>
-           <div id="speak-status" class="text-sm mt-2 opacity-70">点击麦克风开始录音，发音越标准激光炮越强！</div>`
+           <div id="speak-status" class="text-sm mt-2 opacity-70">点击麦克风录音，完成后回放并评分</div>`
         : `<div class="flex items-center justify-center gap-2 mb-1">${getNpcSVG(q.speaker || "Peter", 28)}<span class="text-xs opacity-60">${q.speaker || "NPC"} 说：</span></div>
            <div class="text-lg font-bold">${q.prompt}</div>
            <div class="text-sm opacity-60 mt-1">${q.promptZh || ""}</div>
@@ -744,7 +744,7 @@ const UI = {
              <div class="text-xs opacity-60">请大声读出回应：</div>
              <div class="text-xl font-black" style="color:var(--accent)">${q.correct}</div>
            </div>
-           <div id="speak-status" class="text-sm mt-2 opacity-70">点击麦克风开始录音，发音越标准激光炮越强！</div>`;
+           <div id="speak-status" class="text-sm mt-2 opacity-70">点击麦克风录音，完成后回放并评分</div>`;
       answersHtml = `<div class="grid grid-cols-2 gap-3">
              <button class="btn gold" id="mic-btn" onclick="UI.openRecordOverlay()">🎤 开始朗读</button>
              <button class="btn secondary" onclick="UI.skipSpeak()">跳过朗读</button>
@@ -907,20 +907,17 @@ const UI = {
     this._afterAnswer(res);
   },
 
-  // ---- 口语评测（微信风格录音弹层） ----
+  // ---- 口语评测（录音 → 回放 → 评分 → 确认发射） ----
   openRecordOverlay() {
     if (this._locked) return;
-    const target = this.battle.current.correct;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    this._recCancelled = false;
+    this._resetRecState();
     this._recDone = false;
     this._recResult = null;
     this._recHasAudio = false;
     this._recStartTime = Date.now();
-    this._recStartY = 0;
     this._recCountdown = 60;
 
-    // 创建全屏录音弹层
     const overlay = document.createElement("div");
     overlay.id = "rec-overlay";
     overlay.innerHTML = `
@@ -934,23 +931,19 @@ const UI = {
           <div class="rec-timer" id="rec-timer">${this._recCountdown}s</div>
           <div class="rec-hint" id="rec-hint">正在录音，请大声朗读…</div>
         </div>
-        <div class="rec-cancel-hint" id="rec-cancel-hint">↑ 上滑取消</div>
         <button class="rec-stop-btn" id="rec-stop-btn" onclick="UI._stopRecording(false)">✓ 完成录音</button>
+        <button class="rec-retry-btn" onclick="UI._stopRecording(true)">取消</button>
       </div>`;
     document.body.appendChild(overlay);
 
-    // 启动倒计时
     this._recTimer = setInterval(() => {
       this._recCountdown--;
       const timerEl = document.getElementById("rec-timer");
       if (timerEl) timerEl.textContent = this._recCountdown + "s";
-      if (this._recCountdown <= 0) {
-        this._stopRecording(false);
-      }
+      if (this._recCountdown <= 0) this._stopRecording(false);
     }, 1000);
 
-    // 同时启动：1)语音识别（如支持）2)麦克风音量检测
-    this._startAudioDetection();
+    this._startAudioCapture();
 
     if (SR) {
       try {
@@ -959,7 +952,6 @@ const UI = {
         rec.interimResults = false;
         rec.maxAlternatives = 3;
         this._speakRec = rec;
-
         rec.onresult = (e) => {
           this._recDone = true;
           const alts = [];
@@ -975,10 +967,37 @@ const UI = {
     }
   },
 
-  _startAudioDetection() {
+  _startAudioCapture() {
     if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return;
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      if (this._recStopping || this._recReviewing) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
       this._recStream = stream;
+      this._recChunks = [];
+      const mimeCandidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", ""];
+      let mimeType = "";
+      for (const m of mimeCandidates) {
+        if (!m || (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m))) {
+          mimeType = m;
+          break;
+        }
+      }
+      this._recMimeType = mimeType || "audio/webm";
+      if (typeof MediaRecorder !== "undefined") {
+        try {
+          this._mediaRecorder = mimeType
+            ? new MediaRecorder(stream, { mimeType })
+            : new MediaRecorder(stream);
+          this._mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) this._recChunks.push(e.data);
+          };
+          this._mediaRecorder.start(200);
+        } catch (e) {
+          this._mediaRecorder = null;
+        }
+      }
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const src = audioCtx.createMediaStreamSource(stream);
@@ -988,75 +1007,211 @@ const UI = {
         const data = new Uint8Array(analyser.frequencyBinCount);
         this._recAudioCtx = audioCtx;
         const check = () => {
-          if (this._recCancelled) return;
+          if (this._recStopping || this._recReviewing) return;
           analyser.getByteFrequencyData(data);
           const avg = data.reduce((a, b) => a + b, 0) / data.length;
           if (avg > 10) this._recHasAudio = true;
-          if (!this._recCancelled) requestAnimationFrame(check);
+          requestAnimationFrame(check);
         };
         check();
       } catch (e) {}
-    }).catch(() => {});
+    }).catch(() => {
+      const hint = document.getElementById("rec-hint");
+      if (hint) hint.textContent = "无法访问麦克风，请检查浏览器权限";
+    });
   },
 
   _stopRecording(cancelled) {
-    if (this._recCancelled) return;
-    this._recCancelled = cancelled;
+    if (this._recStopping) return;
+    this._recStopping = true;
     clearInterval(this._recTimer);
 
-    // 停止语音识别（异步，结果可能稍后到达）
     if (this._speakRec) {
       try { this._speakRec.stop(); } catch (e) {}
     }
 
-    // 移除弹层
-    const overlay = document.getElementById("rec-overlay");
-    if (overlay) overlay.remove();
-
     if (cancelled) {
-      this._cleanupRecording();
-      const status = document.getElementById("speak-status");
-      if (status) status.innerHTML = '<span class="opacity-60">已取消，可重新录音</span>';
+      this._abortRecording(true);
       return;
     }
 
-    // 等待600ms让异步识别结果到达，然后评估
-    setTimeout(() => this._evaluateRecording(), 600);
+    const duration = Date.now() - this._recStartTime;
+    const minDuration = 800;
+
+    const enterReview = (blob) => {
+      if (duration < minDuration || (!this._recHasAudio && (!blob || blob.size < 100))) {
+        this._abortRecording(false);
+        const status = document.getElementById("speak-status");
+        if (status) {
+          status.innerHTML = '<span style="color:var(--danger)">录音太短或未检测到声音，请重新朗读</span>';
+        }
+        return;
+      }
+      this._recReviewing = true;
+      this._showRecordingReview(blob, duration);
+    };
+
+    if (this._mediaRecorder && this._mediaRecorder.state !== "inactive") {
+      this._mediaRecorder.onstop = () => {
+        const blob = this._recChunks.length
+          ? new Blob(this._recChunks, { type: this._recMimeType || "audio/webm" })
+          : null;
+        enterReview(blob);
+      };
+      try {
+        this._mediaRecorder.stop();
+      } catch (e) {
+        enterReview(null);
+      }
+    } else {
+      enterReview(null);
+    }
   },
 
-  _evaluateRecording() {
-    this._cleanupRecording();
+  _showRecordingReview(blob, duration) {
+    const overlay = document.getElementById("rec-overlay");
+    if (!overlay) {
+      this._resetRecState();
+      return;
+    }
+
+    let playbackHtml = "";
+    if (blob && blob.size > 0) {
+      if (this._recBlobUrl) URL.revokeObjectURL(this._recBlobUrl);
+      this._recBlobUrl = URL.createObjectURL(blob);
+      this._recBlob = blob;
+      playbackHtml = `<audio id="rec-playback" class="rec-playback" controls playsinline src="${this._recBlobUrl}"></audio>`;
+    } else {
+      playbackHtml = `<p class="rec-playback-fallback">浏览器不支持录音回放，将根据语音识别结果评分</p>`;
+    }
+
+    overlay.innerHTML = `
+      <div class="rec-overlay-bg">
+        <div class="rec-overlay-card rec-review-card">
+          <div class="rec-hint rec-review-title">🔊 回放你的朗读</div>
+          ${playbackHtml}
+          <div id="rec-score-area" class="rec-score-area"><span class="opacity-60">正在评分…</span></div>
+        </div>
+        <div class="rec-review-actions" id="rec-review-actions" style="display:none">
+          <button class="rec-stop-btn rec-confirm-btn" id="rec-confirm-btn" onclick="UI._confirmSpeakFire()">🚀 确认发射</button>
+          <button class="rec-retry-btn" onclick="UI._retrySpeakRecording()">🔄 重新录音</button>
+        </div>
+      </div>`;
+
+    const audio = document.getElementById("rec-playback");
+    if (audio) {
+      audio.play().catch(() => {});
+      audio.onended = () => {
+        if (!this._recScoreReady) this._runSpeakScoring();
+      };
+    }
+
+    // 等待语音识别结果到达后再评分；有回放时优先等回放结束
+    setTimeout(() => {
+      if (!this._recScoreReady) this._runSpeakScoring();
+    }, blob ? Math.max(1500, duration + 400) : 1200);
+  },
+
+  _runSpeakScoring() {
+    if (this._recScoreReady) return;
+    this._recScoreReady = true;
+
     const target = this.battle.current.correct;
-    const duration = Date.now() - this._recStartTime;
+    let quality = 0;
+    let heard = "";
+    let srFailed = false;
 
-    // 优先使用语音识别结果
-    if (this._recDone && this._recResult) {
-      const quality = this._scorePronunciation(target, this._recResult);
-      this._finishSpeak(quality, this._recResult[0]);
-      return;
+    if (this._recDone && this._recResult?.length) {
+      quality = this._scorePronunciation(target, this._recResult);
+      heard = this._recResult[0];
+    } else {
+      srFailed = true;
     }
 
-    // 有麦克风音量检测到声音 → 给鼓励分
-    if (this._recHasAudio) {
-      this._finishSpeak(0.7, target);
-      return;
+    this._recQuality = quality;
+    this._recHeard = heard;
+
+    const correct = quality >= 0.5;
+    let rating = "Excellent!";
+    if (quality < 0.5) rating = "再试试~";
+    else if (quality < 0.7) rating = "Good";
+    else if (quality < 0.9) rating = "Great!";
+
+    const scoreArea = document.getElementById("rec-score-area");
+    if (scoreArea) {
+      if (srFailed) {
+        scoreArea.innerHTML = '<span style="color:var(--danger)">未能识别发音，请重新录音并检查麦克风权限</span>';
+      } else {
+        scoreArea.innerHTML = `<span style="color:${correct ? "var(--ok)" : "var(--danger)"}">发音评分：${Math.round(quality * 100)} 分 · ${rating}</span>${heard ? `<div class="rec-heard-text">识别：${this._esc(heard)}</div>` : ""}`;
+      }
     }
 
-    // 录音时长超过2秒 → 认为用户尝试了（可能是SR不支持或灵敏度问题）
-    if (duration > 2000) {
-      this._finishSpeak(0.6, target);
-      return;
+    const actions = document.getElementById("rec-review-actions");
+    const confirmBtn = document.getElementById("rec-confirm-btn");
+    if (actions) actions.style.display = "flex";
+    if (confirmBtn) {
+      if (srFailed) {
+        confirmBtn.textContent = "重新录音";
+        confirmBtn.onclick = () => UI._retrySpeakRecording();
+      } else if (correct) {
+        confirmBtn.textContent = "🚀 确认发射";
+        confirmBtn.onclick = () => UI._confirmSpeakFire();
+      } else {
+        confirmBtn.textContent = "仍要发射（低伤害）";
+        confirmBtn.onclick = () => UI._confirmSpeakFire();
+      }
     }
+  },
 
-    // 录音太短，提示重试
-    const status = document.getElementById("speak-status");
-    if (status) status.innerHTML = '<span style="color:var(--danger)">录音时间太短，请再试一次（至少2秒）</span>';
+  _confirmSpeakFire() {
+    const quality = this._recQuality ?? 0;
+    const heard = this._recHeard ?? "";
+    const overlay = document.getElementById("rec-overlay");
+    if (overlay) overlay.remove();
+    this._resetRecState();
+    this._finishSpeak(quality, heard);
+  },
+
+  _retrySpeakRecording() {
+    const overlay = document.getElementById("rec-overlay");
+    if (overlay) overlay.remove();
+    this._resetRecState();
+    this.openRecordOverlay();
+  },
+
+  _abortRecording(showCancelMsg) {
+    const overlay = document.getElementById("rec-overlay");
+    if (overlay) overlay.remove();
+    this._resetRecState();
+    if (showCancelMsg) {
+      const status = document.getElementById("speak-status");
+      if (status) status.innerHTML = '<span class="opacity-60">已取消，可重新录音</span>';
+    }
+  },
+
+  _resetRecState() {
+    this._cleanupRecording();
+    this._recStopping = false;
+    this._recReviewing = false;
+    this._recScoreReady = false;
+    this._recQuality = null;
+    this._recHeard = null;
+    this._recDone = false;
+    this._recResult = null;
+    this._recHasAudio = false;
+    this._recChunks = [];
   },
 
   _cleanupRecording() {
     this._speakRec = null;
+    if (this._recBlobUrl) {
+      URL.revokeObjectURL(this._recBlobUrl);
+      this._recBlobUrl = null;
+    }
+    this._recBlob = null;
+    this._mediaRecorder = null;
     if (this._recStream) {
-      this._recStream.getTracks().forEach(t => t.stop());
+      this._recStream.getTracks().forEach((t) => t.stop());
       this._recStream = null;
     }
     if (this._recAudioCtx) {
