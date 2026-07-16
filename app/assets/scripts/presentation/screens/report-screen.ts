@@ -41,6 +41,8 @@ export type ReportModel = {
     masteredCount: number;
   };
   onBack: () => void;
+  onExportSave: () => void;
+  onImportSave: () => void;
 };
 
 const MAX_UNITS = 8;
@@ -192,6 +194,13 @@ export class ReportScreen {
     sectionCaption(panelRoot, "学习摘要", -120);
     statLine(panelRoot, `到期复习 ${learning.dueCount} 项`, -154);
     statLine(panelRoot, `已接触 ${learning.seenCount} 项 · 首次答对 ${learning.masteredCount} 项`, -190);
+
+    makeSecondaryButton(panelRoot, "ExportSaveBtn", "导出存档", 140, 40, () =>
+      model.onExportSave()
+    ).setPosition(-90, -PANEL_H / 2 + 96, 0);
+    makeSecondaryButton(panelRoot, "ImportSaveBtn", "导入存档", 140, 40, () =>
+      model.onImportSave()
+    ).setPosition(90, -PANEL_H / 2 + 96, 0);
 
     makeCtaButton(panelRoot, "BackCta", "返回星图", 200, 48, () => model.onBack()).setPosition(
       0,

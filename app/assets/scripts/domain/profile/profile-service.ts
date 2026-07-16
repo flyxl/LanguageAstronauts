@@ -26,6 +26,12 @@ export class ProfileService {
     }
   }
 
+  async reload(): Promise<void> {
+    const loaded = await this.repository.load();
+    if (!loaded) throw new Error("Save missing after reload");
+    this.save = loaded;
+  }
+
   currentSave(): SaveV5 {
     if (!this.save) throw new Error("ProfileService has not started");
     return this.save;
