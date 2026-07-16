@@ -2,7 +2,7 @@
 
 > **Status:** Target delivered (Cocos Native debug)  
 > **Applies to:** Cocos Creator 原生 Android（非 WebView / 非 Capacitor）  
-> **Last verified:** 2026-07-15
+> **Last verified: 2026-07-16
 
 ## 交付口径（硬约束）
 
