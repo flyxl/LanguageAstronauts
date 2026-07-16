@@ -27,6 +27,29 @@ function pick(arr, n) {
   return shuffle(arr).slice(0, n);
 }
 
+/** 选项去重（避免干扰项与正确答案或彼此重复） */
+function uniqueStrings(values) {
+  const seen = new Set();
+  const out = [];
+  for (const v of values) {
+    const s = String(v ?? "").trim();
+    if (!s || seen.has(s)) continue;
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+
+function pickUniqueValues(values, correct, n) {
+  const key = String(correct ?? "").trim();
+  const pool = uniqueStrings(values.filter((x) => String(x).trim() !== key));
+  return shuffle(pool).slice(0, n);
+}
+
+function buildShuffledOptions(correct, distractors) {
+  return shuffle(uniqueStrings([correct, ...distractors]));
+}
+
 /** 会话完整英文朗读文本（问句 + 回应） */
 function dialogueSpeakText(d) {
   if (!d) return "";
@@ -155,11 +178,12 @@ class Battle {
   // ---- 出题生成 ----
   // style: 'mc' 选择 | 'listen' 听音辨词 | 'spell' 拼写填空 | 'speak' 口语
   _makeVocabQuestion(v, style = "mc") {
-    const distractors = pick(
-      allVocab().filter((x) => x.en !== v.en),
+    const distractors = pickUniqueValues(
+      allVocab().filter((x) => x.en !== v.en).map((x) => x.en),
+      v.en,
       3
-    ).map((x) => x.en);
-    const options = shuffle([v.en, ...distractors]);
+    );
+    const options = buildShuffledOptions(v.en, distractors);
     const q = {
       type: "vocab",
       style,
@@ -180,11 +204,12 @@ class Battle {
 
   // 听力理解(词汇)：听英文单词 → 选出中文含义
   _makeListenQuestion(v) {
-    const distractors = pick(
-      allVocab().filter((x) => x.zh !== v.zh),
+    const distractors = pickUniqueValues(
+      allVocab().filter((x) => x.zh !== v.zh).map((x) => x.zh),
+      v.zh,
       3
-    ).map((x) => x.zh);
-    const options = shuffle([v.zh, ...distractors]);
+    );
+    const options = buildShuffledOptions(v.zh, distractors);
     return {
       type: "vocab",
       style: "listen",
@@ -198,11 +223,12 @@ class Battle {
 
   // 听力理解(会话)：听英文问句 → 选出正确的英文回应
   _makeDialogueListenQuestion(d) {
-    const distractors = pick(
+    const distractors = pickUniqueValues(
       allDialogueAnswers().filter((x) => x !== d.answer),
+      d.answer,
       3
     );
-    const options = shuffle([d.answer, ...distractors]);
+    const options = buildShuffledOptions(d.answer, distractors);
     return {
       type: "dialogue",
       style: "listen",
@@ -218,11 +244,12 @@ class Battle {
 
   // 阅读理解题：看英文 → 选中文含义
   _makeReadQuestion(v) {
-    const distractors = pick(
-      allVocab().filter((x) => x.zh !== v.zh),
+    const distractors = pickUniqueValues(
+      allVocab().filter((x) => x.zh !== v.zh).map((x) => x.zh),
+      v.zh,
       3
-    ).map((x) => x.zh);
-    const options = shuffle([v.zh, ...distractors]);
+    );
+    const options = buildShuffledOptions(v.zh, distractors);
     return {
       type: "vocab",
       style: "read",
@@ -239,8 +266,8 @@ class Battle {
   _makeDialogueReadQuestion(d) {
     const allZh = [];
     _courseData().forEach((g) => g.units.forEach((u) => u.dialogue.forEach((x) => { if (x.zh) allZh.push(x.zh); })));
-    const distractors = pick(allZh.filter((x) => x !== d.zh), 3);
-    const options = shuffle([d.zh, ...distractors]);
+    const distractors = pickUniqueValues(allZh.filter((x) => x !== d.zh), d.zh, 3);
+    const options = buildShuffledOptions(d.zh, distractors);
     return {
       type: "dialogue",
       style: "read",
@@ -257,11 +284,12 @@ class Battle {
 
   // style: 'mc' 选择 | 'listen' 听音辨句 | 'speak' 口语评测
   _makeDialogueQuestion(d, style = "mc") {
-    const distractors = pick(
+    const distractors = pickUniqueValues(
       allDialogueAnswers().filter((x) => x !== d.answer),
+      d.answer,
       3
     );
-    const options = shuffle([d.answer, ...distractors]);
+    const options = buildShuffledOptions(d.answer, distractors);
     return {
       type: "dialogue",
       style,

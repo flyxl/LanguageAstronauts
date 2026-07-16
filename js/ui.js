@@ -910,8 +910,8 @@ const UI = {
   // ---- 口语评测（录音 → 回放 → 评分 → 确认发射） ----
   openRecordOverlay() {
     if (this._locked) return;
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     this._resetRecState();
+    this._recSrUnsupported = !(window.SpeechRecognition || window.webkitSpeechRecognition);
     this._recDone = false;
     this._recResult = null;
     this._recHasAudio = false;
@@ -944,26 +944,61 @@ const UI = {
     }, 1000);
 
     this._startAudioCapture();
+  },
 
-    if (SR) {
-      try {
-        const rec = new SR();
-        rec.lang = "en-US";
-        rec.interimResults = false;
-        rec.maxAlternatives = 3;
-        this._speakRec = rec;
-        rec.onresult = (e) => {
-          this._recDone = true;
-          const alts = [];
-          for (let i = 0; i < e.results[0].length; i++) alts.push(e.results[0][i].transcript);
-          this._recResult = alts;
-        };
-        rec.onerror = () => {};
-        rec.onend = () => {};
-        rec.start();
-      } catch (err) {
-        this._speakRec = null;
-      }
+  _startSpeechRecognition() {
+    if (this._recSrUnsupported || this._recStopping || this._recReviewing) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      this._recSrUnsupported = true;
+      this._recSrEnded = true;
+      return;
+    }
+    try {
+      const rec = new SR();
+      rec.lang = "en-US";
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.maxAlternatives = 3;
+      this._speakRec = rec;
+
+      rec.onresult = (e) => {
+        const alts = new Set(this._recResult || []);
+        for (let i = 0; i < e.results.length; i++) {
+          for (let j = 0; j < e.results[i].length; j++) {
+            const t = e.results[i][j].transcript.trim();
+            if (t) alts.add(t);
+          }
+        }
+        this._recResult = Array.from(alts);
+        this._recDone = this._recResult.length > 0;
+        if (this._recReviewing) this._trySpeakScoring();
+      };
+
+      rec.onerror = (err) => {
+        const code = err?.error || "error";
+        this._recSrError = code;
+        if (code === "not-allowed" || code === "service-not-allowed") {
+          this._recSrUnsupported = true;
+        }
+      };
+
+      rec.onend = () => {
+        this._recSrEnded = true;
+        if (this._recReviewing) {
+          this._trySpeakScoring();
+          return;
+        }
+        if (!this._recStopping && this._speakRec === rec) {
+          try { rec.start(); } catch (e) {}
+        }
+      };
+
+      rec.start();
+    } catch (err) {
+      this._recSrUnsupported = true;
+      this._recSrEnded = true;
+      this._speakRec = null;
     }
   },
 
@@ -1015,6 +1050,7 @@ const UI = {
         };
         check();
       } catch (e) {}
+      this._startSpeechRecognition();
     }).catch(() => {
       const hint = document.getElementById("rec-hint");
       if (hint) hint.textContent = "无法访问麦克风，请检查浏览器权限";
@@ -1102,35 +1138,78 @@ const UI = {
     if (audio) {
       audio.play().catch(() => {});
       audio.onended = () => {
-        if (!this._recScoreReady) this._runSpeakScoring();
+        if (!this._recScoreReady) this._trySpeakScoring(true);
       };
     }
 
-    // 等待语音识别结果到达后再评分；有回放时优先等回放结束
-    setTimeout(() => {
-      if (!this._recScoreReady) this._runSpeakScoring();
-    }, blob ? Math.max(1500, duration + 400) : 1200);
+    this._beginSpeakScoring();
+  },
+
+  _beginSpeakScoring() {
+    this._recReviewStart = Date.now();
+    if (this._recSrUnsupported) {
+      setTimeout(() => this._trySpeakScoring(true), 400);
+      return;
+    }
+    const poll = () => {
+      this._trySpeakScoring(false);
+      if (!this._recScoreReady) this._recScorePollTimer = setTimeout(poll, 250);
+    };
+    this._recScorePollTimer = setTimeout(poll, 400);
+  },
+
+  _trySpeakScoring(force) {
+    if (!this._recReviewing || this._recScoreReady) return;
+    const elapsed = Date.now() - (this._recReviewStart || Date.now());
+    const hasResult = !!(this._recResult && this._recResult.length);
+    const srSettled = this._recSrEnded || this._recSrUnsupported;
+    if (hasResult || force || (srSettled && elapsed >= 1000) || elapsed >= 6000) {
+      this._runSpeakScoring();
+    }
   },
 
   _runSpeakScoring() {
     if (this._recScoreReady) return;
     this._recScoreReady = true;
+    if (this._recScorePollTimer) {
+      clearTimeout(this._recScorePollTimer);
+      this._recScorePollTimer = null;
+    }
 
     const target = this.battle.current.correct;
     let quality = 0;
     let heard = "";
-    let srFailed = false;
 
-    if (this._recDone && this._recResult?.length) {
+    if (this._recResult?.length) {
       quality = this._scorePronunciation(target, this._recResult);
       heard = this._recResult[0];
-    } else {
-      srFailed = true;
+      this._recQuality = quality;
+      this._recHeard = heard;
+      this._renderAutoSpeakScore(quality, heard);
+      return;
     }
 
-    this._recQuality = quality;
-    this._recHeard = heard;
+    if (this._recBlob && this._recHasAudio) {
+      this._showManualSpeakReview(target);
+      return;
+    }
 
+    this._recQuality = 0;
+    this._recHeard = "";
+    const scoreArea = document.getElementById("rec-score-area");
+    if (scoreArea) {
+      scoreArea.innerHTML = '<span style="color:var(--danger)">录音太短或未检测到声音，请重新朗读</span>';
+    }
+    const actions = document.getElementById("rec-review-actions");
+    const confirmBtn = document.getElementById("rec-confirm-btn");
+    if (actions) actions.style.display = "flex";
+    if (confirmBtn) {
+      confirmBtn.textContent = "重新录音";
+      confirmBtn.onclick = () => UI._retrySpeakRecording();
+    }
+  },
+
+  _renderAutoSpeakScore(quality, heard) {
     const correct = quality >= 0.5;
     let rating = "Excellent!";
     if (quality < 0.5) rating = "再试试~";
@@ -1139,21 +1218,14 @@ const UI = {
 
     const scoreArea = document.getElementById("rec-score-area");
     if (scoreArea) {
-      if (srFailed) {
-        scoreArea.innerHTML = '<span style="color:var(--danger)">未能识别发音，请重新录音并检查麦克风权限</span>';
-      } else {
-        scoreArea.innerHTML = `<span style="color:${correct ? "var(--ok)" : "var(--danger)"}">发音评分：${Math.round(quality * 100)} 分 · ${rating}</span>${heard ? `<div class="rec-heard-text">识别：${this._esc(heard)}</div>` : ""}`;
-      }
+      scoreArea.innerHTML = `<span style="color:${correct ? "var(--ok)" : "var(--danger)"}">发音评分：${Math.round(quality * 100)} 分 · ${rating}</span>${heard ? `<div class="rec-heard-text">识别：${this._esc(heard)}</div>` : ""}`;
     }
 
     const actions = document.getElementById("rec-review-actions");
     const confirmBtn = document.getElementById("rec-confirm-btn");
     if (actions) actions.style.display = "flex";
     if (confirmBtn) {
-      if (srFailed) {
-        confirmBtn.textContent = "重新录音";
-        confirmBtn.onclick = () => UI._retrySpeakRecording();
-      } else if (correct) {
+      if (correct) {
         confirmBtn.textContent = "🚀 确认发射";
         confirmBtn.onclick = () => UI._confirmSpeakFire();
       } else {
@@ -1161,6 +1233,32 @@ const UI = {
         confirmBtn.onclick = () => UI._confirmSpeakFire();
       }
     }
+  },
+
+  _showManualSpeakReview(target) {
+    const reason = this._recSrUnsupported
+      ? "当前浏览器不支持英语语音识别（常见于 iPhone Safari），请听回放自评"
+      : "未能自动识别发音，请听回放核对";
+
+    const scoreArea = document.getElementById("rec-score-area");
+    if (scoreArea) {
+      scoreArea.innerHTML = `<span style="color:var(--gold)">${reason}</span><div class="rec-heard-text">目标：${this._esc(target)}</div>`;
+    }
+
+    const actions = document.getElementById("rec-review-actions");
+    const confirmBtn = document.getElementById("rec-confirm-btn");
+    if (actions) actions.style.display = "flex";
+    if (confirmBtn) {
+      confirmBtn.textContent = "✓ 我读对了";
+      confirmBtn.onclick = () => UI._confirmSpeakManual();
+    }
+  },
+
+  _confirmSpeakManual() {
+    const target = this.battle.current.correct;
+    this._recQuality = 0.82;
+    this._recHeard = target;
+    this._confirmSpeakFire();
   },
 
   _confirmSpeakFire() {
@@ -1190,6 +1288,10 @@ const UI = {
   },
 
   _resetRecState() {
+    if (this._recScorePollTimer) {
+      clearTimeout(this._recScorePollTimer);
+      this._recScorePollTimer = null;
+    }
     this._cleanupRecording();
     this._recStopping = false;
     this._recReviewing = false;
@@ -1200,6 +1302,10 @@ const UI = {
     this._recResult = null;
     this._recHasAudio = false;
     this._recChunks = [];
+    this._recSrEnded = false;
+    this._recSrUnsupported = false;
+    this._recSrError = null;
+    this._recReviewStart = 0;
   },
 
   _cleanupRecording() {
