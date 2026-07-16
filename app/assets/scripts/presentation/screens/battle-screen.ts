@@ -28,6 +28,7 @@ export type BattleModel = {
   onSpellClear?: () => void;
   onSpellAppend?: (ch: string) => void;
   onSpellSubmit?: () => void;
+  onReplayAudio?: () => void;
 };
 
 function makeSecondaryButton(
@@ -127,10 +128,15 @@ function makeOptionButton(
   return btn;
 }
 
-function renderChoiceArea(parent: Node, q: BattleQuestion, onAnswer: BattleModel["onAnswer"]): void {
+function renderChoiceArea(
+  parent: Node,
+  q: BattleQuestion,
+  onAnswer: BattleModel["onAnswer"],
+  offsetY = -40
+): void {
   const grid = new Node("OptionGrid");
   parent.addChild(grid);
-  grid.setPosition(0, -40, 0);
+  grid.setPosition(0, offsetY, 0);
 
   const optW = 280;
   const optH = 64;
@@ -352,7 +358,12 @@ export class BattleScreen {
     panel.addChild(answerArea);
     answerArea.setPosition(0, -20, 0);
 
-    if (q.type === "spelling") {
+    if (q.type === "listening" && model.onReplayAudio) {
+      makeSecondaryButton(panel, "ReplayAudio", "再听一次", 160, 48, () =>
+        model.onReplayAudio?.()
+      ).setPosition(0, 28, 0);
+      renderChoiceArea(answerArea, q, model.onAnswer, -56);
+    } else if (q.type === "spelling") {
       renderSpellingArea(answerArea, model);
     } else if (q.type === "speaking") {
       renderSpeakingArea(answerArea, q, model.onAnswer);

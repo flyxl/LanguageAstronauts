@@ -38,7 +38,7 @@ public class AppActivity extends CocosActivity {
         super.onCreate(savedInstanceState);
         // DO OTHER INITIALIZATION BELOW
         SDKWrapper.shared().init(this);
-
+        TtsBridge.init(this);
     }
 
     @Override
@@ -60,6 +60,7 @@ public class AppActivity extends CocosActivity {
         if (!isTaskRoot()) {
             return;
         }
+        TtsBridge.shutdown();
         SDKWrapper.shared().onDestroy();
     }
 

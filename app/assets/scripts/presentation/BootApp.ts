@@ -32,6 +32,11 @@ import type { WeaponId } from "../domain/weapons/weapons";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
 import { SystemClock } from "../infrastructure/system/system-clock";
 import { MathRandomSource } from "../infrastructure/system/math-random-source";
+import {
+  readRuntimeTtsEnv,
+  speakLearningText,
+  stopLearningSpeech,
+} from "../platform/tts";
 import { MainPathNav } from "./main-path/main-path-nav";
 import { BaseScreen } from "./screens/base-screen";
 import { BootProfileScreen } from "./screens/boot-profile-screen";
@@ -605,7 +610,22 @@ export class BootApp extends Component {
         this.renderCurrent();
       },
       onSpellSubmit: () => void this.onBattleAnswer(this.spellBuffer),
+      onReplayAudio: () => this.speakListeningPrompt(),
     });
+    this.speakListeningPrompt();
+  }
+
+  private speakListeningPrompt() {
+    if (!this.currentQ || this.currentQ.type !== "listening") return;
+    const enabled = this.profiles.currentSave().settings.ttsEnabled;
+    speakLearningText(
+      { text: this.currentQ.speakText, enabled, lang: "en-US" },
+      readRuntimeTtsEnv()
+    );
+  }
+
+  private stopBattleSpeech() {
+    stopLearningSpeech(readRuntimeTtsEnv());
   }
 
   private renderSettlement() {
@@ -707,6 +727,7 @@ export class BootApp extends Component {
     opts: { quality?: number; assisted?: boolean } = {}
   ) {
     if (!this.session || !this.currentQ) return;
+    this.stopBattleSpeech();
     this.session.answer(choice, opts);
     if (this.session.finished) {
       await this.repo.commit(this.profiles.currentSave());
@@ -720,6 +741,7 @@ export class BootApp extends Component {
   }
 
   private async onBattleQuit() {
+    this.stopBattleSpeech();
     await this.repo.commit(this.profiles.currentSave());
     // GDD: 紧急撤离仍进结算（保留学习进度，无胜利星章）
     if (this.session) {
