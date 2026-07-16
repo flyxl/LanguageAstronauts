@@ -31,6 +31,8 @@ export type StarMapModel = {
   units: StarMapUnit[];
   selectedUnitId: string | null;
   dueCount: number;
+  dailyDone: number;
+  dailyTotal: number;
   onSelectUnit: (id: string) => void;
   onSortie: () => void;
   onBase: () => void;
@@ -236,8 +238,18 @@ export class StarMapScreen {
         UiTheme.colors.bgPanel,
         UiTheme.colors.accentCta,
         () => model.onDueReview()
-      ).setPosition(0, this.height / 2 - 96, 0);
+      ).setPosition(-90, this.height / 2 - 96, 0);
     }
+
+    makeChip(
+      screen,
+      "DailyChip",
+      `今日护航 ${model.dailyDone}/${model.dailyTotal}`,
+      148,
+      40,
+      UiTheme.colors.bgDeep,
+      UiTheme.colors.accentInfo
+    ).setPosition(model.dueCount > 0 ? 90 : 0, this.height / 2 - 96, 0);
 
     const grid = new Node("UnitGrid");
     screen.addChild(grid);

@@ -21,7 +21,7 @@ import { PETS, type PetId } from "../domain/progression/pets";
 import { collectDueContentItems, countDueReviews } from "../domain/learning/collect-due-items";
 import { listDueContentIds } from "../domain/learning/mastery";
 import type { SaveV5 } from "../domain/save/save-v5";
-import { ensureChildProgression } from "../domain/save/create-default-save";
+import { ensureChildProgression, ensureDailyByChild } from "../domain/save/create-default-save";
 import {
   parseSavePayload,
   SAVE_EXPORT_FILE_NAME,
@@ -29,6 +29,7 @@ import {
   serializeSave,
 } from "../domain/save/save-transfer";
 import type { WeaponId } from "../domain/weapons/weapons";
+import { ensureDailyMissionState, type DailyProgressSignal } from "../domain/progression/daily-missions";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
 import { SystemClock } from "../infrastructure/system/system-clock";
 import { MathRandomSource } from "../infrastructure/system/math-random-source";
@@ -310,12 +311,18 @@ export class BootApp extends Component {
     const save = this.profiles.currentSave();
     const dueCount =
       child != null ? countDueReviews(save.learning, child.id, this.clock.now(), this.units) : 0;
+    const daily =
+      child != null
+        ? ensureDailyMissionState(ensureDailyByChild(save)[child.id], this.clock.now())
+        : null;
 
     this.starMapScreen.render({
       child: this.childSummary(),
       units: this.unitsWithStars(),
       selectedUnitId: this.nav.selectedUnitId,
       dueCount,
+      dailyDone: daily?.completedCount() ?? 0,
+      dailyTotal: 3,
       onSelectUnit: (id) => {
         this.nav.selectUnit(id);
         this.renderCurrent();
@@ -728,8 +735,32 @@ export class BootApp extends Component {
   ) {
     if (!this.session || !this.currentQ) return;
     this.stopBattleSpeech();
-    this.session.answer(choice, opts);
+    const qType = this.currentQ.type;
+    const mode = this.session.mode;
+    const result = this.session.answer(choice, opts);
+    const child = this.activeChild();
+    if (child && result.correct && (qType === "spelling" || qType === "listening" || qType === "speaking")) {
+      this.applyDailySignal(child.id, {
+        type: "weak_question_type_completed",
+        questionType: qType,
+      });
+    }
     if (this.session.finished) {
+      if (child) {
+        this.applyDailySignal(child.id, { type: "battle_finished" });
+        if (mode === "review") {
+          const dueLeft = countDueReviews(
+            this.profiles.currentSave().learning,
+            child.id,
+            this.clock.now(),
+            this.units
+          );
+          if (dueLeft === 0) {
+            this.applyDailySignal(child.id, { type: "due_reviews_cleared" });
+          }
+        }
+        this.claimDailyIfReady(child.id);
+      }
       await this.repo.commit(this.profiles.currentSave());
       this.nav.goSettlement();
       this.renderCurrent();
@@ -738,6 +769,27 @@ export class BootApp extends Component {
     this.currentQ = this.session.nextQuestion();
     this.spellBuffer = "";
     this.renderCurrent();
+  }
+
+  private applyDailySignal(childId: string, signal: DailyProgressSignal) {
+    const save = this.profiles.currentSave();
+    const bag = ensureDailyByChild(save);
+    const tracker = ensureDailyMissionState(bag[childId], this.clock.now());
+    bag[childId] = tracker.apply(signal);
+    save.updatedAt = this.clock.now();
+  }
+
+  private claimDailyIfReady(childId: string) {
+    const save = this.profiles.currentSave();
+    const bag = ensureDailyByChild(save);
+    const tracker = ensureDailyMissionState(bag[childId], this.clock.now());
+    const claimed = tracker.claimIfReady(15);
+    bag[childId] = claimed.state;
+    if (claimed.alloy > 0) {
+      const prog = ensureChildProgression(save, childId);
+      prog.alloy += claimed.alloy;
+    }
+    save.updatedAt = this.clock.now();
   }
 
   private async onBattleQuit() {

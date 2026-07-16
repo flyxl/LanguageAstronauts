@@ -1,3 +1,5 @@
+import type { DailyMissionState } from "../progression/daily-missions";
+
 export interface ChildProfile {
   id: string;
   name: string;
@@ -38,6 +40,8 @@ export interface SaveV5 {
   learning: Record<string, LearningRecord>;
   /** per-child progression keyed by childId */
   progressionByChild: Record<string, ChildProgression>;
+  /** per-child daily missions keyed by childId (optional for older saves) */
+  dailyByChild?: Record<string, DailyMissionState>;
   settings: {
     soundEnabled: boolean;
     bgmEnabled: boolean;

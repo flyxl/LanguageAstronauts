@@ -21,6 +21,7 @@ export class ProfileService {
 
   async start(): Promise<void> {
     this.save = (await this.repository.load()) ?? createDefaultSave(this.clock.now());
+    if (!this.save.dailyByChild) this.save.dailyByChild = {};
     if (!(await this.repository.load())) {
       await this.repository.commit(this.save);
     }
@@ -29,6 +30,7 @@ export class ProfileService {
   async reload(): Promise<void> {
     const loaded = await this.repository.load();
     if (!loaded) throw new Error("Save missing after reload");
+    if (!loaded.dailyByChild) loaded.dailyByChild = {};
     this.save = loaded;
   }
 

@@ -7,6 +7,7 @@ export function createDefaultSave(now: number): SaveV5 {
     children: {},
     learning: {},
     progressionByChild: {},
+    dailyByChild: {},
     settings: {
       soundEnabled: true,
       bgmEnabled: true,
@@ -24,4 +25,11 @@ export function ensureChildProgression(save: SaveV5, childId: string) {
     save.progressionByChild[childId] = createChildProgression();
   }
   return save.progressionByChild[childId];
+}
+
+export function ensureDailyByChild(save: SaveV5): Record<string, import("../progression/daily-missions").DailyMissionState> {
+  if (!save.dailyByChild) {
+    save.dailyByChild = {};
+  }
+  return save.dailyByChild;
 }

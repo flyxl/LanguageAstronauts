@@ -22,5 +22,8 @@ export function parseSavePayload(raw: string): SaveV5 {
   if (save.version !== 5) {
     throw new Error(`Unsupported save version: ${String((parsed as { version?: unknown }).version)}`);
   }
+  if (!save.dailyByChild) {
+    save.dailyByChild = {};
+  }
   return save;
 }

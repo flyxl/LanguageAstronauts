@@ -72,7 +72,7 @@ export class BattleSession {
     private readonly clock: Clock,
     private readonly random: RandomSource,
     private readonly events: EventBus<AppEvents>,
-    private readonly mode: "campaign" | "review" = "campaign"
+    readonly mode: "campaign" | "review" = "campaign"
   ) {
     this.battleId = `battle_${clock.now()}`;
     if (this.mode === "review") {

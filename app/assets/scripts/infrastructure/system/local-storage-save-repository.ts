@@ -9,7 +9,9 @@ function parse(raw: string | null): SaveV5 | null {
   if (!raw) return null;
   try {
     const value = JSON.parse(raw) as SaveV5;
-    return value.version === 5 ? value : null;
+    if (value.version !== 5) return null;
+    if (!value.dailyByChild) value.dailyByChild = {};
+    return value;
   } catch {
     return null;
   }
