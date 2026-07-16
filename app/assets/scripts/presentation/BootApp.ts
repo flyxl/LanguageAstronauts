@@ -7,7 +7,9 @@ import {
   resources,
   JsonAsset,
   profiler,
+  native,
 } from "cc";
+import bundledCatalog from "../../content/catalog.json";
 import type { AppEvents } from "../core/app-events";
 import { EventBus } from "../core/event-bus";
 import { BattleSession } from "../domain/battle/battle-session";
@@ -20,6 +22,12 @@ import { collectDueContentItems, countDueReviews } from "../domain/learning/coll
 import { listDueContentIds } from "../domain/learning/mastery";
 import type { SaveV5 } from "../domain/save/save-v5";
 import { ensureChildProgression } from "../domain/save/create-default-save";
+import {
+  parseSavePayload,
+  SAVE_EXPORT_FILE_NAME,
+  SAVE_EXPORT_STORAGE_KEY,
+  serializeSave,
+} from "../domain/save/save-transfer";
 import type { WeaponId } from "../domain/weapons/weapons";
 import { LocalStorageSaveRepository } from "../infrastructure/system/local-storage-save-repository";
 import { SystemClock } from "../infrastructure/system/system-clock";
@@ -150,6 +158,7 @@ export class BootApp extends Component {
   private prepNode: Node | null = null;
   private profileErrorNode: Node | null = null;
   private reviewHintNode: Node | null = null;
+  private reportToastNode: Node | null = null;
   private deployCapHint = false;
   private pendingBattleMode: "campaign" | "review" = "campaign";
 
@@ -170,6 +179,17 @@ export class BootApp extends Component {
     this.renderCurrent();
   }
 
+  private applyCatalogJson(json: { units?: CatalogUnit[] } | null | undefined): boolean {
+    const source = json?.units;
+    if (!source || source.length === 0) return false;
+    this.units = source.slice(0, 8).map((u) => ({
+      id: u.id,
+      title: u.title,
+      items: (u.items ?? []) as ContentItem[],
+    }));
+    return this.units.length > 0;
+  }
+
   private async loadCatalog() {
     try {
       const asset = await new Promise<JsonAsset | null>((resolve) => {
@@ -178,17 +198,14 @@ export class BootApp extends Component {
           else resolve(data);
         });
       });
-      if (asset?.json) {
-        const json = asset.json as { units?: CatalogUnit[] };
-        this.units = (json.units ?? []).slice(0, 8).map((u) => ({
-          id: u.id,
-          title: u.title,
-          items: (u.items ?? []) as ContentItem[],
-        }));
+      if (asset?.json && this.applyCatalogJson(asset.json as { units?: CatalogUnit[] })) {
         return;
       }
     } catch {
-      // fall through
+      // fall through to bundled import
+    }
+    if (this.applyCatalogJson(bundledCatalog as { units?: CatalogUnit[] })) {
+      return;
     }
     this.units = [
       { id: "3A-U1", title: "Unit 1 How do we feel?", items: FALLBACK_3A_U1_ITEMS },
@@ -221,6 +238,7 @@ export class BootApp extends Component {
   private renderCurrent() {
     this.clearPrepLabel();
     this.clearProfileError();
+    this.clearReportToast();
     this.profileScreen.destroy();
     this.starMapScreen.destroy();
     this.baseScreen.destroy();
@@ -381,8 +399,111 @@ export class BootApp extends Component {
         this.nav.backToStarMap();
         this.renderCurrent();
       },
+      onExportSave: () => void this.onExportSave(),
+      onImportSave: () => void this.onImportSave(),
     });
   }
+
+  private exportSaveStorage(): Storage {
+    const sysLike = (globalThis as { sys?: { localStorage?: Storage } }).sys;
+    if (sysLike?.localStorage) return sysLike.localStorage;
+    return (globalThis as { localStorage: Storage }).localStorage;
+  }
+
+  private tryCopyExportPayload(payload: string): void {
+    if (typeof native !== "undefined" && typeof native.copyTextToClipboard === "function") {
+      native.copyTextToClipboard(payload);
+    }
+  }
+
+  private tryWriteExportFile(payload: string): void {
+    if (typeof native === "undefined" || !native.fileUtils) return;
+    const path = `${native.fileUtils.getWritablePath()}${SAVE_EXPORT_FILE_NAME}`;
+    native.fileUtils.writeStringToFile(payload, path);
+  }
+
+  private tryReadExportPayload(): string | null {
+    const nativeLike = native as {
+      getTextFromClipboard?: () => string;
+      fileUtils?: {
+        getWritablePath: () => string;
+        getStringFromFile: (path: string) => string;
+        isFileExist: (path: string) => boolean;
+      };
+    };
+    if (typeof nativeLike?.getTextFromClipboard === "function") {
+      const clip = nativeLike.getTextFromClipboard().trim();
+      if (clip.startsWith("{")) return clip;
+    }
+    const storage = this.exportSaveStorage();
+    const cached = storage.getItem(SAVE_EXPORT_STORAGE_KEY);
+    if (cached) return cached;
+    if (nativeLike?.fileUtils) {
+      const path = `${nativeLike.fileUtils.getWritablePath()}${SAVE_EXPORT_FILE_NAME}`;
+      if (nativeLike.fileUtils.isFileExist(path)) {
+        return nativeLike.fileUtils.getStringFromFile(path);
+      }
+    }
+    return null;
+  }
+
+  private async onExportSave() {
+    try {
+      const payload = serializeSave(this.profiles.currentSave());
+      this.exportSaveStorage().setItem(SAVE_EXPORT_STORAGE_KEY, payload);
+      this.tryCopyExportPayload(payload);
+      this.tryWriteExportFile(payload);
+      this.showReportToast("存档已导出");
+    } catch {
+      this.showReportToast("导出失败");
+    }
+  }
+
+  private async onImportSave() {
+    const raw = this.tryReadExportPayload();
+    if (!raw) {
+      this.showReportToast("导入失败");
+      return;
+    }
+    try {
+      const save = parseSavePayload(raw);
+      await this.repo.commit(save);
+      await this.profiles.reload();
+      this.exportSaveStorage().setItem(SAVE_EXPORT_STORAGE_KEY, raw);
+      this.showReportToast("存档已导入");
+      this.renderCurrent();
+    } catch {
+      this.showReportToast("导入失败");
+    }
+  }
+
+  private showReportToast(message: string) {
+    this.clearReportToast();
+    const host = this.reportScreen.getScreenRoot() ?? this.screenHost;
+    const toast = new Node("ReportToast");
+    host.addChild(toast);
+    this.reportToastNode = toast;
+
+    const lbl = makeLabel(toast, "ToastLabel", {
+      string: message,
+      fontSize: UiTheme.font.body,
+      color: UiTheme.colors.accentInfo,
+      width: 320,
+      height: 32,
+    });
+    lbl.horizontalAlign = Label.HorizontalAlign.CENTER;
+    toast.setPosition(0, -this.viewport.height / 2 + 100, 0);
+
+    this.scheduleOnce(this.clearReportToast, 2);
+  }
+
+  private clearReportToast = (): void => {
+    this.unschedule(this.clearReportToast);
+    if (this.reportToastNode) {
+      this.reportToastNode.destroy();
+      this.reportToastNode = null;
+    }
+  };
 
   private async persistAndRerender() {
     await this.repo.commit(this.profiles.currentSave());
