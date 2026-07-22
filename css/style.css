@@ -634,3 +634,47 @@ body {
 .rec-confirm-btn:active {
   background: #0ea5e9 !important;
 }
+
+/* ======== 设置开关 / 拼写键盘输入 ======== */
+.settings-toggle {
+  min-width: 56px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+  cursor: pointer;
+}
+.settings-toggle.on {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  color: #7dd3fc;
+}
+.spell-input {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.08em;
+  outline: none;
+}
+.spell-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+.spell-input-ok {
+  border-color: #4ade80 !important;
+  color: #86efac;
+}
+.spell-input-bad {
+  border-color: #f87171 !important;
+  color: #fca5a5;
+}

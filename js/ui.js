@@ -523,6 +523,7 @@ const UI = {
               <button class="btn secondary" onclick="UI.showPets()">🐾 宠物舱</button>
             </div>
             <button class="btn secondary" onclick="UI.showStats()">📊 学情数据</button>
+            <button class="btn secondary" onclick="UI.showSettings()">⚙️ 设置</button>
             ${childCount > 1 ? `<button class="btn secondary" onclick="UI.showChildPicker()">👨‍👩‍👧‍👦 切换孩子</button>` : ""}
             <button class="btn secondary" onclick="UI.showCreateChild()">➕ 添加孩子</button>
           </div>
@@ -713,13 +714,22 @@ const UI = {
         <div class="text-xs opacity-40 mt-2">点击播放按钮听发音，然后选择答案</div>`;
       answersHtml = q.options.map((o, i) => `<button class="missile" data-i="${i}" onclick="UI.choose(${i}, this)">${o}</button>`).join("");
     } else if (q.style === "spell") {
-      // 拼写填空：字母拼块
+      const prefs = Storage.getChildPrefs();
+      const useKeyboard = prefs.spellInputMode === "keyboard";
       promptHtml = `
         <div class="text-xs opacity-60 mb-1">为这个怪兽密码拼出英文：</div>
         <div class="text-2xl font-black" style="color:var(--gold)">${q.prompt}</div>
-        <div id="spell-slots" class="flex justify-center gap-1 mt-3 flex-wrap" style="min-height:40px"></div>`;
-      answersHtml = `
-        <div class="flex flex-wrap justify-center gap-2" id="letter-tray">
+        ${useKeyboard
+          ? `<input id="spell-input" class="spell-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" placeholder="在此输入英文单词" />`
+          : `<div id="spell-slots" class="flex justify-center gap-1 mt-3 flex-wrap" style="min-height:40px"></div>`
+        }`;
+      answersHtml = useKeyboard
+        ? `<div class="grid grid-cols-2 gap-3 mt-3">
+             <button class="btn secondary" onclick="UI.spellKeyboardClear()">清空</button>
+             <button class="btn" id="fire-btn" onclick="UI.spellKeyboardFire()">🚀 发射</button>
+           </div>
+           <p class="text-xs opacity-40 mt-2 text-center">可用键盘输入，回车发射</p>`
+        : `<div class="flex flex-wrap justify-center gap-2" id="letter-tray">
           ${q.letters.map((c, i) => `<button class="missile" style="min-width:44px;min-height:44px;padding:8px;font-size:20px" data-li="${i}" onclick="UI.spellTap(${i}, this)">${c}</button>`).join("")}
         </div>
         <div class="grid grid-cols-2 gap-3 mt-3">
@@ -839,7 +849,12 @@ const UI = {
       setTimeout(() => Sound.speak(q.speak), 350);
     }
     if (q.style === "spell") {
-      this._renderSpellSlots();
+      const prefs = Storage.getChildPrefs();
+      if (prefs.spellInputMode === "keyboard") {
+        this._bindSpellKeyboard();
+      } else {
+        this._renderSpellSlots();
+      }
     }
   },
 
@@ -903,6 +918,46 @@ const UI = {
     const slots = document.getElementById("spell-slots");
     if (slots) {
       slots.innerHTML = `<span class="chip" style="color:${res.correct ? "var(--ok)" : "var(--danger)"};font-size:18px">${res.correct ? "✓ " + word : "✗ 正确：" + res.question.correct}</span>`;
+    }
+    this._afterAnswer(res);
+  },
+
+  _bindSpellKeyboard() {
+    const input = document.getElementById("spell-input");
+    if (!input) return;
+    input.value = "";
+    input.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this.spellKeyboardFire();
+      }
+    };
+    setTimeout(() => {
+      try { input.focus(); } catch (err) {}
+    }, 80);
+  },
+
+  spellKeyboardClear() {
+    if (this._locked) return;
+    const input = document.getElementById("spell-input");
+    if (input) {
+      input.value = "";
+      input.focus();
+    }
+  },
+
+  spellKeyboardFire() {
+    if (this._locked) return;
+    const input = document.getElementById("spell-input");
+    const word = (input?.value || "").trim();
+    if (!word) return;
+    this._locked = true;
+    if (input) input.disabled = true;
+    const res = this.battle.answer(word);
+    if (input) {
+      input.value = res.correct ? word : res.question.correct;
+      input.classList.toggle("spell-input-ok", !!res.correct);
+      input.classList.toggle("spell-input-bad", !res.correct);
     }
     this._afterAnswer(res);
   },
@@ -1578,7 +1633,8 @@ const UI = {
 
   _showEvolve(cb) {
     const st = this.battle.status();
-    const form = MONSTER_FORMS[this.battle.formIndex];
+    const forms = this.battle.forms || (typeof getActiveMonsterForms === "function" ? getActiveMonsterForms() : MONSTER_FORMS);
+    const form = forms[this.battle.formIndex];
     const skillLabel = form ? form.skillLabel : "";
     const banner = document.createElement("div");
     banner.className = "alert-banner";
@@ -1842,6 +1898,70 @@ const UI = {
     pp.fedAt = Date.now();
     Storage.save();
     this.showPets();
+  },
+
+  // ============ 设置 ============
+  showSettings() {
+    const prefs = Storage.getChildPrefs();
+    const soundOn = Storage.getSoundEnabled();
+    const ctx = Storage.getContext();
+    const spellOn = prefs.enableSpelling;
+    const mode = prefs.spellInputMode;
+    this._render(`
+      <div class="screen">
+        ${this._topBar()}
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-2xl font-black title-glow">⚙️ 设置</h1>
+          <button class="btn secondary" onclick="UI.showMenu()">返回</button>
+        </div>
+        <p class="text-xs opacity-50 mb-3">当前小航员：${this._esc(ctx.name || "小航员")}（拼写相关设置仅对本孩子生效）</p>
+
+        <div class="panel p-4 mb-3">
+          <div class="flex items-center justify-between gap-3">
+            <div class="text-left">
+              <div class="font-bold">需要拼写单词</div>
+              <div class="text-xs opacity-60 mt-1">关闭后跳过拼写吞噬怪（听→读→口语）</div>
+            </div>
+            <button class="settings-toggle ${spellOn ? "on" : ""}" onclick="UI.toggleEnableSpelling()">${spellOn ? "开" : "关"}</button>
+          </div>
+        </div>
+
+        <div class="panel p-4 mb-3 ${spellOn ? "" : "opacity-40"}">
+          <div class="font-bold mb-1">拼写输入方式</div>
+          <div class="text-xs opacity-60 mb-3">仅在开启拼写时生效</div>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="btn ${mode === "tiles" ? "" : "secondary"}" ${spellOn ? "" : "disabled"} onclick="UI.setSpellInputMode('tiles')">🔤 点选字母</button>
+            <button class="btn ${mode === "keyboard" ? "" : "secondary"}" ${spellOn ? "" : "disabled"} onclick="UI.setSpellInputMode('keyboard')">⌨️ 键盘输入</button>
+          </div>
+        </div>
+
+        <div class="panel p-4 mb-3">
+          <div class="flex items-center justify-between gap-3">
+            <div class="text-left">
+              <div class="font-bold">音效</div>
+              <div class="text-xs opacity-60 mt-1">本设备全局开关（所有孩子共用）</div>
+            </div>
+            <button class="settings-toggle ${soundOn ? "on" : ""}" onclick="UI.toggleSound()">${soundOn ? "开" : "关"}</button>
+          </div>
+        </div>
+      </div>`);
+  },
+
+  toggleEnableSpelling() {
+    const prefs = Storage.getChildPrefs();
+    Storage.updateChildPrefs({ enableSpelling: !prefs.enableSpelling });
+    this.showSettings();
+  },
+
+  setSpellInputMode(mode) {
+    if (!Storage.getChildPrefs().enableSpelling) return;
+    Storage.updateChildPrefs({ spellInputMode: mode === "keyboard" ? "keyboard" : "tiles" });
+    this.showSettings();
+  },
+
+  toggleSound() {
+    Storage.setSoundEnabled(!Storage.getSoundEnabled());
+    this.showSettings();
   },
 
   // ============ 学情数据（家长端预览） ============

@@ -6,6 +6,18 @@
 const STORAGE_KEY = "language_astronauts_save_v4";
 const LEGACY_KEY_V3 = "language_astronauts_save_v3";
 
+const DEFAULT_CHILD_PREFS = {
+  enableSpelling: true,
+  spellInputMode: "tiles", // "tiles" | "keyboard"
+};
+
+function _normalizeChildPrefs(prefs) {
+  const p = Object.assign({}, DEFAULT_CHILD_PREFS, prefs || {});
+  p.enableSpelling = p.enableSpelling !== false;
+  p.spellInputMode = p.spellInputMode === "keyboard" ? "keyboard" : "tiles";
+  return p;
+}
+
 function _newChildDefaults(name, textbookId, grade) {
   return {
     name: name || "小航员",
@@ -25,6 +37,7 @@ function _newChildDefaults(name, textbookId, grade) {
     garden: [],
     pets: [],
     deployedPets: [],
+    prefs: { ...DEFAULT_CHILD_PREFS },
     createdAt: Date.now(),
   };
 }
@@ -86,7 +99,23 @@ const Storage = {
       console.warn("存档读取失败，已重置：", e);
       this.root = structuredClone(DEFAULT_SAVE);
     }
+    this._ensureChildPrefs();
     return this.root;
+  },
+
+  _ensureChildPrefs() {
+    const root = this.getRoot();
+    if (!root.settings) root.settings = { sound: true };
+    if (typeof root.settings.sound !== "boolean") root.settings.sound = true;
+    let changed = false;
+    Object.values(root.children || {}).forEach((child) => {
+      const next = _normalizeChildPrefs(child.prefs);
+      if (!child.prefs || child.prefs.enableSpelling !== next.enableSpelling || child.prefs.spellInputMode !== next.spellInputMode) {
+        child.prefs = next;
+        changed = true;
+      }
+    });
+    if (changed) this.save();
   },
 
   save() {
@@ -182,6 +211,35 @@ const Storage = {
     return true;
   },
 
+  /** 当前孩子偏好（拼写开关 / 输入方式）；缺省补齐默认值 */
+  getChildPrefs() {
+    const child = this.getActiveChild();
+    if (!child) return { ...DEFAULT_CHILD_PREFS };
+    child.prefs = _normalizeChildPrefs(child.prefs);
+    return child.prefs;
+  },
+
+  updateChildPrefs(patch) {
+    const child = this.getActiveChild();
+    if (!child) return false;
+    child.prefs = _normalizeChildPrefs({ ...child.prefs, ...patch });
+    this.save();
+    return true;
+  },
+
+  getSoundEnabled() {
+    const root = this.getRoot();
+    return root.settings?.sound !== false;
+  },
+
+  setSoundEnabled(enabled) {
+    const root = this.getRoot();
+    if (!root.settings) root.settings = { sound: true };
+    root.settings.sound = !!enabled;
+    this.save();
+    return root.settings.sound;
+  },
+
   deleteChild(childId) {
     const root = this.getRoot();
     if (!root.children[childId]) return false;
@@ -243,6 +301,7 @@ const Storage = {
     if (version !== 4) throw new Error("不支持的存档版本");
     this.root = structuredClone(data);
     if (!this.root.settings) this.root.settings = { sound: true };
+    this._ensureChildPrefs();
     this.save();
     return this.root;
   },

@@ -59,6 +59,17 @@ function dialogueSpeakText(d) {
   return answer || prompt;
 }
 
+/** 当前孩子启用的 Boss 形态（关闭拼写时跳过 spell） */
+function getActiveMonsterForms() {
+  const prefs = typeof Storage !== "undefined" && Storage.getChildPrefs
+    ? Storage.getChildPrefs()
+    : { enableSpelling: true };
+  if (prefs.enableSpelling === false) {
+    return MONSTER_FORMS.filter((f) => f.skill !== "spell");
+  }
+  return MONSTER_FORMS.slice();
+}
+
 // 当前孩子教材词汇池（用于生成干扰项）
 function _courseData() {
   return Catalog.getActiveCourseData();
@@ -86,6 +97,7 @@ class Battle {
     this.reviewEntries = reviewEntries;
     this.sessionDueKeys = reviewEntries.map((e) => e.key);
 
+    this.forms = getActiveMonsterForms();
     this.maxHp = 160;
     this.hp = 160;
     this.combo = 0;
@@ -111,7 +123,8 @@ class Battle {
       return;
     }
     // 按当前 boss 的技能类型生成题目，确保每个词/句都练到该技能
-    const form = MONSTER_FORMS[Math.min(this.formIndex, MONSTER_FORMS.length - 1)];
+    const forms = this.forms || getActiveMonsterForms();
+    const form = forms[Math.min(this.formIndex, forms.length - 1)];
     const style = form.skill;
     const q = [];
 
@@ -145,7 +158,8 @@ class Battle {
   }
 
   _spawnMonster() {
-    const form = MONSTER_FORMS[Math.min(this.formIndex, MONSTER_FORMS.length - 1)];
+    const forms = this.forms || getActiveMonsterForms();
+    const form = forms[Math.min(this.formIndex, forms.length - 1)];
     const hp = this._calcMonsterHp(this.questionQueue);
     this.monster = {
       ...form,
@@ -306,13 +320,17 @@ class Battle {
 
   /** 复习题型：按记忆层级轮换听说读写，避免只会选择题 */
   _reviewStyleForEntry(entry) {
-    const vocabStyles = ["mc", "listen", "read", "spell", "speak"];
+    const prefs = Storage.getChildPrefs();
+    const vocabStyles = prefs.enableSpelling
+      ? ["mc", "listen", "read", "spell", "speak"]
+      : ["mc", "listen", "read", "speak"];
     const dialogueStyles = ["mc", "listen", "read", "speak"];
     const pool = entry.type === "vocab" ? vocabStyles : dialogueStyles;
     let style = pool[(Math.max(1, entry.level) - 1) % pool.length];
     if (entry.type === "vocab" && style === "spell" && /\s/.test(entry.item?.en || "")) {
       style = "read";
     }
+    if (style === "spell" && !prefs.enableSpelling) style = "read";
     return style;
   }
 
@@ -450,7 +468,8 @@ class Battle {
       // 怪兽死亡 -> 进化（仅推图且本题库已答完；复习模式不因 HP 归零提前结束）
       if (this.mode !== "review" && this.monster.hp <= 0 && questionsRemaining === 0) {
         result.monsterDead = true;
-        if (this.formIndex < MONSTER_FORMS.length - 1) {
+        const forms = this.forms || getActiveMonsterForms();
+        if (this.formIndex < forms.length - 1) {
           this.formIndex += 1;
           this._buildQueue();
           this._spawnMonster();
@@ -486,8 +505,9 @@ class Battle {
       return;
     }
     if (this.mode === "campaign") {
-      // 普通通关：击杀全部三形态 BOSS（给孩子即时成就感）
-      const allBossKilled = this.formIndex >= MONSTER_FORMS.length - 1 && this.monster.hp <= 0;
+      // 普通通关：击杀全部形态 BOSS
+      const forms = this.forms || getActiveMonsterForms();
+      const allBossKilled = this.formIndex >= forms.length - 1 && this.monster.hp <= 0;
       if (allBossKilled) {
         // 双轨制完美通关（额外成就）：水晶达上限 AND 本单元复习队列清空
         const unitPending = Storage.get().reviewQueue.filter((e) => e.unitId === this.unit.id).length;
@@ -527,7 +547,8 @@ class Battle {
 
   // 进度信息（供 UI 顶部状态栏）
   status() {
-    const form = MONSTER_FORMS[Math.min(this.formIndex, MONSTER_FORMS.length - 1)];
+    const forms = this.forms || getActiveMonsterForms();
+    const form = forms[Math.min(this.formIndex, forms.length - 1)];
     return {
       hp: this.hp,
       maxHp: this.maxHp,
@@ -536,7 +557,7 @@ class Battle {
       combo: this.combo,
       monster: this.monster,
       formIndex: this.formIndex,
-      formTotal: MONSTER_FORMS.length,
+      formTotal: forms.length,
       skillLabel: form ? form.skillLabel : "",
     };
   }
@@ -546,4 +567,5 @@ if (typeof window !== "undefined") {
   window.Battle = Battle;
   window.CRYSTAL_GOAL = CRYSTAL_GOAL;
   window.MONSTER_FORMS = MONSTER_FORMS;
+  window.getActiveMonsterForms = getActiveMonsterForms;
 }

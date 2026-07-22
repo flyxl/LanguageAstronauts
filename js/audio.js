@@ -23,7 +23,10 @@ const Sound = {
   },
 
   _enabled() {
-    return Storage.get().settings.sound;
+    if (typeof Storage !== "undefined" && Storage.getSoundEnabled) {
+      return Storage.getSoundEnabled();
+    }
+    return Storage.get()?.settings?.sound !== false;
   },
 
   _beep(freq, duration, type = "sine", gain = 0.15) {
