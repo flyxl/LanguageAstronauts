@@ -69,7 +69,7 @@ Cute chibi space-fantasy game asset for kids, semi-3D stylized, rounded friendly
 |------|-------------|
 | `pet-star-fox.png` | A Star Dust Fox space pet, orange-gold little fox with sparkling stardust fur, big friendly eyes, fluffy tail tipped with tiny flame-like starlight, loyal companion vibe, sitting front view, game companion character |
 | `pet-nebula-cat.png` | A Nebula Cat space pet, purple-and-white kitten with nebula-swirl eyes, golden ear tips, soft lavender nebula wisps floating around the body only, elegant mysterious yet adorable, sitting front view, game companion character |
-| `pet-crystal-dragon.png` | A Crystal Dragon space pet, translucent ice-cyan mini dragon with cut-crystal body facets, bright eyes, dorsal fins refracting rainbow highlights, gentle healing vibe, sitting front view, game companion character |
+| `pet-crystal-dragon.png` | A Crystal Chinese dragon space pet, cute chibi Eastern long dragon (shenlong style), serpentine body coiled in a gentle S-shape, no bat wings, small antler-like horns and whiskers, translucent ice-cyan crystal scales with cut-gem facets, pearl-like bright eyes, flowing mane and tail tip with rainbow refraction, auspicious cloud wisps around the body only, gentle healing guardian vibe, front 3/4 view, kid-friendly, game companion character |
 
 ---
 
