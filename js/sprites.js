@@ -167,17 +167,71 @@ const SPRITES = {
  */
 function getShipSVG(suitId, size = 64) {
   const svg = SPRITES.ships[suitId] || SPRITES.ships.classic;
-  return `<div style="width:${size}px;height:${size}px;display:inline-block">${svg}</div>`;
+  return `<div style="width:${size}px;height:${size}px;display:inline-block;overflow:hidden">${svg}</div>`;
+}
+
+/** 文生图资源根路径（相对站点根目录） */
+const GAME_ASSET_BASE = "assets/images";
+
+const WEAPON_IMAGES = {
+  pulse: "weapon-pulse.png",
+  plasma: "weapon-plasma.png",
+  flame: "weapon-flame.png",
+  frost: "weapon-frost.png",
+  thunder: "weapon-thunder.png",
+};
+
+const BOSS_IMAGES = {
+  listen: "boss-listen.png",
+  read: "boss-read.png",
+  write: "boss-spell.png",
+  spell: "boss-spell.png",
+  speak: "boss-speak.png",
+  // 旧 morph id 兼容
+  word: "boss-listen.png",
+  dialogue: "boss-speak.png",
+  reading: "boss-read.png",
+};
+
+const PET_IMAGES = {
+  star_fox: "pet-star-fox.png",
+  nebula_cat: "pet-nebula-cat.png",
+  crystal_dragon: "pet-crystal-dragon.png",
+};
+
+/**
+ * 固定显示尺寸的游戏图片（源文件 1024²，显示时强制约束，避免撑破布局）
+ * @param {string} filename
+ * @param {number} size
+ * @param {string} [alt]
+ */
+function gameAssetImg(filename, size, alt = "") {
+  const s = Math.max(1, Math.round(Number(size) || 48));
+  const src = `${GAME_ASSET_BASE}/${filename}`;
+  return `<img class="game-asset" src="${src}" alt="${alt}" width="${s}" height="${s}" style="width:${s}px;height:${s}px;max-width:${s}px;max-height:${s}px;object-fit:contain;display:block" loading="lazy" decoding="async" draggable="false" />`;
+}
+
+function getWeaponImg(weaponId, size = 48) {
+  let id = weaponId || "pulse";
+  if (id === "classic" || !WEAPON_IMAGES[id]) id = "pulse";
+  return gameAssetImg(WEAPON_IMAGES[id], size, id);
+}
+
+function getPetImg(speciesId, size = 48) {
+  const file = PET_IMAGES[speciesId];
+  if (!file) return "";
+  return gameAssetImg(file, size, speciesId || "pet");
 }
 
 /**
- * 获取怪兽 SVG
- * @param {'word'|'dialogue'|'reading'} formId
+ * 获取怪兽立绘（PNG）
+ * @param {string} formId listen|read|write|speak …
  * @param {number} [size=80]
  */
 function getMonsterSVG(formId, size = 80) {
-  const svg = SPRITES.monsters[formId] || SPRITES.monsters.word;
-  return `<div style="width:${size}px;height:${size}px;display:inline-block">${svg}</div>`;
+  const file = BOSS_IMAGES[formId] || BOSS_IMAGES.listen;
+  const s = Math.max(1, Math.round(Number(size) || 80));
+  return `<div class="monster-art" style="width:${s}px;height:${s}px;max-width:${s}px;max-height:${s}px;overflow:hidden">${gameAssetImg(file, s, formId || "boss")}</div>`;
 }
 
 /**
@@ -192,7 +246,11 @@ function getNpcSVG(name, size = 40) {
 
 if (typeof window !== "undefined") {
   window.SPRITES = SPRITES;
+  window.GAME_ASSET_BASE = GAME_ASSET_BASE;
   window.getShipSVG = getShipSVG;
   window.getMonsterSVG = getMonsterSVG;
   window.getNpcSVG = getNpcSVG;
+  window.getWeaponImg = getWeaponImg;
+  window.getPetImg = getPetImg;
+  window.gameAssetImg = gameAssetImg;
 }

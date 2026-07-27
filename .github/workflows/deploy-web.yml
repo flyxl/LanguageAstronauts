@@ -8,6 +8,7 @@ on:
       - "manifest.webmanifest"
       - "css/**"
       - "js/**"
+      - "assets/images/**"
       - ".github/workflows/deploy-web.yml"
   workflow_dispatch:
 
@@ -31,9 +32,10 @@ jobs:
 
       - name: Prepare static site
         run: |
-          mkdir -p _site
+          mkdir -p _site/assets
           cp index.html manifest.webmanifest _site/
           cp -r css js _site/
+          cp -r assets/images _site/assets/
           touch _site/.nojekyll
 
       - uses: actions/configure-pages@v5

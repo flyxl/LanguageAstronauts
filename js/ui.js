@@ -10,251 +10,42 @@ const WEAPONS = {
     desc: "标准配备", ability: "",
     color: "#38bdf8", beam: "linear-gradient(to top, #fff, #38bdf8)",
     beamWidth: 8, critColor: "#67e8f9",
-    svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="wp1" x1="32" y1="0" x2="32" y2="64"><stop stop-color="#a5f3fc"/><stop offset="1" stop-color="#0e7490"/></linearGradient>
-        <filter id="wg1"><feGaussianBlur stdDeviation="2" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <radialGradient id="wc1" cx="50%" cy="50%"><stop stop-color="#fff"/><stop offset="1" stop-color="#38bdf8"/></radialGradient>
-      </defs>
-      <rect x="27" y="14" width="10" height="40" rx="5" fill="url(#wp1)" stroke="#22d3ee" stroke-width="1.5"/>
-      <rect x="24" y="44" width="16" height="12" rx="4" fill="#0c4a6e" stroke="#38bdf8" stroke-width="1.2"/>
-      <path d="M29 14 L29 8 Q32 4 35 8 L35 14" fill="#38bdf8" stroke="#67e8f9" stroke-width="1"/>
-      <circle cx="32" cy="8" r="3" fill="url(#wc1)" filter="url(#wg1)">
-        <animate attributeName="r" values="3;4;3" dur="1.2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="32" cy="8" r="1.5" fill="#fff">
-        <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite"/>
-      </circle>
-      <rect x="23" y="26" width="18" height="3" rx="1.5" fill="#22d3ee" opacity="0.6"/>
-      <rect x="25" y="32" width="14" height="2" rx="1" fill="#22d3ee" opacity="0.4"/>
-      <circle cx="28" cy="50" r="1.5" fill="#38bdf8"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle>
-      <circle cx="36" cy="50" r="1.5" fill="#38bdf8"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite" begin="1s"/></circle>
-    </svg>`,
   },
   plasma: {
     name: "等离子双管炮", price: 200,
     desc: "双束齐发，连击加成", ability: "连击伤害+25%",
     color: "#a78bfa", beam: "linear-gradient(to top, #fff, #a78bfa, #7c3aed)",
     beamWidth: 6, critColor: "#c4b5fd",
-    svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="wp2" x1="0" y1="32" x2="64" y2="32"><stop stop-color="#c4b5fd"/><stop offset="1" stop-color="#6d28d9"/></linearGradient>
-        <filter id="wg2"><feGaussianBlur stdDeviation="2.5" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <radialGradient id="wcore2"><stop stop-color="#ede9fe"/><stop offset="1" stop-color="#7c3aed"/></radialGradient>
-      </defs>
-      <rect x="14" y="16" width="8" height="34" rx="4" fill="url(#wp2)" stroke="#a78bfa" stroke-width="1.5"/>
-      <rect x="42" y="16" width="8" height="34" rx="4" fill="url(#wp2)" stroke="#a78bfa" stroke-width="1.5"/>
-      <path d="M22 34 Q32 28 42 34 Q32 40 22 34 Z" fill="#4c1d95" stroke="#a78bfa" stroke-width="1"/>
-      <circle cx="32" cy="34" r="6" fill="url(#wcore2)" filter="url(#wg2)">
-        <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="32" cy="34" r="2.5" fill="#fff" opacity="0.9">
-        <animate attributeName="opacity" values="0.9;0.4;0.9" dur="0.7s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="18" cy="18" r="3.5" fill="#1e1b4b" stroke="#c4b5fd" stroke-width="1.5" filter="url(#wg2)"/>
-      <circle cx="46" cy="18" r="3.5" fill="#1e1b4b" stroke="#c4b5fd" stroke-width="1.5" filter="url(#wg2)"/>
-      <circle cx="18" cy="18" r="1.5" fill="#e9d5ff"><animate attributeName="r" values="1;2.5;1" dur="0.6s" repeatCount="indefinite"/></circle>
-      <circle cx="46" cy="18" r="1.5" fill="#e9d5ff"><animate attributeName="r" values="1;2.5;1" dur="0.6s" repeatCount="indefinite" begin="0.3s"/></circle>
-      <path d="M16 16 L16 10 Q18 6 20 10 L20 16" fill="#c4b5fd"/><path d="M44 16 L44 10 Q46 6 48 10 L48 16" fill="#c4b5fd"/>
-      <line x1="18" y1="22" x2="18" y2="46" stroke="#c4b5fd" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.5"/>
-      <line x1="46" y1="22" x2="46" y2="46" stroke="#c4b5fd" stroke-width="0.8" stroke-dasharray="2 3" opacity="0.5"/>
-    </svg>`,
   },
   flame: {
     name: "烈焰喷射器", price: 350,
     desc: "范围灼烧，恐惧效果", ability: "答对后额外灼烧 5 伤害",
     color: "#f97316", beam: "linear-gradient(to top, #fbbf24, #f97316, #ef4444)",
     beamWidth: 14, critColor: "#fbbf24",
-    svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="wp3" x1="32" y1="0" x2="32" y2="64"><stop stop-color="#fef3c7"/><stop offset=".3" stop-color="#fbbf24"/><stop offset=".7" stop-color="#f97316"/><stop offset="1" stop-color="#7c2d12"/></linearGradient>
-        <filter id="wg3"><feGaussianBlur stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <radialGradient id="wfire3"><stop stop-color="#fff"/><stop offset=".4" stop-color="#fde68a"/><stop offset="1" stop-color="#f97316" stop-opacity="0"/></radialGradient>
-      </defs>
-      <path d="M32 2 Q42 12 40 22 Q46 16 46 28 Q48 38 42 44 L38 56 L26 56 L22 44 Q16 38 18 28 Q18 16 24 22 Q22 12 32 2 Z" fill="url(#wp3)" stroke="#dc2626" stroke-width="1.5" filter="url(#wg3)">
-        <animate attributeName="d" values="M32 2 Q42 12 40 22 Q46 16 46 28 Q48 38 42 44 L38 56 L26 56 L22 44 Q16 38 18 28 Q18 16 24 22 Q22 12 32 2 Z;M32 4 Q40 14 38 24 Q44 18 44 30 Q46 38 40 44 L38 56 L26 56 L24 44 Q18 38 20 30 Q20 18 26 24 Q24 14 32 4 Z;M32 2 Q42 12 40 22 Q46 16 46 28 Q48 38 42 44 L38 56 L26 56 L22 44 Q16 38 18 28 Q18 16 24 22 Q22 12 32 2 Z" dur="1.5s" repeatCount="indefinite"/>
-      </path>
-      <ellipse cx="32" cy="18" rx="6" ry="8" fill="url(#wfire3)" opacity="0.8">
-        <animate attributeName="ry" values="8;6;8" dur="0.5s" repeatCount="indefinite"/>
-      </ellipse>
-      <ellipse cx="32" cy="18" rx="3" ry="5" fill="#fff" opacity="0.6">
-        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.3s" repeatCount="indefinite"/>
-      </ellipse>
-      <circle cx="26" cy="30" r="2" fill="#fde68a" opacity="0.5"><animate attributeName="cy" values="30;26;30" dur="1s" repeatCount="indefinite"/></circle>
-      <circle cx="38" cy="32" r="1.5" fill="#fbbf24" opacity="0.4"><animate attributeName="cy" values="32;28;32" dur="0.8s" repeatCount="indefinite" begin="0.3s"/></circle>
-      <rect x="27" y="52" width="10" height="8" rx="3" fill="#451a03" stroke="#f97316" stroke-width="1.2"/>
-      <circle cx="32" cy="56" r="2" fill="#f97316"><animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite"/></circle>
-    </svg>`,
   },
   frost: {
     name: "冰霜水晶炮", price: 500,
     desc: "冻结目标，水晶增幅", ability: "水晶获取+30%",
     color: "#67e8f9", beam: "linear-gradient(to top, #fff, #67e8f9, #06b6d4)",
     beamWidth: 10, critColor: "#a5f3fc",
-    svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="wp4" x1="32" y1="0" x2="32" y2="64"><stop stop-color="#ecfeff"/><stop offset="1" stop-color="#0e7490"/></linearGradient>
-        <filter id="wg4"><feGaussianBlur stdDeviation="2.5" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <radialGradient id="wice4"><stop stop-color="#fff"/><stop offset=".5" stop-color="#a5f3fc"/><stop offset="1" stop-color="#06b6d4" stop-opacity="0.3"/></radialGradient>
-      </defs>
-      <polygon points="32,2 38,16 54,18 44,30 46,46 32,40 18,46 20,30 10,18 26,16" fill="url(#wp4)" stroke="#22d3ee" stroke-width="1.5" filter="url(#wg4)">
-        <animateTransform attributeName="transform" type="rotate" from="0 32 26" to="5 32 26" dur="3s" values="0 32 26;3 32 26;0 32 26;-3 32 26;0 32 26" repeatCount="indefinite"/>
-      </polygon>
-      <polygon points="32,10 35,18 43,20 38,26 39,34 32,30 25,34 26,26 21,20 29,18" fill="#cffafe" opacity="0.6"/>
-      <circle cx="32" cy="24" r="8" fill="url(#wice4)" filter="url(#wg4)"/>
-      <path d="M32 18 L32 30 M26 24 L38 24 M28 20 L36 28 M36 20 L28 28" stroke="#fff" stroke-width="1.5" stroke-linecap="round">
-        <animateTransform attributeName="transform" type="rotate" from="0 32 24" to="360 32 24" dur="4s" repeatCount="indefinite"/>
-      </path>
-      <circle cx="32" cy="24" r="3" fill="#fff" opacity="0.8">
-        <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="24" cy="14" r="1.5" fill="#a5f3fc" opacity="0.6"><animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/></circle>
-      <circle cx="42" cy="16" r="1" fill="#67e8f9" opacity="0.5"><animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite" begin="1s"/></circle>
-      <circle cx="20" cy="32" r="1.2" fill="#a5f3fc" opacity="0.4"><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="0.5s"/></circle>
-      <rect x="27" y="48" width="10" height="10" rx="4" fill="#164e63" stroke="#22d3ee" stroke-width="1"/>
-      <circle cx="32" cy="53" r="2" fill="#67e8f9"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/></circle>
-    </svg>`,
   },
   thunder: {
     name: "雷神电弧炮", price: 800,
     desc: "闪电毁灭，暴击之王", ability: "暴击率+15%，暴击伤害+50%",
     color: "#fbbf24", beam: "linear-gradient(to top, #fff, #fbbf24, #f59e0b)",
     beamWidth: 12, critColor: "#fde68a",
-    svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="wp5" x1="32" y1="0" x2="32" y2="64"><stop stop-color="#fef9c3"/><stop offset=".5" stop-color="#fbbf24"/><stop offset="1" stop-color="#92400e"/></linearGradient>
-        <filter id="wg5"><feGaussianBlur stdDeviation="3.5" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <filter id="wg5b"><feGaussianBlur stdDeviation="1.5" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <path d="M38 2 L20 28 L30 28 L16 60 L50 22 L36 22 Z" fill="url(#wp5)" stroke="#d97706" stroke-width="2" filter="url(#wg5)">
-        <animate attributeName="opacity" values="1;0.85;1" dur="0.15s" repeatCount="indefinite"/>
-      </path>
-      <path d="M36 8 L24 26 L30 26 L22 46" stroke="#fff" stroke-width="3" opacity="0.7" stroke-linecap="round" filter="url(#wg5b)">
-        <animate attributeName="opacity" values="0.7;0.3;0.7;1;0.7" dur="0.2s" repeatCount="indefinite"/>
-      </path>
-      <circle cx="32" cy="30" r="16" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3 5" opacity="0.5" filter="url(#wg5b)">
-        <animateTransform attributeName="transform" type="rotate" from="0 32 30" to="360 32 30" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="32" cy="30" r="10" fill="none" stroke="#fde68a" stroke-width="1.5" stroke-dasharray="2 4" opacity="0.4">
-        <animateTransform attributeName="transform" type="rotate" from="360 32 30" to="0 32 30" dur="3s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="32" cy="30" r="4" fill="#fef3c7" opacity="0.6" filter="url(#wg5b)">
-        <animate attributeName="r" values="3;5;3" dur="0.5s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="22" cy="14" r="1.5" fill="#fde68a"><animate attributeName="opacity" values="0;1;0" dur="0.8s" repeatCount="indefinite"/></circle>
-      <circle cx="46" cy="20" r="1" fill="#fbbf24"><animate attributeName="opacity" values="0;1;0" dur="0.6s" repeatCount="indefinite" begin="0.2s"/></circle>
-      <circle cx="18" cy="40" r="1.2" fill="#fde68a"><animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite" begin="0.5s"/></circle>
-      <circle cx="48" cy="42" r="0.8" fill="#fbbf24"><animate attributeName="opacity" values="0;1;0" dur="0.7s" repeatCount="indefinite" begin="0.3s"/></circle>
-    </svg>`,
   },
 };
+
 
 // 宠物系统
 const PETS = [
   { id: "star_fox", name: "星尘狐", emoji: "🦊", price: 80, ability: "答对护盾+3", maxLevel: 5, color: "#f97316",
-    stages: ["🥚", "🦊", "🦊✨", "🔥🦊", "⭐🦊"],
-    svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="pf1" cx="50%" cy="35%"><stop stop-color="#fff7ed"/><stop offset=".6" stop-color="#fdba74"/><stop offset="1" stop-color="#ea580c"/></radialGradient>
-        <filter id="pfg"><feGaussianBlur stdDeviation="1" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <ellipse cx="32" cy="40" rx="20" ry="17" fill="url(#pf1)" stroke="#f97316" stroke-width="1"/>
-      <path d="M14 28 L18 8 L24 26 Z" fill="#fdba74" stroke="#f97316" stroke-width="1.2"/>
-      <path d="M40 26 L46 8 L50 28 Z" fill="#fdba74" stroke="#f97316" stroke-width="1.2"/>
-      <path d="M16 14 L18 8 L20 14" fill="#fef3c7" opacity="0.8"/>
-      <path d="M44 14 L46 8 L48 14" fill="#fef3c7" opacity="0.8"/>
-      <ellipse cx="24" cy="38" rx="7" ry="7.5" fill="#1c1917"/>
-      <ellipse cx="40" cy="38" rx="7" ry="7.5" fill="#1c1917"/>
-      <circle cx="26" cy="36" r="3.5" fill="#fff"/>
-      <circle cx="42" cy="36" r="3.5" fill="#fff"/>
-      <circle cx="25" cy="35" r="1.5" fill="#1c1917"/>
-      <circle cx="41" cy="35" r="1.5" fill="#1c1917"/>
-      <path d="M22 36 L20 34 L22 35" fill="#fff" opacity="0.9"/>
-      <path d="M38 36 L36 34 L38 35" fill="#fff" opacity="0.9"/>
-      <ellipse cx="32" cy="46" rx="3.5" ry="2.5" fill="#1c1917"/>
-      <path d="M28 48 Q32 53 36 48" stroke="#ea580c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-      <ellipse cx="18" cy="42" rx="5" ry="3.5" fill="#fecaca" opacity="0.5"/>
-      <ellipse cx="46" cy="42" rx="5" ry="3.5" fill="#fecaca" opacity="0.5"/>
-      <path d="M10 48 Q4 54 8 60 Q10 58 12 60" stroke="#f97316" stroke-width="3" fill="#fdba74" stroke-linecap="round"/>
-      <circle cx="6" cy="54" r="1" fill="#fde68a" opacity="0.8"><animate attributeName="opacity" values="0.8;0;0.8" dur="2s" repeatCount="indefinite"/></circle>
-      <circle cx="50" cy="16" r="1.2" fill="#fbbf24"><animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/></circle>
-      <circle cx="14" cy="12" r="1" fill="#fbbf24"><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="0.7s"/></circle>
-    </svg>` },
+    stages: ["🥚", "🦊", "🦊✨", "🔥🦊", "⭐🦊"] },
   { id: "nebula_cat", name: "星云猫", emoji: "🐱", price: 120, ability: "连击门槛-1（2连开始算暴击）", maxLevel: 5, color: "#a78bfa",
-    stages: ["🥚", "🐱", "🐱✨", "💜🐱", "👑🐱"],
-    svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="pc1" cx="50%" cy="35%"><stop stop-color="#f5f3ff"/><stop offset=".5" stop-color="#c4b5fd"/><stop offset="1" stop-color="#6d28d9"/></radialGradient>
-        <filter id="pcg"><feGaussianBlur stdDeviation="1.2" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <radialGradient id="pce"><stop stop-color="#e9d5ff"/><stop offset="1" stop-color="#7c3aed"/></radialGradient>
-      </defs>
-      <ellipse cx="32" cy="40" rx="20" ry="17" fill="url(#pc1)" stroke="#7c3aed" stroke-width="1"/>
-      <path d="M12 28 L16 6 L24 26 Z" fill="#ddd6fe" stroke="#8b5cf6" stroke-width="1.2"/>
-      <path d="M40 26 L48 6 L52 28 Z" fill="#ddd6fe" stroke="#8b5cf6" stroke-width="1.2"/>
-      <path d="M14 12 L16 6 L18 12" fill="#fde68a" opacity="0.7"/>
-      <path d="M46 12 L48 6 L50 12" fill="#fde68a" opacity="0.7"/>
-      <ellipse cx="23" cy="38" rx="8" ry="8.5" fill="#1e1b4b"/>
-      <ellipse cx="41" cy="38" rx="8" ry="8.5" fill="#1e1b4b"/>
-      <ellipse cx="23" cy="38" rx="6" ry="6.5" fill="url(#pce)" filter="url(#pcg)">
-        <animate attributeName="opacity" values="1;0.7;1" dur="2.5s" repeatCount="indefinite"/>
-      </ellipse>
-      <ellipse cx="41" cy="38" rx="6" ry="6.5" fill="url(#pce)" filter="url(#pcg)">
-        <animate attributeName="opacity" values="1;0.7;1" dur="2.5s" repeatCount="indefinite" begin="1.2s"/>
-      </ellipse>
-      <circle cx="26" cy="36" r="2.5" fill="#fff"/>
-      <circle cx="44" cy="36" r="2.5" fill="#fff"/>
-      <circle cx="25" cy="35" r="1" fill="#1e1b4b"/>
-      <circle cx="43" cy="35" r="1" fill="#1e1b4b"/>
-      <path d="M20 36 L18 34" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
-      <path d="M38 36 L36 34" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
-      <path d="M29 49 Q32 53 35 49" stroke="#7c3aed" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <ellipse cx="16" cy="42" rx="4.5" ry="3" fill="#fecdd3" opacity="0.5"/>
-      <ellipse cx="48" cy="42" rx="4.5" ry="3" fill="#fecdd3" opacity="0.5"/>
-      <path d="M10 36 L2 34 M10 38 L2 38 M10 40 L2 42" stroke="#ddd6fe" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M54 36 L62 34 M54 38 L62 38 M54 40 L62 42" stroke="#ddd6fe" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M32 56 Q28 62 32 64 Q36 62 32 56 Z" fill="#c4b5fd" stroke="#7c3aed" stroke-width="1"/>
-      <circle cx="12" cy="10" r="1.5" fill="#e9d5ff"><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/></circle>
-      <circle cx="52" cy="12" r="1" fill="#c4b5fd"><animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="0.5s"/></circle>
-      <circle cx="32" cy="4" r="1.2" fill="#a78bfa"><animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite" begin="1s"/></circle>
-    </svg>` },
+    stages: ["🥚", "🐱", "🐱✨", "💜🐱", "👑🐱"] },
   { id: "crystal_dragon", name: "水晶龙", emoji: "🐉", price: 150, ability: "每3回合自动恢复15护盾", maxLevel: 5, color: "#67e8f9",
-    stages: ["🥚", "🐉", "🐉✨", "💎🐉", "🌟🐉"],
-    svg: `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="pd1" cx="50%" cy="30%"><stop stop-color="#ecfeff"/><stop offset=".5" stop-color="#a5f3fc"/><stop offset="1" stop-color="#0e7490"/></radialGradient>
-        <filter id="pdg"><feGaussianBlur stdDeviation="1.5" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <radialGradient id="pdj"><stop stop-color="#fff"/><stop offset="1" stop-color="#22d3ee"/></radialGradient>
-      </defs>
-      <ellipse cx="32" cy="38" rx="18" ry="19" fill="url(#pd1)" stroke="#0891b2" stroke-width="1"/>
-      <path d="M16 22 L10 4 L22 20 Z" fill="#67e8f9" stroke="#0891b2" stroke-width="1.2"/>
-      <path d="M42 20 L54 4 L48 22 Z" fill="#67e8f9" stroke="#0891b2" stroke-width="1.2"/>
-      <path d="M26 18 L32 8 L38 18 Z" fill="#a5f3fc" stroke="#0891b2" stroke-width="1"/>
-      <path d="M30 14 L32 8 L34 14" fill="#fff" opacity="0.6"/>
-      <ellipse cx="24" cy="34" rx="7.5" ry="8" fill="#083344"/>
-      <ellipse cx="40" cy="34" rx="7.5" ry="8" fill="#083344"/>
-      <circle cx="26" cy="32" r="4" fill="url(#pdj)" filter="url(#pdg)">
-        <animate attributeName="r" values="3.5;4.5;3.5" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="42" cy="32" r="4" fill="url(#pdj)" filter="url(#pdg)">
-        <animate attributeName="r" values="3.5;4.5;3.5" dur="2s" repeatCount="indefinite" begin="1s"/>
-      </circle>
-      <circle cx="25" cy="31" r="1.5" fill="#fff"/>
-      <circle cx="41" cy="31" r="1.5" fill="#fff"/>
-      <path d="M22 32 L20 30" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
-      <path d="M38 32 L36 30" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
-      <path d="M28 48 Q32 53 36 48" stroke="#0891b2" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <ellipse cx="18" cy="40" rx="4" ry="2.5" fill="#fecdd3" opacity="0.4"/>
-      <ellipse cx="46" cy="40" rx="4" ry="2.5" fill="#fecdd3" opacity="0.4"/>
-      <path d="M12 46 Q6 52 9 58 Q11 56 13 58" stroke="#0891b2" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <path d="M52 46 Q58 52 55 58 Q53 56 51 58" stroke="#0891b2" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <polygon points="9,58 5,56 7,60" fill="#67e8f9"/>
-      <polygon points="55,58 59,56 57,60" fill="#67e8f9"/>
-      <ellipse cx="32" cy="38" rx="5" ry="3.5" fill="#a5f3fc" opacity="0.25"/>
-      <circle cx="10" cy="8" r="1.5" fill="#67e8f9"><animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite"/></circle>
-      <circle cx="56" cy="10" r="1" fill="#a5f3fc"><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="0.8s"/></circle>
-      <circle cx="32" cy="2" r="1.2" fill="#22d3ee"><animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="1.5s"/></circle>
-    </svg>` },
+    stages: ["🥚", "🐉", "🐉✨", "💎🐉", "🌟🐉"] },
 ];
 
 // 向后兼容旧存档（suit字段 → weapon字段）
@@ -488,7 +279,7 @@ const UI = {
     return `
       <div class="flex items-center justify-between gap-2 mb-3">
         <div class="flex gap-2 flex-wrap">
-          <span class="chip"><span style="display:inline-block;width:18px;height:18px;vertical-align:middle">${(WEAPONS[p.suit]||WEAPONS.pulse).svg}</span> <span style="color:${rank.color}">${rank.icon} ${rank.name}</span></span>
+          <span class="chip"><span style="display:inline-block;width:18px;height:18px;vertical-align:middle;overflow:hidden">${getWeaponImg(p.suit, 18)}</span> <span style="color:${rank.color}">${rank.icon} ${rank.name}</span></span>
           <span class="chip" style="color:var(--gold)">🏅 ${p.score}</span>
           <span class="chip" style="color:var(--crystal)">💎 ${p.crystals}</span>
         </div>
@@ -511,7 +302,7 @@ const UI = {
       <div class="screen">
         ${this._topBar()}
         <div class="panel text-center p-6 mt-6">
-          <div class="ship-hero" style="position:relative">${getShipSVG("classic", 100)}<div style="position:absolute;bottom:0;right:-10px;width:36px;height:36px">${(WEAPONS[p.suit]||WEAPONS.pulse).svg}</div></div>
+          <div class="ship-hero" style="position:relative">${getShipSVG("classic", 100)}<div style="position:absolute;bottom:0;right:-10px;width:36px;height:36px;overflow:hidden">${getWeaponImg(p.suit, 36)}</div></div>
           <h1 class="text-3xl font-black title-glow mt-2">${this._esc(ctx.name || p.name)}</h1>
           <p class="text-sm opacity-70 mt-1">时空语航员 · ${tb.shortName}</p>
           ${gradeLabel ? `<p class="text-xs mt-2"><span class="chip" style="cursor:pointer" onclick="UI.showChangeGrade()">📍 ${gradeLabel} <span class="opacity-60">切换</span></span></p>` : ""}
@@ -798,11 +589,11 @@ const UI = {
         <!-- 战场 -->
         <div class="panel battle-stage" id="stage">
           <div class="combo-pop" id="combo" style="${st.combo >= 2 ? "" : "display:none"}">Combo x${st.combo}</div>
-          <div class="monster" id="monster">${getMonsterSVG(st.monster.id, 90)}</div>
+          <div class="monster" id="monster">${getMonsterSVG(st.monster.id, 96)}</div>
           ${this._battlePetsHtml()}
           <div class="player-ship" id="ship">
             ${getShipSVG("classic", 56)}
-            <div style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:28px;height:28px">${(WEAPONS[Storage.get().player.suit] || WEAPONS.pulse).svg}</div>
+            <div style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:28px;height:28px;overflow:hidden">${getWeaponImg(Storage.get().player.suit, 28)}</div>
           </div>
         </div>
 
@@ -1511,10 +1302,9 @@ const UI = {
       .map((pp, i) => {
         const def = PETS.find((d) => d.id === pp.species);
         if (!def) return "";
-        const stage = getPetStageEmoji(def, pp.level);
         const scale = getPetVisualScale(pp.level);
         return `<div class="battle-pet" id="pet-${pp.species}" style="--pet-color:${def.color};--pet-scale:${scale};--i:${i}" title="${def.name} Lv.${pp.level}">
-          <span class="battle-pet-emoji">${stage}</span>
+          <span class="battle-pet-art">${getPetImg(pp.species, Math.round(28 * scale))}</span>
           <span class="battle-pet-lv">Lv.${pp.level}</span>
         </div>`;
       })
@@ -1725,7 +1515,7 @@ const UI = {
       const equipped = p.suit === id;
       return `
         <div class="panel p-4 text-center" style="border-color:${equipped ? w.color : ""}">
-          <div class="flex justify-center"><div style="width:48px;height:48px">${w.svg}</div></div>
+          <div class="flex justify-center"><div class="asset-box" style="width:48px;height:48px">${getWeaponImg(id, 48)}</div></div>
           <div class="font-bold mt-1" style="color:${w.color}">${w.name}</div>
           <div class="text-xs opacity-60">${w.desc}</div>
           ${w.ability ? `<div class="text-xs mt-1" style="color:var(--gold)">⚡ ${w.ability}</div>` : ""}
@@ -1744,7 +1534,7 @@ const UI = {
       const owned = (Storage.get().pets || []).find(pp => pp.species === pet.id);
       return `
         <div class="panel p-4 text-center">
-          <div class="flex justify-center"><div style="width:52px;height:52px">${pet.svg}</div></div>
+          <div class="flex justify-center"><div class="asset-box" style="width:52px;height:52px">${getPetImg(pet.id, 52)}</div></div>
           <div class="font-bold mt-1" style="color:${pet.color}">${pet.name}</div>
           <div class="text-xs opacity-60">${pet.ability}</div>
           <div class="text-xs opacity-60 mb-2">${owned ? "Lv." + owned.level : "💎 " + pet.price}</div>
@@ -1829,7 +1619,7 @@ const UI = {
         return `
           <div class="panel p-4 text-center" style="${deployed ? "border-color:" + def.color : ""}">
             <div class="text-3xl">${getPetStageEmoji(def, pp.level)}</div>
-            <div class="flex justify-center mt-1"><div style="width:${Math.round(48 * getPetVisualScale(pp.level))}px;height:${Math.round(48 * getPetVisualScale(pp.level))}px;transition:transform 0.3s">${def.svg}</div></div>
+            <div class="flex justify-center mt-1"><div class="asset-box" style="width:${Math.round(48 * getPetVisualScale(pp.level))}px;height:${Math.round(48 * getPetVisualScale(pp.level))}px;transition:transform 0.3s">${getPetImg(pp.species, Math.round(48 * getPetVisualScale(pp.level)))}</div></div>
             <div class="font-bold mt-1" style="color:${def.color}">${def.name}</div>
             <div class="text-xs" style="color:var(--gold)">Lv.${pp.level}${maxed ? " MAX" : ""}</div>
             <div class="text-xs opacity-80 mt-1" style="color:${def.color}">⚡ ${Combat.describePet(pp)}</div>

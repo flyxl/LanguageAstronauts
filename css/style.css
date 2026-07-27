@@ -197,17 +197,32 @@ body {
 
 .monster {
   position: absolute;
-  top: 16px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 76px;
-  filter: drop-shadow(0 0 20px rgba(167, 139, 250, 0.6));
+  width: 96px;
+  height: 96px;
+  max-width: 42%;
+  filter: drop-shadow(0 0 20px rgba(167, 139, 250, 0.55));
   animation: monster-bob 2.2s ease-in-out infinite;
   transition: filter 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+.monster .monster-art,
+.monster .game-asset {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 96px !important;
+  max-height: 96px !important;
+  object-fit: contain;
 }
 @keyframes monster-bob {
   0%, 100% { transform: translateX(-50%) translateY(0) scale(1); }
-  50% { transform: translateX(-50%) translateY(-14px) scale(1.03); }
+  50% { transform: translateX(-50%) translateY(-10px) scale(1.03); }
 }
 .monster.hit {
   animation: monster-hit 0.4s cubic-bezier(.36,.07,.19,.97);
@@ -270,6 +285,20 @@ body {
   font-size: calc(22px * var(--pet-scale, 1));
   line-height: 1;
   filter: drop-shadow(0 0 6px var(--pet-color));
+}
+.battle-pet-art {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px var(--pet-color));
+}
+.battle-pet-art .game-asset {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 28px !important;
+  max-height: 28px !important;
 }
 .battle-pet-lv {
   font-size: 10px;
@@ -487,6 +516,37 @@ body {
 }
 
 .scrollable { -webkit-overflow-scrolling: touch; }
+
+/* 游戏立绘：源图 1024²，显示必须受容器约束 */
+.game-asset {
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  vertical-align: middle;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.asset-box {
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.asset-box .game-asset {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+.monster-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
 
 /* 复习突袭提醒小红点 */
 .review-dot {
