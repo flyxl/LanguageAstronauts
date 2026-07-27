@@ -559,6 +559,98 @@ body {
   object-fit: contain;
 }
 
+/* 武器库 / 宠物大图预览 */
+.asset-preview-trigger {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+  border-radius: 12px;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.asset-preview-trigger:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.asset-preview-trigger:active {
+  transform: scale(0.98);
+}
+.asset-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+}
+.asset-preview-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  animation: fade-in 0.2s ease;
+}
+.asset-preview-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 360px);
+  padding: 24px 20px 20px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  animation: fade-in 0.2s ease;
+}
+.asset-preview-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  cursor: pointer;
+}
+.asset-preview-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  margin: 8px auto 16px;
+}
+.asset-preview-art .game-asset {
+  width: auto !important;
+  height: auto !important;
+  max-width: min(72vw, 280px) !important;
+  max-height: min(72vw, 280px) !important;
+}
+.asset-preview-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.asset-preview-desc {
+  font-size: 0.875rem;
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+.asset-preview-extra {
+  font-size: 0.75rem;
+  color: var(--gold);
+  opacity: 0.9;
+}
+.asset-preview-hint {
+  margin-top: 14px;
+  font-size: 0.7rem;
+  opacity: 0.4;
+}
+
 /* 复习突袭提醒小红点 */
 .review-dot {
   display: inline-block;

@@ -1515,7 +1515,9 @@ const UI = {
       const equipped = p.suit === id;
       return `
         <div class="panel p-4 text-center" style="border-color:${equipped ? w.color : ""}">
-          <div class="flex justify-center"><div class="asset-box" style="width:48px;height:48px">${getWeaponImg(id, 48)}</div></div>
+          <button type="button" class="asset-preview-trigger" title="点击查看大图" onclick="UI.showAssetPreview('weapon','${id}')">
+            <div class="flex justify-center"><div class="asset-box" style="width:48px;height:48px">${getWeaponImg(id, 48)}</div></div>
+          </button>
           <div class="font-bold mt-1" style="color:${w.color}">${w.name}</div>
           <div class="text-xs opacity-60">${w.desc}</div>
           ${w.ability ? `<div class="text-xs mt-1" style="color:var(--gold)">⚡ ${w.ability}</div>` : ""}
@@ -1534,7 +1536,9 @@ const UI = {
       const owned = (Storage.get().pets || []).find(pp => pp.species === pet.id);
       return `
         <div class="panel p-4 text-center">
-          <div class="flex justify-center"><div class="asset-box" style="width:52px;height:52px">${getPetImg(pet.id, 52)}</div></div>
+          <button type="button" class="asset-preview-trigger" title="点击查看大图" onclick="UI.showAssetPreview('pet','${pet.id}')">
+            <div class="flex justify-center"><div class="asset-box" style="width:52px;height:52px">${getPetImg(pet.id, 52)}</div></div>
+          </button>
           <div class="font-bold mt-1" style="color:${pet.color}">${pet.name}</div>
           <div class="text-xs opacity-60">${pet.ability}</div>
           <div class="text-xs opacity-60 mb-2">${owned ? "Lv." + owned.level : "💎 " + pet.price}</div>
@@ -1558,6 +1562,59 @@ const UI = {
         <div class="grid grid-cols-2 gap-3">${petCards}</div>
         <div class="h-6"></div>
       </div>`);
+  },
+
+  showAssetPreview(kind, id) {
+    const previewSize = Math.min(280, Math.max(160, Math.round(window.innerWidth * 0.55)));
+    let title = "";
+    let desc = "";
+    let extra = "";
+    let imgHtml = "";
+    let accent = "";
+
+    if (kind === "weapon") {
+      const w = WEAPONS[id];
+      if (!w) return;
+      title = w.name;
+      desc = w.desc;
+      accent = w.color;
+      const parts = [Combat.weaponDamageLabel(id)];
+      if (w.ability) parts.push(`⚡ ${w.ability}`);
+      extra = parts.join(" · ");
+      imgHtml = getWeaponImg(id, previewSize);
+    } else if (kind === "pet") {
+      const pet = PETS.find((p) => p.id === id);
+      if (!pet) return;
+      title = pet.name;
+      desc = pet.ability;
+      accent = pet.color;
+      const owned = (Storage.get().pets || []).find((pp) => pp.species === id);
+      extra = owned ? `已领养 · Lv.${owned.level}` : `领养需要 💎 ${pet.price}`;
+      imgHtml = getPetImg(id, previewSize);
+    } else {
+      return;
+    }
+
+    this.closeAssetPreview();
+    const overlay = document.createElement("div");
+    overlay.id = "asset-preview-overlay";
+    overlay.className = "asset-preview-overlay";
+    overlay.innerHTML = `
+      <div class="asset-preview-bg" onclick="UI.closeAssetPreview()"></div>
+      <div class="asset-preview-card" role="dialog" aria-modal="true" aria-label="${this._esc(title)}">
+        <button type="button" class="asset-preview-close" onclick="UI.closeAssetPreview()" aria-label="关闭">✕</button>
+        <div class="asset-preview-art">${imgHtml}</div>
+        <div class="asset-preview-title" style="color:${accent}">${this._esc(title)}</div>
+        <div class="asset-preview-desc">${this._esc(desc)}</div>
+        <div class="asset-preview-extra">${this._esc(extra)}</div>
+        <p class="asset-preview-hint">点击空白处关闭</p>
+      </div>`;
+    document.body.appendChild(overlay);
+  },
+
+  closeAssetPreview() {
+    const el = document.getElementById("asset-preview-overlay");
+    if (el) el.remove();
   },
 
   buySuit(id) {
@@ -1619,7 +1676,9 @@ const UI = {
         return `
           <div class="panel p-4 text-center" style="${deployed ? "border-color:" + def.color : ""}">
             <div class="text-3xl">${getPetStageEmoji(def, pp.level)}</div>
-            <div class="flex justify-center mt-1"><div class="asset-box" style="width:${Math.round(48 * getPetVisualScale(pp.level))}px;height:${Math.round(48 * getPetVisualScale(pp.level))}px;transition:transform 0.3s">${getPetImg(pp.species, Math.round(48 * getPetVisualScale(pp.level)))}</div></div>
+            <button type="button" class="asset-preview-trigger" title="点击查看大图" onclick="UI.showAssetPreview('pet','${pp.species}')">
+              <div class="flex justify-center mt-1"><div class="asset-box" style="width:${Math.round(48 * getPetVisualScale(pp.level))}px;height:${Math.round(48 * getPetVisualScale(pp.level))}px;transition:transform 0.3s">${getPetImg(pp.species, Math.round(48 * getPetVisualScale(pp.level)))}</div></div>
+            </button>
             <div class="font-bold mt-1" style="color:${def.color}">${def.name}</div>
             <div class="text-xs" style="color:var(--gold)">Lv.${pp.level}${maxed ? " MAX" : ""}</div>
             <div class="text-xs opacity-80 mt-1" style="color:${def.color}">⚡ ${Combat.describePet(pp)}</div>
