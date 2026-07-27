@@ -547,6 +547,17 @@ body {
   overflow: hidden;
   flex-shrink: 0;
 }
+.ship-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.ship-art .game-asset,
+.player-ship .ship-art .game-asset {
+  object-fit: contain;
+}
 
 /* 复习突袭提醒小红点 */
 .review-dot {

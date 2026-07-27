@@ -1,0 +1,90 @@
+{
+  "outputDir": "assets/images",
+  "model": "agnes-image-2.1-flash",
+  "size": "1K",
+  "ratio": "1:1",
+  "stylePrefix": "Cute chibi space-fantasy game asset for kids, semi-3D stylized, rounded friendly shapes, premium material detail, soft volumetric lighting, subtle rim glow, subject centered with generous empty margin, isolated cutout, transparent background PNG with alpha channel, no backdrop, no floor, no ground shadow, no environment, no scenery, no text, no watermark, no UI frame, crisp game-icon rendering",
+  "negativeHint": "Avoid: solid background, black backdrop, space nebula background, floor, ground shadow, studio backdrop, checkerboard, photo realism, horror, blood, readable English words, watermark, logo, UI, clutter, lowres, blurry",
+  "assets": [
+    {
+      "id": "weapon-pulse",
+      "file": "weapon-pulse.png",
+      "subject": "A sleek single-barrel pulse laser cannon, cyan-blue energy core, silver-white metal body, soft cyan muzzle glow and tiny particles, clean starter weapon, slight low-angle front view, game item icon"
+    },
+    {
+      "id": "weapon-plasma",
+      "file": "weapon-plasma.png",
+      "subject": "A twin-barrel plasma cannon, two purple energy barrels, bright violet crystal core in the center, deep purple and silver body, soft plasma arcs at both muzzles, cool but kid-friendly, game item icon"
+    },
+    {
+      "id": "weapon-flame",
+      "file": "weapon-flame.png",
+      "subject": "A flame thrower cannon with stylized orange-to-crimson energy fire at the muzzle, dark orange metal body with heat fins, warm powerful look, cartoon flame not realistic fire, kid-safe, game item icon"
+    },
+    {
+      "id": "weapon-frost",
+      "file": "weapon-frost.png",
+      "subject": "A frost crystal cannon with translucent ice-blue crystal prisms set into the barrel, frosty vapor and tiny ice particles at the muzzle, cool specular highlights, jewel-like premium look, game item icon"
+    },
+    {
+      "id": "weapon-thunder",
+      "file": "weapon-thunder.png",
+      "subject": "A thunder arc cannon with golden lightning patterns wrapping the body, bright electric arcs and gold-white sparks at the muzzle, deep gold and black armor plating, legendary crit weapon vibe, majestic but kid-friendly, game item icon"
+    },
+    {
+      "id": "boss-listen",
+      "file": "boss-listen.png",
+      "subject": "A purple Listening Devourer alien monster, chubby round body, oversized headphone-like ear fins, sonic wave emblem on chest, curious squinted eyes, adorable mildly mischievous, smaller stage-1 boss, game enemy character"
+    },
+    {
+      "id": "boss-read",
+      "file": "boss-read.png",
+      "subject": "A sky-blue Reading Devourer alien monster, eyes glowing like magnifying lenses, floating translucent rune shards around shoulders with no readable letters, clever expression, slightly larger than stage-1, game enemy character"
+    },
+    {
+      "id": "boss-spell",
+      "file": "boss-spell.png",
+      "subject": "A pink-magenta Spelling Devourer octopus-like alien, tentacles wrapping colorful alphabet building blocks that are abstract and not readable real words, inky pink-purple glow, playful tongue-out expression, mid-size stage-3 boss, game enemy character"
+    },
+    {
+      "id": "boss-speak",
+      "file": "boss-speak.png",
+      "subject": "A red-gold Speaking Devourer final boss, cute dragon-like space beast, glowing sonic resonance core in the throat, golden energy patterns on fins and horns, majestic not scary, big cartoon eyes, largest stage-4 epic game boss character"
+    },
+    {
+      "id": "pet-star-fox",
+      "file": "pet-star-fox.png",
+      "subject": "A Star Dust Fox space pet, orange-gold little fox with sparkling stardust fur, big friendly eyes, fluffy tail tipped with tiny flame-like starlight, loyal companion vibe, sitting front view, game companion character"
+    },
+    {
+      "id": "pet-nebula-cat",
+      "file": "pet-nebula-cat.png",
+      "subject": "A Nebula Cat space pet, purple-and-white kitten with nebula-swirl eyes, golden ear tips, soft lavender nebula wisps floating around the body only, elegant mysterious yet adorable, sitting front view, game companion character"
+    },
+    {
+      "id": "pet-crystal-dragon",
+      "file": "pet-crystal-dragon.png",
+      "subject": "A Crystal Dragon space pet, translucent ice-cyan mini dragon with cut-crystal body facets, bright eyes, dorsal fins refracting rainbow highlights, gentle healing vibe, sitting front view, game companion character"
+    },
+    {
+      "id": "ship-classic",
+      "file": "ship-classic.png",
+      "subject": "A cute chibi starter spaceship pointing straight upward, cyan-blue metallic hull with silver cockpit canopy, compact arrow-shaped fighter, soft orange-yellow twin engine flames at the bottom, friendly kid-safe sci-fi, slight 3/4 front view, game player ship icon"
+    },
+    {
+      "id": "ship-star",
+      "file": "ship-star.png",
+      "subject": "A cute chibi star-themed spaceship pointing straight upward, deep purple and violet hull with a bright golden star emblem on the chest, sleek wings, soft pink-magenta engine glow at bottom, magical premium skin, kid-friendly, game player ship icon"
+    },
+    {
+      "id": "ship-school",
+      "file": "ship-school.png",
+      "subject": "A cute chibi school shuttle spaceship pointing straight upward, rounded green oval hull like a friendly space bus, small side stabilizer fins, warm yellow landing light at bottom, wholesome student explorer vibe, kid-safe, game player ship icon"
+    },
+    {
+      "id": "ship-dragon",
+      "file": "ship-dragon.png",
+      "subject": "A cute chibi dragon-winged spaceship pointing straight upward, crimson-red armored hull with small dragon wings on both sides, golden engine exhaust, fierce but adorable cockpit eyes, legendary skin feel, kid-safe not scary, game player ship icon"
+    }
+  ]
+}

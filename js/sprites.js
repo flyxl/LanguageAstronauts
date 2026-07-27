@@ -160,14 +160,26 @@ const SPRITES = {
   </svg>`,
 };
 
+const SHIP_IMAGES = {
+  classic: "ship-classic.png",
+  star: "ship-star.png",
+  school: "ship-school.png",
+  dragon: "ship-dragon.png",
+};
+
+function getShipImg(shipId, size = 64) {
+  const file = SHIP_IMAGES[shipId] || SHIP_IMAGES.classic;
+  return gameAssetImg(file, size, shipId || "ship");
+}
+
 /**
- * 获取飞船 SVG
- * @param {string} suitId
+ * 获取飞船立绘（PNG，保留旧函数名供 UI 调用）
+ * @param {string} suitId classic|star|school|dragon
  * @param {number} [size=64]
  */
 function getShipSVG(suitId, size = 64) {
-  const svg = SPRITES.ships[suitId] || SPRITES.ships.classic;
-  return `<div style="width:${size}px;height:${size}px;display:inline-block;overflow:hidden">${svg}</div>`;
+  const s = Math.max(1, Math.round(Number(size) || 64));
+  return `<div class="ship-art" style="width:${s}px;height:${s}px;max-width:${s}px;max-height:${s}px;overflow:hidden">${getShipImg(suitId, s)}</div>`;
 }
 
 /** 文生图资源根路径（相对站点根目录） */
@@ -248,6 +260,7 @@ if (typeof window !== "undefined") {
   window.SPRITES = SPRITES;
   window.GAME_ASSET_BASE = GAME_ASSET_BASE;
   window.getShipSVG = getShipSVG;
+  window.getShipImg = getShipImg;
   window.getMonsterSVG = getMonsterSVG;
   window.getNpcSVG = getNpcSVG;
   window.getWeaponImg = getWeaponImg;
