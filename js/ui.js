@@ -116,6 +116,8 @@ const UI = {
   _startingBattle: false,
   _battleStartToken: 0,
   _deployPickerSelected: [],
+  _battleReadyPromise: null,
+  _deployConfirming: false,
 
   init() {
     this.el = document.getElementById("app");
@@ -486,6 +488,8 @@ const UI = {
   },
 
   _confirmDeployPicker() {
+    if (this._deployConfirming) return;
+    this._deployConfirming = true;
     Sound._ensure();
     Combat.setDeployedPets(this._deployPickerSelected || []);
     document.getElementById("deploy-picker-overlay")?.remove();
@@ -493,6 +497,7 @@ const UI = {
     this._deployPickerOnConfirm = null;
     this._deployPickerOnCancel = null;
     cb?.();
+    setTimeout(() => { this._deployConfirming = false; }, 800);
   },
 
   _cancelDeployPicker() {
@@ -585,6 +590,7 @@ const UI = {
 
   /** 战斗开始前语音 + 横幅：【军衔】【名字】，准备好干掉 Boss 了吗？ */
   _announceBattleReady() {
+    if (this._battleReadyPromise) return this._battleReadyPromise;
     if (!this.battle || this.battle._announcedReady) return Promise.resolve();
     this.battle._announcedReady = true;
     Sound._ensure();
@@ -608,11 +614,14 @@ const UI = {
       </div>`;
     document.body.appendChild(banner);
 
-    return Sound.narrate(line, { rate: 1.02, pitch: 1.18 }).then(() => {
+    this._battleReadyPromise = Sound.narrate(line, { rate: 1.02, pitch: 1.18 }).then(() => {
       banner.remove();
     }).catch(() => {
       banner.remove();
+    }).finally(() => {
+      this._battleReadyPromise = null;
     });
+    return this._battleReadyPromise;
   },
 
   _findUnit(unitId) {
@@ -1644,6 +1653,7 @@ const UI = {
     if (confirm("确定撤退吗？本次战斗的进度将保留已收集的水晶。")) {
       this._battleStartToken += 1;
       this._startingBattle = false;
+      this._battleReadyPromise = null;
       this.battle._end(false);
       this.showMenu();
     }

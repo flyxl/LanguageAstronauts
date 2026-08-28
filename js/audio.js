@@ -10,6 +10,8 @@ const Sound = {
   _speakQueue: [],
   _narrating: false,
   _speaking: false,
+  _currentNarrateText: null,
+  _currentNarratePromise: null,
 
   _ensure() {
     if (!this.ctx) {
@@ -189,8 +191,11 @@ const Sound = {
       return;
     }
 
-    const { text, opts, resolve } = this._narrateQueue.shift();
+    const item = this._narrateQueue.shift();
+    const { text, opts, resolve, promise } = item;
     this._narrating = true;
+    this._currentNarrateText = text;
+    this._currentNarratePromise = promise || null;
     const synth = window.speechSynthesis;
     const u = new SpeechSynthesisUtterance(text);
     const lang = opts.lang || "zh-CN";
@@ -217,6 +222,8 @@ const Sound = {
       if (resumeTimer) clearInterval(resumeTimer);
       if (maxTimer) clearTimeout(maxTimer);
       this._narrating = false;
+      this._currentNarrateText = null;
+      this._currentNarratePromise = null;
       resolve();
       this._drainNarrateQueue();
       this._drainSpeakQueue();
@@ -233,17 +240,25 @@ const Sound = {
     if (synth.paused) synth.resume();
   },
 
-  /** 中文语音播报（游戏事件解说）；多条自动排队，避免互相打断 */
+  /** 中文语音播报（游戏事件解说）；多条自动排队，相同文案合并为一次 */
   narrate(text, opts = {}) {
     if (!this._enabled() || !("speechSynthesis" in window)) {
       return Promise.resolve();
     }
     const raw = String(text || "").trim();
     if (!raw) return Promise.resolve();
-    return new Promise((resolve) => {
-      this._narrateQueue.push({ text: raw, opts, resolve });
-      this._drainNarrateQueue();
-    });
+
+    if (this._narrating && this._currentNarrateText === raw && this._currentNarratePromise) {
+      return this._currentNarratePromise;
+    }
+    const queued = this._narrateQueue.find((item) => item.text === raw);
+    if (queued?.promise) return queued.promise;
+
+    let resolve;
+    const promise = new Promise((r) => { resolve = r; });
+    this._narrateQueue.push({ text: raw, opts, resolve, promise });
+    this._drainNarrateQueue();
+    return promise;
   },
 
   /** 清空待播报到队列（不影响正在播放的一句） */
