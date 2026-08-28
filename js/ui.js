@@ -486,6 +486,7 @@ const UI = {
   },
 
   _confirmDeployPicker() {
+    Sound._ensure();
     Combat.setDeployedPets(this._deployPickerSelected || []);
     document.getElementById("deploy-picker-overlay")?.remove();
     const cb = this._deployPickerOnConfirm;
@@ -582,15 +583,36 @@ const UI = {
     });
   },
 
-  /** 战斗开始前语音：军衔 + 孩子名字 */
+  /** 战斗开始前语音 + 横幅：【军衔】【名字】，准备好干掉 Boss 了吗？ */
   _announceBattleReady() {
     if (!this.battle || this.battle._announcedReady) return Promise.resolve();
     this.battle._announcedReady = true;
+    Sound._ensure();
     const ctx = Storage.getContext();
     const p = Storage.get()?.player;
     const rank = getPlayerRank(p?.score || 0);
     const name = (ctx.name || p?.name || "小航员").trim();
-    return Sound.narrate(`${rank.name}${name}，准备好干掉 Boss 了吗？`, { rate: 1.05, pitch: 1.2 });
+    const callSign = `${rank.name}${name}`;
+    const line = `${callSign}，准备好干掉 Boss 了吗？`;
+
+    document.getElementById("battle-ready-banner")?.remove();
+    const banner = document.createElement("div");
+    banner.id = "battle-ready-banner";
+    banner.className = "battle-ready-banner";
+    banner.innerHTML = `
+      <div class="text-center animate__animated animate__zoomIn">
+        <div class="text-4xl">${rank.icon}</div>
+        <div class="text-2xl font-black mt-2" style="color:${rank.color}">${this._esc(callSign)}</div>
+        <div class="text-lg font-bold mt-3 title-glow">准备好干掉 Boss 了吗？</div>
+        <div class="text-xs opacity-50 mt-2">🔊 语音播报中…</div>
+      </div>`;
+    document.body.appendChild(banner);
+
+    return Sound.narrate(line, { rate: 1.02, pitch: 1.18 }).then(() => {
+      banner.remove();
+    }).catch(() => {
+      banner.remove();
+    });
   },
 
   _findUnit(unitId) {

@@ -517,6 +517,19 @@ body {
   backdrop-filter: blur(2px);
   animation: alert-flash 0.6s ease-in-out 3;
 }
+
+/* 开战就绪播报横幅 */
+.battle-ready-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 10040;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 16, 48, 0.72);
+  backdrop-filter: blur(3px);
+  pointer-events: none;
+}
 @keyframes alert-flash {
   0%, 100% { background: rgba(120, 0, 0, 0.15); }
   50% { background: rgba(220, 30, 30, 0.5); }
