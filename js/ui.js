@@ -74,13 +74,20 @@ function getPlayerRank(score) {
   return rank;
 }
 
+const PET_LEVEL_TIERS = ["幼体", "成长", "进化", "觉醒", "传说"];
+
 function getPetStageEmoji(def, level) {
   if (!def?.stages?.length) return def?.emoji || "🐾";
   return def.stages[Math.min(Math.max(1, level) - 1, def.stages.length - 1)];
 }
 
+function getPetStageLabel(level) {
+  return PET_LEVEL_TIERS[Math.min(Math.max(1, level) - 1, PET_LEVEL_TIERS.length - 1)] || "幼体";
+}
+
+/** 等级越高体型越大，战场与宠物舱同步 */
 function getPetVisualScale(level) {
-  return 0.82 + Math.min(5, level || 1) * 0.06;
+  return 0.73 + Math.min(5, level || 1) * 0.14;
 }
 
 // 成就徽章系统
@@ -578,12 +585,18 @@ const UI = {
     }
 
     const useGrid = q.style === "mc" || q.style === "listen" || q.style === "read";
+    const weaponId = Combat.normalizeWeaponId(Storage.get().player.suit);
+    const weaponDef = WEAPONS[weaponId] || WEAPONS.pulse;
+    const weaponChip = `<span class="chip weapon-chip" style="font-size:11px;padding:2px 8px;border-color:${weaponDef.color}55;color:${weaponDef.color}" title="${Combat.weaponDamageLabel(weaponId)}">${weaponDef.name} · ${Combat.weaponTierLabel(weaponId)}</span>`;
 
     this._render(`
       <div class="screen">
         <div class="flex items-center justify-between mb-2">
           <span class="chip">${modeLabel}</span>
-          <button class="btn secondary" style="padding:8px 14px" onclick="UI.quitBattle()">撤退</button>
+          <div class="flex items-center gap-2">
+            ${weaponChip}
+            <button class="btn secondary" style="padding:8px 14px" onclick="UI.quitBattle()">撤退</button>
+          </div>
         </div>
 
         <!-- 战场 -->
@@ -1298,14 +1311,24 @@ const UI = {
   _battlePetsHtml() {
     const pets = Combat.getDeployedPets();
     if (!pets.length) return "";
-    return `<div class="battle-pets">${pets
+    return `<div class="battle-pets" aria-label="出战宠物">
+      <div class="battle-pets-label">⚔️ 协同</div>
+      ${pets
       .map((pp, i) => {
         const def = PETS.find((d) => d.id === pp.species);
         if (!def) return "";
-        const scale = getPetVisualScale(pp.level);
-        return `<div class="battle-pet" id="pet-${pp.species}" style="--pet-color:${def.color};--pet-scale:${scale};--i:${i}" title="${def.name} Lv.${pp.level}">
-          <span class="battle-pet-art">${getPetImg(pp.species, Math.round(28 * scale))}</span>
-          <span class="battle-pet-lv">Lv.${pp.level}</span>
+        const lv = pp.level || 1;
+        const scale = getPetVisualScale(lv);
+        const stage = getPetStageEmoji(def, lv);
+        const tier = getPetStageLabel(lv);
+        const bonus = Combat.getPetBonuses([pp]);
+        return `<div class="battle-pet battle-pet-tier-${lv}" id="pet-${pp.species}" style="--pet-color:${def.color};--pet-scale:${scale};--i:${i}" title="${def.name} ${tier} Lv.${lv} · 协同攻击 +${bonus.petDamage}">
+          <span class="battle-pet-stage">${stage}</span>
+          <span class="battle-pet-art">${getPetImg(pp.species, Math.round(26 * scale))}</span>
+          <span class="battle-pet-meta">
+            <span class="battle-pet-lv">Lv.${lv}</span>
+            <span class="battle-pet-tier">${tier}</span>
+          </span>
         </div>`;
       })
       .join("")}</div>`;
@@ -1323,21 +1346,33 @@ const UI = {
   _fireLaser(crit) {
     const stage = document.getElementById("stage");
     if (!stage) return;
-    const w = WEAPONS[Storage.get().player.suit] || WEAPONS.pulse;
-    const beam = document.createElement("div");
-    beam.className = "laser-beam" + (crit ? " crit" : "");
-    beam.style.background = crit ? `linear-gradient(to top, #fff, ${w.critColor}, ${w.color})` : w.beam;
-    beam.style.width = (crit ? w.beamWidth + 6 : w.beamWidth) + "px";
-    beam.style.boxShadow = `0 0 24px ${w.color}, 0 0 48px ${w.color}44`;
-    stage.appendChild(beam);
+    const weaponId = Combat.normalizeWeaponId(Storage.get().player.suit);
+    const w = WEAPONS[weaponId] || WEAPONS.pulse;
+    const ws = Combat.getWeaponStats(weaponId);
+    const spawnBeam = (offsetX = 0, widthMul = 1) => {
+      const beam = document.createElement("div");
+      beam.className = "laser-beam" + (crit ? " crit" : "") + (weaponId === "flame" ? " flame" : weaponId === "thunder" ? " thunder" : "");
+      beam.style.background = crit ? `linear-gradient(to top, #fff, ${w.critColor}, ${w.color})` : w.beam;
+      const bw = (crit ? w.beamWidth + 6 : w.beamWidth) * widthMul;
+      beam.style.width = bw + "px";
+      beam.style.left = `calc(50% + ${offsetX}px)`;
+      beam.style.boxShadow = `0 0 24px ${w.color}, 0 0 48px ${w.color}44`;
+      stage.appendChild(beam);
+      setTimeout(() => beam.remove(), 380);
+    };
+    if (weaponId === "plasma") {
+      spawnBeam(-10, 0.85);
+      spawnBeam(10, 0.85);
+    } else {
+      spawnBeam(0, weaponId === "flame" ? 1.15 : 1);
+    }
     if (crit) {
       const flash = document.createElement("div");
       flash.className = "crit-flash";
-      flash.style.background = `radial-gradient(circle at 50% 30%, ${w.critColor}66, transparent 60%)`;
+      flash.style.background = `radial-gradient(circle at 50% 30%, ${w.critColor}${ws.tier >= 4 ? "aa" : "66"}, transparent 60%)`;
       stage.appendChild(flash);
       setTimeout(() => flash.remove(), 450);
     }
-    setTimeout(() => beam.remove(), 380);
   },
 
   _hitMonster(res) {
@@ -1540,8 +1575,8 @@ const UI = {
             <div class="flex justify-center"><div class="asset-box" style="width:52px;height:52px">${getPetImg(pet.id, 52)}</div></div>
           </button>
           <div class="font-bold mt-1" style="color:${pet.color}">${pet.name}</div>
-          <div class="text-xs opacity-60">${pet.ability}</div>
-          <div class="text-xs opacity-60 mb-2">${owned ? "Lv." + owned.level : "💎 " + pet.price}</div>
+          <div class="text-xs opacity-60">${(() => { const s = PET_SPECIES[pet.id]; return s ? `${getPetStageLabel(1)} · ${s.describe(1)}` : pet.ability; })()}</div>
+          <div class="text-xs opacity-60 mb-2">${owned ? `${getPetStageLabel(owned.level)} · Lv.${owned.level}` : "💎 " + pet.price}</div>
           ${owned
             ? `<button class="btn" style="width:100%" onclick="UI.showPets()">查看</button>`
             : `<button class="btn secondary" style="width:100%" ${p.crystals < pet.price ? "disabled" : ""} onclick="UI.buyPet('${pet.id}')">领养</button>`
@@ -1680,8 +1715,8 @@ const UI = {
               <div class="flex justify-center mt-1"><div class="asset-box" style="width:${Math.round(48 * getPetVisualScale(pp.level))}px;height:${Math.round(48 * getPetVisualScale(pp.level))}px;transition:transform 0.3s">${getPetImg(pp.species, Math.round(48 * getPetVisualScale(pp.level)))}</div></div>
             </button>
             <div class="font-bold mt-1" style="color:${def.color}">${def.name}</div>
-            <div class="text-xs" style="color:var(--gold)">Lv.${pp.level}${maxed ? " MAX" : ""}</div>
-            <div class="text-xs opacity-80 mt-1" style="color:${def.color}">⚡ ${Combat.describePet(pp)}</div>
+            <div class="text-xs" style="color:var(--gold)">${getPetStageLabel(pp.level)} · Lv.${pp.level}${maxed ? " MAX" : ""}</div>
+            <div class="text-xs opacity-80 mt-1" style="color:${def.color}">⚡ ${(() => { const s = PET_SPECIES[pp.species]; return s ? s.describe(pp.level) : ""; })()}</div>
             <div class="hpbar mt-2"><i style="width:${pct}%;background:linear-gradient(90deg,${def.color},var(--gold))"></i></div>
             <div class="text-xs opacity-50 mt-1">EXP ${pp.exp}/${expNeeded}</div>
             ${deployed
@@ -1739,7 +1774,7 @@ const UI = {
       pp.level += 1;
       pp.exp = 0;
       Sound.win();
-      Sound.narrate(`${def.name}升级到 ${pp.level} 级！${getPetStageEmoji(def, pp.level)}`, { rate: 1.2, pitch: 1.3 });
+      Sound.narrate(`${def.name}进化到${getPetStageLabel(pp.level)}！${getPetStageEmoji(def, pp.level)}`, { rate: 1.2, pitch: 1.3 });
       FX.explode(window.innerWidth / 2, window.innerHeight / 3, 24, [def.color, "#fbbf24", "#fff"]);
     } else {
       Sound.correct();

@@ -406,12 +406,12 @@ class Battle {
     };
 
     if (correct) {
-      Sound.laser();
+      const ctx = this._combatCtx();
+      Sound.weaponFire(ctx.weaponId);
       this.combo += 1;
       this.bestCombo = Math.max(this.bestCombo, this.combo);
       result.combo = this.combo;
 
-      const ctx = this._combatCtx();
       const petB = Combat.getPetBonuses(ctx.pets);
 
       // 连击回血：每达到 3 的倍数连击时恢复 HP（鼓励连续答对）
@@ -445,13 +445,17 @@ class Battle {
         petDamage,
       });
       const questionsRemaining = this.questionQueue.length;
-      // 推图：血量按剩余题目对齐（答对一题扣一格），暴击只放大显示伤害
+      // 推图：血量按剩余题目对齐（答对一题扣一格）；武器/暴击只放大显示伤害，不影响击杀判定
       if (this.mode !== "review") {
         const unit = this.monster.hpUnit || Math.max(6, Math.round(this.monster.maxHp / Math.max(1, this.monster.questionsTotal || 1)));
         const targetHp = questionsRemaining * unit;
         const chunk = Math.max(0, this.monster.hp - targetHp);
         this.monster.hp = targetHp;
-        result.damage = crit ? Math.max(chunk, Math.round(chunk * 1.5)) : Math.max(chunk, 1);
+        const ws = Combat.getWeaponStats(ctx.weaponId);
+        const displayMul = ws.damageMul || 1;
+        result.damage = crit
+          ? Math.max(Math.round(chunk * displayMul * 1.5), 1)
+          : Math.max(Math.round(chunk * displayMul), 1);
       } else {
         this.monster.hp = Math.max(0, this.monster.hp - dmg);
         result.damage = dmg;

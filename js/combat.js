@@ -49,6 +49,23 @@ const Combat = {
     return `杀伤力 ×${s.damageMul.toFixed(2)}（${s.label}）`;
   },
 
+  weaponTierLabel(weaponId) {
+    const s = this.getWeaponStats(weaponId);
+    return `T${s.tier} · ${s.label}`;
+  },
+
+  petStageLabel(level) {
+    const tiers = ["幼体", "成长", "进化", "觉醒", "传说"];
+    return tiers[Math.min(Math.max(1, level) - 1, tiers.length - 1)] || "幼体";
+  },
+
+  describePet(pp) {
+    const spec = PET_SPECIES[pp.species];
+    if (!spec) return "";
+    const lv = pp.level || 1;
+    return `${this.petStageLabel(lv)} · ${spec.describe(lv)}`;
+  },
+
   /** 当前出战宠物 ID 列表（最多 2 只） */
   getDeployedPetIds() {
     const child = Storage.getActiveChild();
@@ -121,7 +138,8 @@ const Combat = {
   describePet(pp) {
     const spec = PET_SPECIES[pp.species];
     if (!spec) return "";
-    return spec.describe(pp.level || 1);
+    const lv = pp.level || 1;
+    return `${this.petStageLabel(lv)} · ${spec.describe(lv)}`;
   },
 
   getCritThreshold(weaponId, pets) {

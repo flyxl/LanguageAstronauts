@@ -46,20 +46,40 @@ const Sound = {
   },
 
   laser() {
+    this.weaponFire("pulse");
+  },
+
+  /** 按武器等级播放不同激光音效 */
+  weaponFire(weaponId) {
     if (!this._enabled()) return;
+    const id = typeof Combat !== "undefined" ? Combat.normalizeWeaponId(weaponId) : "pulse";
+    const profiles = {
+      pulse: { start: 900, end: 180, gain: 0.18, type: "sawtooth" },
+      plasma: { start: 1100, end: 320, gain: 0.2, type: "square", echo: 80 },
+      flame: { start: 420, end: 120, gain: 0.22, type: "sawtooth", rumble: true },
+      frost: { start: 1400, end: 600, gain: 0.16, type: "triangle" },
+      thunder: { start: 760, end: 90, gain: 0.24, type: "square", crackle: true },
+    };
+    const p = profiles[id] || profiles.pulse;
     const ctx = this._ensure();
     if (!ctx) return;
     if (ctx.state === "suspended") ctx.resume();
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
-    osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(900, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.25);
-    g.gain.setValueAtTime(0.18, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
+    osc.type = p.type;
+    osc.frequency.setValueAtTime(p.start, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(40, p.end), ctx.currentTime + 0.28);
+    g.gain.setValueAtTime(p.gain, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.32);
     osc.connect(g).connect(ctx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + 0.3);
+    osc.stop(ctx.currentTime + 0.32);
+    if (p.echo) setTimeout(() => this._beep(p.end + 200, 0.12, p.type, p.gain * 0.55), 55);
+    if (p.rumble) setTimeout(() => this._beep(90, 0.18, "square", 0.08), 100);
+    if (p.crackle) {
+      setTimeout(() => this._beep(2200, 0.06, "square", 0.1), 40);
+      setTimeout(() => this._beep(1800, 0.08, "square", 0.08), 90);
+    }
   },
 
   correct() {

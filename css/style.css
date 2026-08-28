@@ -268,18 +268,58 @@ body {
   z-index: 4;
   pointer-events: none;
 }
+.battle-pets-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.55);
+  padding-left: 4px;
+}
 .battle-pet {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px 2px 4px;
+  gap: 5px;
+  padding: 3px 10px 3px 5px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.45);
   border: 1px solid color-mix(in srgb, var(--pet-color) 55%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--pet-color) 40%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pet-color) 35%, transparent);
   transform: scale(var(--pet-scale, 1));
   transform-origin: left center;
-  transition: transform 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.battle-pet-tier-3 { box-shadow: 0 0 14px color-mix(in srgb, var(--pet-color) 55%, transparent); }
+.battle-pet-tier-4 { box-shadow: 0 0 18px color-mix(in srgb, var(--pet-color) 70%, transparent); }
+.battle-pet-tier-5 {
+  box-shadow: 0 0 22px color-mix(in srgb, var(--pet-color) 85%, transparent), 0 0 8px rgba(251, 191, 36, 0.35);
+  animation: pet-aura 2.2s ease-in-out infinite;
+}
+@keyframes pet-aura {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+}
+.battle-pet-stage {
+  font-size: calc(18px * var(--pet-scale, 1));
+  line-height: 1;
+  filter: drop-shadow(0 0 6px var(--pet-color));
+}
+.battle-pet-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+.battle-pet-tier {
+  font-size: 8px;
+  font-weight: 700;
+  opacity: 0.85;
+  color: var(--pet-color);
+}
+.weapon-chip {
+  max-width: 42vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .battle-pet-emoji {
   font-size: calc(22px * var(--pet-scale, 1));
@@ -344,6 +384,17 @@ body {
   width: 12px;
   background: linear-gradient(to top, #fff, #fbbf24, #ef4444);
   box-shadow: 0 0 24px #fbbf24, 0 0 48px #f97316;
+}
+.laser-beam.flame {
+  filter: blur(0.5px);
+  border-radius: 8px;
+}
+.laser-beam.thunder {
+  animation: fire-laser 0.28s ease-out forwards, thunder-flicker 0.12s ease-in-out 2;
+}
+@keyframes thunder-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
 }
 @keyframes fire-laser {
   0% { height: 0; opacity: 1; }
