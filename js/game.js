@@ -160,11 +160,13 @@ class Battle {
   _spawnMonster() {
     const forms = this.forms || getActiveMonsterForms();
     const form = forms[Math.min(this.formIndex, forms.length - 1)];
-    const hp = this._calcMonsterHp(this.questionQueue);
+    const { hp, hpUnit, questionsTotal } = this._calcMonsterHp(this.questionQueue);
     this.monster = {
       ...form,
       maxHp: hp,
       hp,
+      hpUnit,
+      questionsTotal,
     };
   }
 
@@ -177,16 +179,22 @@ class Battle {
     };
   }
 
-  /** 估算单题伤害（与 Combat.calcDamage 对齐，用于计算 BOSS 血量） */
+  /** 估算单题伤害（与 Combat.calcDamage 对齐，用于计算每题血量单位） */
   _estimateDamage(q) {
     return Combat.estimateHit(q, this._combatCtx());
   }
 
-  /** BOSS 血量 = 本题库预估伤害之和 × 余量（随武器/宠物缩放，避免提前击杀） */
+  /**
+   * BOSS 血量严格按题目数量挂钩：
+   * maxHp = 题数 × 单题血量单位（单位随武器/宠物缩放，数值更有打击感）
+   * 答对一题扣一格，答完本题库才击败。
+   */
   _calcMonsterHp(questions) {
-    if (!questions?.length) return 30;
-    const total = questions.reduce((s, q) => s + this._estimateDamage(q), 0);
-    return Math.max(24, Math.round(total * 1.2));
+    const n = questions?.length || 0;
+    if (!n) return { hp: 30, hpUnit: 30, questionsTotal: 0 };
+    const avg = Math.round(questions.reduce((s, q) => s + this._estimateDamage(q), 0) / n);
+    const hpUnit = Math.max(6, avg);
+    return { hp: n * hpUnit, hpUnit, questionsTotal: n };
   }
 
   // ---- 出题生成 ----
@@ -362,9 +370,11 @@ class Battle {
       }
       this._buildQueue();
       if (this.monster) {
-        const hp = this._calcMonsterHp(this.questionQueue);
+        const { hp, hpUnit, questionsTotal } = this._calcMonsterHp(this.questionQueue);
         this.monster.maxHp = hp;
         this.monster.hp = hp;
+        this.monster.hpUnit = hpUnit;
+        this.monster.questionsTotal = questionsTotal;
       }
     }
     this.current = this.questionQueue.shift();
@@ -435,13 +445,17 @@ class Battle {
         petDamage,
       });
       const questionsRemaining = this.questionQueue.length;
-      // 推图：本题库未答完前 Boss 不会倒下（高暴击/高伤时血量保底 1）
-      if (this.mode !== "review" && questionsRemaining > 0) {
-        this.monster.hp = Math.max(1, this.monster.hp - dmg);
+      // 推图：血量按剩余题目对齐（答对一题扣一格），暴击只放大显示伤害
+      if (this.mode !== "review") {
+        const unit = this.monster.hpUnit || Math.max(6, Math.round(this.monster.maxHp / Math.max(1, this.monster.questionsTotal || 1)));
+        const targetHp = questionsRemaining * unit;
+        const chunk = Math.max(0, this.monster.hp - targetHp);
+        this.monster.hp = targetHp;
+        result.damage = crit ? Math.max(chunk, Math.round(chunk * 1.5)) : Math.max(chunk, 1);
       } else {
         this.monster.hp = Math.max(0, this.monster.hp - dmg);
+        result.damage = dmg;
       }
-      result.damage = dmg;
 
       // 水晶碎片奖励（连击越高越多；冰霜武器加成）
       let gain = 1 + Math.floor(this.combo / 3);
