@@ -7,7 +7,9 @@
 const Sound = {
   ctx: null,
   _narrateQueue: [],
+  _speakQueue: [],
   _narrating: false,
+  _speaking: false,
 
   _ensure() {
     if (!this.ctx) {
@@ -114,6 +116,71 @@ const Sound = {
     return voices.find((v) => v.lang.includes("zh") || v.lang.includes("CN")) || null;
   },
 
+  /** 估算中文解说最短时长，避免 iOS 过早触发 onend 导致被截断 */
+  _estimatedNarrateMs(text, rate = 1.1) {
+    const len = String(text || "").length;
+    return Math.max(2200, Math.round((len / (3.6 * rate)) * 1000) + 500);
+  },
+
+  _resumeSynthLoop(synth, intervalMs = 700) {
+    if (synth.paused) synth.resume();
+    return setInterval(() => {
+      if (synth.speaking || synth.pending) synth.resume();
+    }, intervalMs);
+  },
+
+  _drainSpeakQueue() {
+    if (this._speaking || this._narrating || this._narrateQueue.length) return;
+    if (!this._speakQueue.length) return;
+    const { text, resolve } = this._speakQueue.shift();
+    this._doSpeak(text, resolve);
+  },
+
+  _doSpeak(text, resolve) {
+    if (!this._enabled() || !("speechSynthesis" in window)) {
+      resolve?.();
+      this._drainSpeakQueue();
+      return;
+    }
+    const raw = String(text || "").trim();
+    if (!raw) {
+      resolve?.();
+      this._drainSpeakQueue();
+      return;
+    }
+    try {
+      this._speaking = true;
+      const synth = window.speechSynthesis;
+      const u = new SpeechSynthesisUtterance(raw);
+      u.lang = "en-US";
+      u.rate = 0.85;
+      u.pitch = 1;
+      const enVoice = this._pickVoice("en-US");
+      if (enVoice) u.voice = enVoice;
+      let resumeTimer = null;
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        if (resumeTimer) clearInterval(resumeTimer);
+        this._speaking = false;
+        resolve?.();
+        this._drainSpeakQueue();
+      };
+      u.onend = finish;
+      u.onerror = finish;
+      u.onstart = () => {
+        resumeTimer = this._resumeSynthLoop(synth, 700);
+      };
+      synth.speak(u);
+      if (synth.paused) synth.resume();
+    } catch (e) {
+      this._speaking = false;
+      resolve?.();
+      this._drainSpeakQueue();
+    }
+  },
+
   _drainNarrateQueue() {
     if (this._narrating || !this._narrateQueue.length) return;
     if (!this._enabled() || !("speechSynthesis" in window)) {
@@ -134,25 +201,34 @@ const Sound = {
     const voice = this._pickVoice(lang);
     if (voice) u.voice = voice;
 
+    const startedAt = Date.now();
+    const minMs = this._estimatedNarrateMs(text, u.rate);
     let resumeTimer = null;
     let done = false;
-    const finish = () => {
+    let maxTimer = null;
+    const finish = (reason) => {
       if (done) return;
+      const elapsed = Date.now() - startedAt;
+      if (reason === "end" && elapsed < minMs) {
+        setTimeout(() => finish("min"), minMs - elapsed);
+        return;
+      }
       done = true;
       if (resumeTimer) clearInterval(resumeTimer);
+      if (maxTimer) clearTimeout(maxTimer);
       this._narrating = false;
       resolve();
       this._drainNarrateQueue();
+      this._drainSpeakQueue();
     };
 
-    u.onend = finish;
-    u.onerror = finish;
+    u.onend = () => finish("end");
+    u.onerror = () => finish("error");
     u.onstart = () => {
-      resumeTimer = setInterval(() => {
-        if (synth.speaking || synth.pending) synth.resume();
-      }, 4000);
+      resumeTimer = this._resumeSynthLoop(synth, 700);
     };
 
+    maxTimer = setTimeout(() => finish("max"), minMs + 3000);
     synth.speak(u);
     if (synth.paused) synth.resume();
   },
@@ -172,41 +248,53 @@ const Sound = {
 
   /** 清空待播报到队列（不影响正在播放的一句） */
   clearNarrateQueue() {
+    this._narrateQueue.forEach((item) => item.resolve());
     this._narrateQueue = [];
   },
 
-  /** 朗读英文（教学发音）；会中断游戏解说队列 */
+  /** 等待解说队列播完（供 UI 在进入战斗后播放听力题） */
+  whenNarrateIdle() {
+    if (!this._narrating && !this._narrateQueue.length) return Promise.resolve();
+    return new Promise((resolve) => {
+      const tick = () => {
+        if (!this._narrating && !this._narrateQueue.length) resolve();
+        else setTimeout(tick, 120);
+      };
+      tick();
+    });
+  },
+
+  /** 朗读英文（教学发音）；不会打断正在播放的中文解说 */
   speak(text) {
-    if (!this._enabled()) return;
-    if (!("speechSynthesis" in window)) return;
+    if (!this._enabled()) return Promise.resolve();
+    if (!("speechSynthesis" in window)) return Promise.resolve();
     const raw = String(text || "").trim();
-    if (!raw) return;
-    try {
-      this.clearNarrateQueue();
-      this._narrating = false;
-      const synth = window.speechSynthesis;
-      synth.cancel();
-      const u = new SpeechSynthesisUtterance(raw);
-      u.lang = "en-US";
-      u.rate = 0.85;
-      u.pitch = 1;
-      const enVoice = this._pickVoice("en-US");
-      if (enVoice) u.voice = enVoice;
-      synth.speak(u);
-      if (synth.paused) synth.resume();
-    } catch (e) {
-      /* 忽略 */
-    }
+    if (!raw) return Promise.resolve();
+    return new Promise((resolve) => {
+      if (this._narrating || this._narrateQueue.length) {
+        this._speakQueue.push({ text: raw, resolve });
+        return;
+      }
+      if (this._speaking) {
+        this._speakQueue.push({ text: raw, resolve });
+        return;
+      }
+      this._doSpeak(raw, resolve);
+    });
   },
 
   /** 预加载语音列表（应在首次用户交互时调用） */
   _warmupTTS() {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.getVoices();
-    const u = new SpeechSynthesisUtterance("");
-    u.volume = 0;
-    window.speechSynthesis.speak(u);
   },
 };
 
-if (typeof window !== "undefined") window.Sound = Sound;
+if (typeof window !== "undefined") {
+  window.Sound = Sound;
+  if (window.speechSynthesis) {
+    window.speechSynthesis.addEventListener("voiceschanged", () => {
+      window.speechSynthesis.getVoices();
+    });
+  }
+}

@@ -808,9 +808,11 @@ const UI = {
     this._spellBuffer = [];
     this._locked = false;
 
-    // 听音辨词：进入即自动播放一次发音
+    // 听音辨词：进入即自动播放一次发音（等开战解说播完，避免截断）
     if (q.style === "listen") {
-      setTimeout(() => Sound.speak(q.speak), 350);
+      Sound.whenNarrateIdle().then(() => {
+        setTimeout(() => Sound.speak(q.speak), 450);
+      });
     }
     if (q.style === "spell") {
       const prefs = Storage.getChildPrefs();
