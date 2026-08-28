@@ -70,6 +70,7 @@ function _migrateFromV3(v3) {
         mastery: v3.mastery || {},
         garden: v3.garden || [],
         pets: v3.pets || [],
+        deployedPets: v3.deployedPets || (v3.pets || []).slice(0, 2).map((p) => p.species),
       },
     },
     settings: v3.settings || { sound: true },
@@ -112,6 +113,10 @@ const Storage = {
       const next = _normalizeChildPrefs(child.prefs);
       if (!child.prefs || child.prefs.enableSpelling !== next.enableSpelling || child.prefs.spellInputMode !== next.spellInputMode) {
         child.prefs = next;
+        changed = true;
+      }
+      if (!Array.isArray(child.deployedPets)) {
+        child.deployedPets = (child.pets || []).slice(0, 2).map((p) => p.species);
         changed = true;
       }
     });

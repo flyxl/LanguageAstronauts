@@ -892,3 +892,56 @@ body {
   border-color: #f87171 !important;
   color: #fca5a5;
 }
+
+/* 出战宠物选择 */
+.deploy-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(3, 8, 24, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+.deploy-card {
+  width: min(100%, 420px);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.deploy-pet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.deploy-pet-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.deploy-pet-option.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--gold) 45%, transparent);
+  transform: scale(1.02);
+}
+.deploy-pet-option.disabled:not(.selected) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.deploy-pet-art {
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+}
+.deploy-pet-art .game-asset {
+  width: 100% !important;
+  height: 100% !important;
+}

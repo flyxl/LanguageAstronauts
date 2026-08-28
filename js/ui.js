@@ -115,6 +115,7 @@ const UI = {
   el: null,
   _startingBattle: false,
   _battleStartToken: 0,
+  _deployPickerSelected: [],
 
   init() {
     this.el = document.getElementById("app");
@@ -316,6 +317,7 @@ const UI = {
           <div class="grid gap-3 mt-5">
             <button class="btn" onclick="UI.showLevelSelect()">🌌 星图远征</button>
             ${due > 0 ? `<button class="btn gold animate__animated animate__pulse animate__infinite" onclick="UI.startReview()">🚨 红色警报突袭 (${due})</button>` : ""}
+            ${(save.pets || []).length ? `<button class="btn secondary" onclick="UI.showDeployPicker({ onConfirm: () => UI.showMenu() })">⚔️ 出战宠物 (${Combat.getDeployedPetIds().length}/${Combat.MAX_BATTLE_PETS})</button>` : ""}
             <div class="grid grid-cols-2 gap-3">
               <button class="btn secondary" onclick="UI.showStore()">⚔️ 武器库</button>
               <button class="btn secondary" onclick="UI.showPets()">🐾 宠物舱</button>
@@ -379,6 +381,7 @@ const UI = {
           <button class="btn secondary" onclick="UI.showMenu()">返回</button>
         </div>
         <p class="text-xs opacity-50 mt-1">${Catalog.getTextbook(ctx.textbookId).name}</p>
+        ${this._deployBarHtml()}
         <div class="scrollable">${body}${moreBtn}</div>
         <div class="h-6"></div>
       </div>`);
@@ -393,6 +396,112 @@ const UI = {
     if (arrow) arrow.textContent = visible ? "▶" : "▼";
   },
 
+  _deployBarHtml() {
+    const pets = Storage.get()?.pets || [];
+    if (!pets.length) return "";
+    const deployed = Combat.getDeployedPets();
+    const labels = deployed.map((pp) => {
+      const def = PETS.find((d) => d.id === pp.species);
+      return def ? `${def.name} Lv.${pp.level}` : pp.species;
+    });
+    return `
+      <div class="panel p-3 mt-3 flex items-center justify-between gap-2 flex-wrap">
+        <div class="text-xs">
+          <span class="opacity-60">⚔️ 出战宠物（最多 ${Combat.MAX_BATTLE_PETS} 只）：</span>
+          ${labels.length ? `<span style="color:var(--gold)">${labels.join("、")}</span>` : `<span style="color:var(--danger)">尚未选择</span>`}
+        </div>
+        <button class="btn secondary" style="padding:6px 12px;font-size:12px" onclick="UI.showDeployPicker({ onConfirm: () => UI.showLevelSelect() })">选择出战</button>
+      </div>`;
+  },
+
+  /** 开战前选择出战宠物（最多 2 只） */
+  showDeployPicker(opts = {}) {
+    const pets = Storage.get()?.pets || [];
+    if (!pets.length) {
+      opts.onConfirm?.();
+      return;
+    }
+    this._deployPickerOnConfirm = opts.onConfirm;
+    this._deployPickerOnCancel = opts.onCancel;
+    this._deployPickerTitle = opts.title || "选择出战宠物";
+    this._deployPickerSelected = [...Combat.getDeployedPetIds()];
+    this._renderDeployPickerOverlay();
+  },
+
+  _renderDeployPickerOverlay() {
+    const pets = Storage.get()?.pets || [];
+    const selected = this._deployPickerSelected || [];
+    const slotsFull = selected.length >= Combat.MAX_BATTLE_PETS;
+    document.getElementById("deploy-picker-overlay")?.remove();
+
+    const cards = pets.map((pp) => {
+      const def = PETS.find((d) => d.id === pp.species);
+      if (!def) return "";
+      const isSel = selected.includes(pp.species);
+      const spec = PET_SPECIES[pp.species];
+      const bonus = spec ? spec.describe(pp.level || 1) : "";
+      return `
+        <button type="button" class="deploy-pet-option${isSel ? " selected" : ""}${!isSel && slotsFull ? " disabled" : ""}"
+          onclick="UI._toggleDeployPickerPet('${pp.species}')"
+          ${!isSel && slotsFull ? "disabled" : ""}
+          style="--pet-color:${def.color}">
+          <div class="text-2xl">${getPetStageEmoji(def, pp.level)}</div>
+          <div class="deploy-pet-art">${getPetImg(pp.species, 44)}</div>
+          <div class="font-bold text-sm" style="color:${def.color}">${def.name}</div>
+          <div class="text-xs" style="color:var(--gold)">${getPetStageLabel(pp.level)} · Lv.${pp.level}</div>
+          <div class="text-xs opacity-70 mt-1">${bonus}</div>
+          <div class="text-xs mt-2" style="color:${isSel ? "var(--gold)" : "var(--accent)"}">${isSel ? "✓ 已出战" : "点击出战"}</div>
+        </button>`;
+    }).join("");
+
+    const overlay = document.createElement("div");
+    overlay.id = "deploy-picker-overlay";
+    overlay.className = "deploy-overlay";
+    overlay.innerHTML = `
+      <div class="deploy-card panel p-4">
+        <h2 class="text-xl font-black title-glow text-center">${this._esc(this._deployPickerTitle)}</h2>
+        <p class="text-xs opacity-60 text-center mt-2">点选最多 <b>${Combat.MAX_BATTLE_PETS}</b> 只宠物与你一起上战场（可不选）</p>
+        <p class="text-xs text-center mt-1" style="color:var(--gold)">已选 ${selected.length}/${Combat.MAX_BATTLE_PETS}</p>
+        <div class="deploy-pet-grid mt-4">${cards}</div>
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <button class="btn secondary" onclick="UI._cancelDeployPicker()">取消</button>
+          <button class="btn gold" onclick="UI._confirmDeployPicker()">确认出战 ⚔️</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+  },
+
+  _toggleDeployPickerPet(speciesId) {
+    const pets = Storage.get()?.pets || [];
+    if (!pets.some((p) => p.species === speciesId)) return;
+    if (!Array.isArray(this._deployPickerSelected)) this._deployPickerSelected = [];
+    const idx = this._deployPickerSelected.indexOf(speciesId);
+    if (idx >= 0) {
+      this._deployPickerSelected.splice(idx, 1);
+    } else {
+      if (this._deployPickerSelected.length >= Combat.MAX_BATTLE_PETS) return;
+      this._deployPickerSelected.push(speciesId);
+    }
+    this._renderDeployPickerOverlay();
+  },
+
+  _confirmDeployPicker() {
+    Combat.setDeployedPets(this._deployPickerSelected || []);
+    document.getElementById("deploy-picker-overlay")?.remove();
+    const cb = this._deployPickerOnConfirm;
+    this._deployPickerOnConfirm = null;
+    this._deployPickerOnCancel = null;
+    cb?.();
+  },
+
+  _cancelDeployPicker() {
+    document.getElementById("deploy-picker-overlay")?.remove();
+    const cb = this._deployPickerOnCancel;
+    this._deployPickerOnConfirm = null;
+    this._deployPickerOnCancel = null;
+    cb?.();
+  },
+
   // ============ 启动战斗 ============
   startCampaign(unitId) {
     const unit = this._findUnit(unitId);
@@ -403,7 +512,24 @@ const UI = {
     }
     this._startingBattle = true;
     const token = ++this._battleStartToken;
-    Combat.ensureDeployedPets();
+    const pets = Storage.get()?.pets || [];
+    if (pets.length) {
+      this.showDeployPicker({
+        title: `出征 · ${unit.name}`,
+        onConfirm: () => this._launchCampaign(unitId, token),
+        onCancel: () => { this._startingBattle = false; },
+      });
+      return;
+    }
+    this._launchCampaign(unitId, token);
+  },
+
+  _launchCampaign(unitId, token) {
+    const unit = this._findUnit(unitId);
+    if (!unit) {
+      this._startingBattle = false;
+      return;
+    }
     this.battle = new Battle(unit, "campaign");
     this._announceBattleReady().then(() => {
       if (this._battleStartToken !== token) return;
@@ -424,8 +550,20 @@ const UI = {
     }
     this._startingBattle = true;
     const token = ++this._battleStartToken;
-    Combat.ensureDeployedPets();
-    // 复习突袭：合并所有到期条目，一次清剿完毕
+    const pets = Storage.get()?.pets || [];
+    const launch = () => this._launchReview(due, token);
+    if (pets.length) {
+      this.showDeployPicker({
+        title: "复习突袭 · 选择出战宠物",
+        onConfirm: launch,
+        onCancel: () => { this._startingBattle = false; },
+      });
+      return;
+    }
+    launch();
+  },
+
+  _launchReview(due, token) {
     const course = Catalog.getActiveCourseData();
     const unit = this._findUnit(due[0].unitId) || course[0]?.units[0];
     this.battle = new Battle(unit, "review", due);
