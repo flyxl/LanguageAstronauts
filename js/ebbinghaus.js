@@ -115,7 +115,7 @@ const ReviewQueue = {
         ...prev,
         ...e,
         level: Math.max(prev.level, e.level),
-        dueAt: Math.min(prev.dueAt, e.dueAt),
+        dueAt: Math.max(prev.dueAt || 0, e.dueAt || 0),
         item: prev.item || e.item,
       });
     }
@@ -143,45 +143,59 @@ const ReviewQueue = {
     const m = save.mastery[entry.key] || { level: entry.level, correct: 0, wrong: 0 };
     const level = Math.max(entry.level || 1, m.level || 1);
     const cd = EBBINGHAUS.cooldowns[level] || EBBINGHAUS.cooldowns[1];
-    const idx = save.reviewQueue.findIndex((e) => e.key === entry.key);
     const next = { ...entry, level, dueAt: now + cd };
-    if (idx >= 0) save.reviewQueue[idx] = next;
-    else save.reviewQueue.push(next);
+    let hit = false;
+    save.reviewQueue = save.reviewQueue.map((e) => {
+      if (e.key !== entry.key) return e;
+      hit = true;
+      return { ...e, ...next, item: e.item || entry.item };
+    });
+    if (!hit) save.reviewQueue.push(next);
     return next;
   },
 
   /**
-   * 复习突袭胜利后：确保本次会话内所有条目不再处于「已到期」状态
+   * 复习突袭胜利后：推迟本次会话所有条目（不论是否仍显示为到期）
    * 防止答完回到基地仍显示红色警报
    */
   completeSession(sessionEntries, now = Date.now()) {
     if (!sessionEntries?.length) return 0;
-    const save = Storage.get();
+    this.consolidate();
     const keys = new Set(sessionEntries.map((e) => e.key));
     let fixed = 0;
-    for (const e of save.reviewQueue) {
-      if (keys.has(e.key) && e.dueAt <= now) {
-        this._deferEntry(e, now);
+    for (const key of keys) {
+      const entry = Storage.get().reviewQueue.find((e) => e.key === key)
+        || sessionEntries.find((e) => e.key === key);
+      if (entry) {
+        this._deferEntry(entry, now);
         fixed += 1;
       }
     }
-    if (fixed) Storage.save();
+    this.consolidate();
+    Storage.save();
     return fixed;
   },
 
-  /** 推图通关后：推迟本单元所有到期复习（刚完整练过该单元） */
+  /** 推图通关后：推迟本单元全部复习条目（刚完整练过该单元） */
   deferUnitDue(unitId, now = Date.now()) {
+    this.consolidate();
     const save = Storage.get();
     if (!save?.reviewQueue?.length) return 0;
-    let fixed = 0;
-    for (const e of save.reviewQueue) {
-      if (e.unitId === unitId && e.dueAt <= now) {
-        this._deferEntry(e, now);
-        fixed += 1;
-      }
-    }
-    if (fixed) Storage.save();
-    return fixed;
+    const unitEntries = save.reviewQueue.filter((e) => e.unitId === unitId);
+    for (const e of unitEntries) this._deferEntry(e, now);
+    this.consolidate();
+    if (unitEntries.length) Storage.save();
+    return unitEntries.length;
+  },
+
+  /** 胜利后清掉所有仍显示为到期的条目（回到基地不应再弹红色警报） */
+  dismissAllDue(now = Date.now()) {
+    this.consolidate();
+    const due = this.getDue(now);
+    for (const e of due) this._deferEntry(e, now);
+    this.consolidate();
+    if (due.length) Storage.save();
+    return due.length;
   },
 
   /** 返回当前已到期、待复习的条目（按紧急程度排序，BOSS 优先） */
@@ -189,7 +203,7 @@ const ReviewQueue = {
     const save = Storage.get();
     if (!save?.reviewQueue?.length) return [];
     return save.reviewQueue
-      .filter((e) => e.dueAt <= now)
+      .filter((e) => e.dueAt == null || e.dueAt <= now)
       .sort((a, b) => b.level - a.level || a.dueAt - b.dueAt);
   },
 
@@ -203,6 +217,7 @@ const ReviewQueue = {
 
   /** 队列中已到期条目数（用于警报角标） */
   dueCount(now = Date.now()) {
+    this.consolidate();
     return this.getDue(now).length;
   },
 

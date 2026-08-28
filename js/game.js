@@ -542,10 +542,12 @@ class Battle {
 
     if (this.mode === "review" && win) {
       ReviewQueue.completeSession(this.reviewEntries);
-      ReviewQueue.consolidate();
     }
     if (this.mode === "campaign" && win) {
       ReviewQueue.deferUnitDue(this.unit.id);
+    }
+    if (win) {
+      ReviewQueue.dismissAllDue();
       ReviewQueue.consolidate();
     }
 
